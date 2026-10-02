@@ -1,0 +1,44 @@
+# GitHub Pages for the guide. This repo is a push-mirror of the Forgejo
+# source of truth; a merge there lands here and this builds and deploys it.
+# The site's base_url is set at build time from the Pages URL (or a custom
+# domain, via the CNAME file in static/).
+name: pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+        id: pages
+      - name: Install Zola
+        run: |
+          curl -fsSL https://github.com/getzola/zola/releases/download/v0.22.1/zola-v0.22.1-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          sudo mv zola /usr/local/bin/
+      - name: Build
+        run: |
+          base="${{ steps.pages.outputs.base_url }}"
+          if [ -f static/CNAME ]; then base="https://$(cat static/CNAME)"; fi
+          zola build --base-url "$base"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

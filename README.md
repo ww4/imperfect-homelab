@@ -44,9 +44,16 @@ git add flake.lock content/services
 
 ## Publishing
 
-Cloudflare Pages, wired to the GitHub mirror of this repo (the Forgejo repo
-is the source of truth; GitHub is a push-mirror). Build command `zola build`,
-output `public`, `ZOLA_VERSION` set to the version `nix build` uses.
+GitHub Pages, from the GitHub push-mirror of this repo (Forgejo is the
+source of truth; a merge there lands on the mirror and
+`.github/workflows/pages.yml` builds Zola 0.22.1 and deploys). The base URL
+is the Pages URL, or the domain in `static/CNAME` when that file exists —
+add it (one line, the bare hostname) and a CNAME record pointing at
+`<org>.github.io` to put the site on its own name. The repo on GitHub must
+be public for Pages on the free plan.
+
+The installer ISO is not here (1.5 GB); it lives in a DigitalOcean Space and
+the Install chapter links it with its checksum.
 
 ## License
 
