@@ -1,0 +1,15 @@
+# Imperfect Homelab
+
+> A complete self-hosted homelab (media, photos, documents, a git forge, single sign-on, monitoring, phone alerts, 3-2-1 backups) installed from a public NixOS module library in one pass, then explained well enough to add to. A hat tip to Perfect Media Server.
+
+If you are an agent helping someone install or extend this, read these in order:
+
+- [For agents](https://ww4.github.io/imperfect-homelab/start-here/for-agents/): the headless contract — every command takes `--json`, exit codes, where secrets go, what to never do
+- [The install skill](https://ww4.github.io/imperfect-homelab/skills/homelab-install/SKILL.md): the procedure, step by step, as an Agent Skill
+- [The installer ISO](https://ww4.github.io/imperfect-homelab/install/the-installer-iso/): download, checksum, write, boot
+- [The configurator's README](https://git.rosemaryacres.com/ww4/homelab-modules/src/branch/main/configurator/README.md): commands, the answers file, what comes out
+- [Services](https://ww4.github.io/imperfect-homelab/services/): every module, its options and secrets (generated from the library's catalog)
+
+The whole site as one text file: [llms-full.txt](https://ww4.github.io/imperfect-homelab/llms-full.txt).
+
+The question set is machine-readable: `nix run 'git+https://git.rosemaryacres.com/ww4/homelab-modules.git?dir=configurator' -- schema --json`.

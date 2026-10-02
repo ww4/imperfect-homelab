@@ -39,8 +39,16 @@
         bash ${./tools/gen-reference.sh} ${catalogJson} ${optionsFile} $out
       '';
 
+      # The whole site as one text file for agents (static/llms-full.txt), from
+      # the same markdown the pages come from; committed so Pages needs no nix,
+      # and checked for freshness like the reference.
+      llms = pkgs.runCommand "imperfect-homelab-llms" { } ''
+        mkdir -p $out
+        bash ${./tools/gen-llms.sh} ${./content} https://ww4.github.io/imperfect-homelab > $out/llms-full.txt
+      '';
+
       site = pkgs.stdenvNoCC.mkDerivation {
-        pname = "homelab-guide";
+        pname = "imperfect-homelab";
         version = if self ? shortRev then self.shortRev else "dirty";
         src = self;
         nativeBuildInputs = [ pkgs.zola ];
@@ -61,6 +69,14 @@
           echo "content/services regenerated from homelab-modules ${homelab-modules.shortRev or "dirty"}"
         '');
       };
+
+      checks.${system}.llms-fresh = pkgs.runCommand "llms-fresh" { } ''
+        if diff ${self}/static/llms-full.txt ${llms}/llms-full.txt; then
+          touch $out
+        else
+          echo "static/llms-full.txt is stale — run: tools/gen-llms.sh content https://ww4.github.io/imperfect-homelab > static/llms-full.txt" >&2; exit 1
+        fi
+      '';
 
       # `nix flake check`: the committed reference must equal the generated one.
       checks.${system}.reference-fresh = pkgs.runCommand "reference-fresh" { } ''

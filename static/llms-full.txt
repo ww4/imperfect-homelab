@@ -1,0 +1,2607 @@
+# Imperfect Homelab
+
+
+A complete self-hosted homelab — media, photos, documents, a git forge,
+single sign-on, monitoring, phone alerts, 3-2-1 backups — that you install
+from a public NixOS module library in one pass, and then understand well
+enough to add to.
+
+Three promises:
+
+1. **One command from the installer ISO** answers questions and leaves you
+   with a working system, secrets included.
+2. **Every line of it is readable.** Implementations live in the library;
+   your values live in a flake you own. Nothing is hidden in a container
+   you cannot inspect.
+3. **You can add the next service yourself**, and the guide shows the loop
+   the author's own tooling uses to do it.
+
+## Thanks
+
+This homelab exists because other people wrote theirs down. [Perfect Media Server](https://perfectmediaserver.com) by Alex Kretzschmar is where it started, and the name here is a nod to it: that site taught the shape (independent disks, a union filesystem, parity, one service per container) and the habit of explaining the reasoning. The [Self-Hosted](https://selfhosted.show) podcast and [Linux Unplugged](https://linuxunplugged.com) from Jupiter Broadcasting are the reason the pieces are what they are, from mergerfs to NixOS; years of listening turned into years of running. If anything here is useful to you, it was useful to me first because of them.
+
+
+# Start here
+
+URL: https://ww4.github.io/imperfect-homelab/start-here/
+
+
+This guide hands you a homelab that one person has run for years, and then shows you how it is built so you can change it. Every service, alert rule and backup job you end up with is a file you can read. The install is one command from the NixOS installer: it asks what you want, mints the secrets, and leaves you with a working machine. The understanding takes longer, and the rest of the site is for that.
+
+Read it in order the first time. Later you will come back for one chapter at a time, and the Services reference is for looking things up.
+
+The reference machine is one household's setup. The Principles chapter gives the reasons for its choices (a MergerFS pool over independent disks, Tailscale as the only way in, nginx in front of everything), and you can make different ones. The install path is tested against three fixed profiles in a virtual machine, and your hardware will differ from the reference box in ways the Hardware chapter tries to anticipate. When something in the guide and something on your screen disagree, the screen is right, and the issue tracker is where to say so.
+
+
+
+## What you get
+
+URL: https://ww4.github.io/imperfect-homelab/start-here/what-you-get/
+
+
+The reference machine runs about fifty services on one NixOS box. The ones most people come for are media (Jellyfin, with Sonarr, Radarr, Lidarr and a torrent client inside a VPN namespace), photos (Immich), documents (Paperless), a password vault (Vaultwarden), a git forge (Forgejo), recipes, notes, and an audiobook server. Under them sit a MergerFS pool with SnapRAID parity, single sign-on through Authelia, and TLS certificates from Let's Encrypt over DNS-01 so nothing has to listen on the internet. Monitoring is Prometheus, Grafana and Alertmanager, with every alert rule and quiet-hours window provisioned from the configuration. Backups are restic to a local pool and to Backblaze B2, with a restore the owner has tested.
+
+Nothing on it is reachable from the public internet. Every web service sits behind an nginx allow list that admits the LAN and the Tailscale network and denies everyone else, and the rule lives in one place so a new service inherits it. The Principles chapter explains why a homelab whose DNS points at private addresses is not protected by that.
+
+The part most homelabs skip is the operating side. Deployment is GitOps: a daemon on the machine polls the git forge and rebuilds when a pull request merges, so nobody runs a rebuild by hand. Two watchdogs compare what the forge holds against what the machine deployed and what the offsite mirror holds, because a deploy pipeline that reads a stale source looks healthy from every dashboard. Drives that drop off the USB bus are remounted by a service that only ever remounts and never repairs. An AI agent does routine operations work as its own Unix user, through pull requests a human merges. That last part has its own chapter.
+
+The library is the reusable half. About forty NixOS modules hold the implementation, every one of them reading your domain, your users, your pool layout and your secret paths from a single `homelab.*` option set, and your own flake is mostly that values file. The reference box keeps a few things private (its hardware scan, a home radio station, some automation that is one family's business), and nothing in this guide depends on them.
+
+
+
+## Who this is for
+
+URL: https://ww4.github.io/imperfect-homelab/start-here/who-this-is-for/
+
+
+You need a machine, a domain you control, and an evening. The machine can be anything that boots the NixOS installer and has a disk for the system and at least one for data; the Hardware chapter says what matters and what does not. The domain is for DNS-01 certificates and for naming services, so it needs a registrar or DNS host with an API (Cloudflare is the tested one). A Tailscale account is the simplest way to reach the box from outside your LAN, and the guide assumes it. Backblaze B2 is the tested offsite backup target and costs a few dollars a month at household scale.
+
+You do not need to know Nix. The configurator asks questions and writes the configuration; the Install chapter walks through the output file by file so you can see what it wrote and why. You will need to be comfortable in a terminal over SSH, and you will read more configuration than you write. By the Extending chapter you will be writing a module of your own, and the guide teaches the Nix you need along the way.
+
+If you already run a homelab, the install path still applies, but you will probably skim Start Here and Principles and spend your time in Tech Stack and Extending. The library is a set of modules you can import one at a time into an existing NixOS flake; you do not have to adopt the whole machine to use the storage watchdog or the monitoring.
+
+
+
+## Where it came from
+
+URL: https://ww4.github.io/imperfect-homelab/start-here/where-it-came-from/
+
+
+The reference box is called gromit and lives in rural Kentucky. It has been rebuilt several times over the years, most recently from scratch on NixOS, and what you install from this guide is a cleaned-up copy of what it runs today. Its configuration, the public half anyway, is the library this site documents. The private half is a values file plus the handful of things that are one household's business.
+
+It started from Perfect Media Server. Alex Kretzschmar's site laid out a way to build a home server from independent disks, a union filesystem, parity, and containers, and explained the reasoning as well as the commands. This machine's first version followed that write-up closely. The storage design here still does: MergerFS over disks that each hold whole files, SnapRAID for parity, and a backup tier separate from the media tier. What changed over the years is that the configuration moved from scripts and hand-edited files into one declarative description, and that an agent took over the routine work.
+
+This guide does the same thing one generation on, and owes the same debt to two podcasts: Self-Hosted, which Alex co-hosts, and Linux Unplugged from Jupiter Broadcasting, which is where NixOS and most of the rest of the stack came from. Perfect Media Server taught the principles and left the build to you; this site gives you the build and then teaches the principles, in that order, because a working machine is a better place to learn from than a blank one.
+
+
+
+## For agents
+
+URL: https://ww4.github.io/imperfect-homelab/start-here/for-agents/
+
+
+If you are an AI agent and someone has handed you this site, the short version is in two files: [llms.txt](/llms.txt) says what is where, and [the install skill](/skills/homelab-install/SKILL.md) is the procedure. This page is the contract behind both, written for a reader who will act on it.
+
+The configurator is headless first. `homelab-configure` takes an answers file and writes a private NixOS flake; the terminal UI is a front end that produces the same file and calls the same command. Every command takes `--json`. `schema --json` returns the whole question set: each module, the options it reads with type, default and whether it is required, and each secret with its class. `generate` returns exit 0 with a report, exit 2 with every problem it found at once (a missing value, a secret not supplied, a foundation module absent, a removal it refused), or exit 3 when the result failed to evaluate. Nothing is installed by any of this; the output is a directory.
+
+Three things the tool enforces so that you do not have to remember them. Secrets never enter the answers file: supplied ones arrive as a file path or an environment variable, generated ones are minted and encrypted, and the show-once values go to a file the user reads and deletes. The foundation set is checked on every run: `system` and `boot` are added, `backup` must be present and configured before the first install, and `mergerfs-pools` and `backup` cannot be removed later; a removal that another module requires is refused with the dependent named. And the disk the live system booted from is never offered by the picker; when you choose disks yourself, use `/dev/disk/by-id/` names and leave that one alone.
+
+Two things are yours alone. Never ask the user to paste a secret to you; ask them to put it in a file, and tell them which variable names it must carry (the schema says). And never run `install` on your own authority: it erases the named disks, and the typed confirmation of the host name is there so that a person says yes to the exact device list. If the user wants you to run it unattended, they say so, and you pass `--yes`.
+
+The box itself is easy to reach. The installer ISO runs sshd; the user sets a password at the console with `passwd` and gives you the address, and `ssh nixos@<address>` lands you on a machine where `homelab-configure` is on the path and `sudo` needs no password. From there the skill's procedure applies as written. If the user is installing a different machine from where you run, generate locally and hand off to `nixos-anywhere` as the generated README says.
+
+Everything on this site is also in [llms-full.txt](/llms-full.txt) as one plain-text file, regenerated from the same source as the pages, so you can read the whole guide in one fetch.
+
+
+# Principles
+
+URL: https://ww4.github.io/imperfect-homelab/principles/
+
+
+Five rules account for the choices in this homelab, and most of the library's files are one of them applied. Implementations live in a public library and the facts about your house live in a flake you own. Secrets enter as file paths, never as values the library knows about. Importing a module is what enables it, and a module reads nothing but its own options. The network is the perimeter, and the applications behind it are not asked to be. And nobody applies a change by hand: a merge deploys it, after a rehearsal if you want one.
+
+Each has a chapter. They are short, and they are worth reading before the Tech stack chapter: the rules came first and the stack had to fit them.
+
+
+
+## Implementations and values
+
+URL: https://ww4.github.io/imperfect-homelab/principles/implementations-and-values/
+
+
+The configuration is two repositories, and the line between them is a single option set. The library holds the implementation: about forty NixOS modules for services, storage, monitoring, single sign-on and the download stack. Your flake holds the values: your domain, your admin user, your pool layout, the paths to your secrets, and whatever per-service settings you change from the defaults. The library's `modules/options.nix` declares every `homelab.*` option with a type, a default where one makes sense, and a description, and that file is the whole interface. Another household imports the same modules and writes a different values file.
+
+A module never hardcodes a fact about a site. It reads `config.homelab.domain` for its vhost name, `config.homelab.adminUser` for the account it seeds, `config.homelab.pools` for where the data lives. Where the reference machine needed a personal value during the split, the value became an option with a documented default and the module kept working for everyone else. The rule has a test: the library's leak scan fails the build if a hostname, a path from the reference box, or a tracker name appears anywhere in the public tree. The reference machine's own values file is the proof that the interface is complete, because it builds the real box from the public modules plus that file and nothing else. After the split, the owner compared the box's system closure before and after, module by module, and the two matched.
+
+The library has no inputs of its own. It does not pin a nixpkgs; your flake does, and the modules evaluate against whatever you pinned. That keeps the library out of your lock file's dependency graph and means a library update changes nothing on your machine until you bump the input yourself.
+
+What stays private is a short list. Hardware scans and disk layouts, because they are one machine's. Secrets, because they are yours. A few modules that are one household's business: a home radio station, a dashboard full of personal links, tooling around private trackers. Everything in this guide builds without them.
+
+
+
+## Secrets are paths
+
+URL: https://ww4.github.io/imperfect-homelab/principles/secrets-are-paths/
+
+
+The library never declares a secret and never reads one by name. Where a module needs a credential, it exposes an option ending in `File` (`homelab.acme.credentialsFile`, `homelab.backup.passwordFile`) and reads whatever path you put there. The module's header says what the file must contain, down to the variable names. How the file gets to that path is your flake's business.
+
+In the consumer's flake, sops-nix keeps every credential encrypted in the repository and decrypts it at activation with the machine's own SSH host key. The configuration is therefore self-contained: a host whose key is a recipient can rebuild from a bare clone, and no plaintext credential exists in the repository or its history. The values file declares each secret once (`sops.secrets."restic-password"`) and points the module's option at `config.sops.secrets."restic-password".path`, which resolves to a root-owned file under `/run/secrets` at boot. Each secret declares its own owner and mode, so a service that runs as its own user gets a file it can read and nothing else can. The recipient list is the access boundary. Two keys can decrypt: the machine's host key, and an administrator key you keep somewhere that is not the machine. Lose both and the secrets are gone with them, which is why the install writes the admin key to a file it tells you to move. The agent that operates the reference machine is not a recipient, so it can wire a secret's plumbing but cannot read a value. The configurator writes all of this for you on a fresh install, and the pattern is the same one you follow by hand when you add a service later.
+
+Secrets come in three classes, and the catalog records which is which. Some the tooling can mint for you (admin passwords, OIDC client secrets, the restic passphrase). Some only you can supply (a DNS API token, a VPN configuration). The third class, values a service used to mint for itself on its first run, is empty now: the download stack's modules seed the API keys into each application before it starts, so they are values the configuration owns.
+
+
+
+## Importing enables
+
+URL: https://ww4.github.io/imperfect-homelab/principles/importing-enables/
+
+
+Importing a module enables it. There is no `enable = true` to remember, except for the few modules that document one because turning them on has a cost or a prerequisite: the monitoring stack, single sign-on, SnapRAID (whose first sync is a manual, hours-long step). One concern, one file, one import line: the reference machine's configuration is a list of imports with a comment on each line saying what it is for, and it reads top to bottom as a description of the machine. The import list is the inventory, and removing a line removes the service. If you can name a thing you can find its file, and its file is the only place you configure it. A module that needs to touch nginx does so through a shared helper, so the module declares its vhost next to the service and not in one central web-server file.
+
+The catalog is the machine-readable index. `nix eval --json .#catalog` returns every module with its one-line purpose, the options it reads, the secrets it needs and their class, the modules it requires, and the vhost it claims. The library's flake checks the catalog against its exported modules at evaluation time, in both directions, so nobody can add a module without an entry and an entry cannot outlive its module. The configurator reads the catalog instead of parsing module headers, and so does the Services section of this site, which the build generates from it and checks for freshness.
+
+A module reads only its own options and the shared ones. It never reaches into another module's configuration except through a declared `requires`, which is what lets you add and remove modules later with no effect on the others.
+
+
+
+## The perimeter is the network
+
+URL: https://ww4.github.io/imperfect-homelab/principles/the-perimeter-is-the-network/
+
+
+Nothing on the machine listens to the public internet. Every web service is reachable over Tailscale or the trusted LAN, and an nginx allow/deny block that every virtual host inherits from one place enforces it. Adding a source range is a reviewed commit; adding a vhost needs no gate of its own, because the rule lives in the shared `http` block and a per-vhost gate is a gate someone eventually forgets.
+
+The mistake this prevents is relying on DNS as access control. A homelab whose records point at private addresses feels private, and DNS is not a perimeter. Many residential connections now carry a public IPv6 address. If nginx listens on all interfaces with no allow/deny, anything that can route to the box reaches the backend with a forged `Host` header, and only each application's login stands in the way. The reference machine had that gap until the gate went in. The library module `nginx-access` closes it, and the Day two chapter has you test the closed state from outside before you trust it.
+
+Certificates come from Let's Encrypt over DNS-01. The challenge is answered by a DNS record your API token creates, so issuance needs no inbound path at all, and a service that nobody outside your network can reach still gets a real certificate. The ACME module's defaults are the library's; your flake supplies the email and the token file.
+
+Some things the gate does not cover: a compromised Tailscale account is inside the perimeter, single sign-on covers only the applications that support it, and disks are not encrypted at rest. The Security chapter in Operating with an agent lists the rest.
+
+
+
+## GitOps, with a rehearsal branch
+
+URL: https://ww4.github.io/imperfect-homelab/principles/gitops-with-a-rehearsal/
+
+
+Nobody runs `nixos-rebuild` on the reference machine, including its owner. A daemon ([comin](https://github.com/nlewo/comin)) polls the git forge and rebuilds the machine when `main` advances; `main` is branch-protected, so a reviewed merge is the only thing that advances it. Git holds the history and the NixOS generation list holds the rollback. The forge is self-hosted, and a mirror on GitHub is both an offsite copy of the configuration and a fallback source the daemon can deploy from. The library is a flake input pinned by commit, so a library change deploys nothing until a pull request bumps the lock.
+
+The rehearsal branch is the part that makes an agent operator workable, and it is useful to a human for the same reason. The daemon applies a push to the unprotected `testing` branch with `nixos-rebuild test`: the configuration goes live and services restart, and it writes nothing to the bootloader, so a reboot returns the machine to the last merged state. You check the real thing (the vhost answers, the timer fired, the metric is there) before you ask anyone to merge. The one rule is that `testing` must descend from `main`; a diverged branch is ignored by design, and the reference machine's push hook refuses it.
+
+Two watchdogs watch the pipeline itself. One compares the forge's branch head with the commit the daemon last deployed, because a deploy pipeline that looks healthy while reading a stale source is a failure the dashboards miss. The other compares the forge with its mirror, so a mirror that stopped tracking is an alert instead of a surprise found during a disaster. Both ship their own alert rules. The reference machine lost its deploys for two days once to an expired mirror token and found out by accident; the watchdogs are the result. A failed check publishes a failure, never stale data that reads as healthy. The library's exporters and watchdogs follow that rule, and the Field notes chapter has the incidents that taught it.
+
+
+# Tech stack
+
+URL: https://ww4.github.io/imperfect-homelab/tech-stack/
+
+
+Each layer here fits the principles, and where two tools would both have done the job, the one that could be declared in a file won. The storage layer is the one whose choices cost the most to learn, so it has the longest chapter. Monitoring and containers come next, because they are where a declarative setup differs most from what the usual guides show. The rest are short.
+
+Nothing in this section is a tutorial for the tool itself. Each chapter says what the library does with the tool, which settings matter, and which lesson from the reference machine shaped them.
+
+
+
+## NixOS and flakes
+
+URL: https://ww4.github.io/imperfect-homelab/tech-stack/nixos-and-flakes/
+
+
+One flake builds every machine. The reference fleet is three hosts (a storage and services box, a compute node that does builds and ML inference, a laptop), each a `nixosConfigurations` entry in one `flake.nix`, sharing the library and the values file where they overlap. The library is an input pinned by commit in `flake.lock`, so a library change deploys nothing until a pull request bumps the pin. Your configurator-generated flake has the same shape with one host in it. Adding a second host later is a second entry and a second hardware file.
+
+The system closure is the unit of proof. `nix build .#nixosConfigurations.<host>.config.system.build.toplevel` evaluates and builds the whole machine without touching it, and the resulting store path is a hash of everything in it. Two configurations that produce the same path are the same machine, and that is the check behind every change in this guide: build before, build after, compare. `nix store diff-closures` lists what changed between two builds, down to the package version.
+
+Installation is nixos-anywhere with disko. The configurator writes the disk layout and the flake; nixos-anywhere installs it over SSH onto anything booted from the NixOS ISO. Nothing in that path is custom.
+
+
+
+## Storage
+
+URL: https://ww4.github.io/imperfect-homelab/tech-stack/storage/
+
+
+The pool is MergerFS over independent disks, each holding whole files. There is no striping: a lost disk costs that disk's contents and nothing else, every surviving disk is readable on its own with any Linux, and disks of different sizes and ages mix freely. That trade suits bulk media but not a database, which is why the services keep their state on the system disk and only their large files on the pool. SnapRAID adds parity on top, so a single failed disk is recoverable file by file.
+
+Six mount options took the longest to get right, and the library sets them for every pool. `cache.files=off` keeps the page cache coherent across branches. `moveonenospc=true` moves a file to another branch and retries when a write fills the one it started on. `dropcacheonclose=true` keeps a large sequential write from evicting everything else. `func.getattr=newest` makes `stat()` return the newest branch's metadata when a path exists on several, without which two writers holding copies see stale sizes. `minfreespace` is a floor set above your largest single file, so a create never hits end-of-disk mid-write; the reference machine learned that when a mirror job filled a branch until a temp file no longer fit. And the create policy, `mfs` or `epmfs`, decides where new files land.
+
+The create policy is the one to get right. `mfs` (most free space) balances writes across branches and is the right default for a media pool. `epmfs` (existing path, most free space) keeps a new file on the branch that already holds its parent directory, and any pool that receives hardlinks needs it, because MergerFS hardlinks only work within one branch. When they fail, `rsync --link-dest` does not error; it silently copies, and an incremental backup becomes a full one and fills the pool. The reference machine's backup pool runs `epmfs` for exactly that reason. Pick per pool, in the values file.
+
+SnapRAID reads the member disks directly, never through the pool mount, and writes parity to one file per parity disk on a disk outside the pool. The library derives the data disks from the pool's member list, so adding a disk to the pool adds it to parity in the same edit. The first sync is yours to run by hand, because it builds parity from scratch and takes hours.
+
+Disks on USB drop off the bus, and the library's remounter handles the two shapes that takes. In the clean one the mount disappears and a `systemctl start` on the mount unit brings it back. In the other, the filesystem shuts down but the mount entry survives: `/proc/mounts` still lists it, `mountpoint` still says yes, `df` still reports it, and only a real read returns an error. Nothing can mount over that corpse, so a plain restart fails forever. The reference machine once ran 260 failed recovery attempts over nine hours in that state without an alert, because the dashboard rule counted mount entries and the zombie kept the count at full strength.
+
+The remounter now probes with a real directory read, answers "is it mounted" from the kernel's mount table rather than by stat-ing the path (which also fails on a dead filesystem), and treats a slow read as ambiguous. Three rules bound it: it only ever remounts, never repairs; it declares success only after a write test; and it caps itself at a few remounts per drive per day, because a disk that keeps dropping is failing hardware and silently remounting it hides the warning.
+
+
+
+## Web and certificates
+
+URL: https://ww4.github.io/imperfect-homelab/tech-stack/web-and-certificates/
+
+
+Every service sits behind nginx, and every vhost is declared by the module that serves it. A shared helper turns a port into a vhost: `foo.<domain>` with TLS, proxying to `127.0.0.1:<port>`, the forward-auth hook if the name is in the protected list. The allow/deny gate lives once, in the shared `http` block, so a vhost that forgets it does not exist. Services bind to localhost; only nginx listens on an interface. A new service is a module that calls the helper, and the DNS record is the one thing you add by hand.
+
+Certificates come from Let's Encrypt over DNS-01. The ACME client answers the challenge by creating a DNS record through your provider's API, so issuance needs no port open to the internet, and a name that resolves only inside your tailnet still gets a browser-trusted certificate. The library's `acme` module sets the defaults; your flake supplies an email, a provider name, and the token file.
+
+Two things the reference machine learned here are in the Field notes: a `types {}` block in a vhost replaces the whole MIME map rather than adding to it, and a regex `location` beats a prefix one regardless of order. The library's build-time checks catch the log-path mistakes; those two it cannot, so the Day two chapter has you probe every path class after a change.
+
+
+
+## Single sign-on
+
+URL: https://ww4.github.io/imperfect-homelab/tech-stack/single-sign-on/
+
+
+Authelia runs in two modes from one module. As a forward-auth gate it puts a real login (password plus TOTP) in front of services that have none of their own, or whose own login you would rather not expose. As an OIDC provider it gives single sign-on to the applications that support it: Grafana, Forgejo, Nextcloud, Paperless and Immich on the reference machine. Both modes share the user database, so one account and one authenticator cover the machine.
+
+One option drives the forward-auth side: a list of subdomain names. The module generates both the nginx `auth_request` wiring and Authelia's access-control rule from that list, because they must always agree and keeping them as two edits is how a vhost ends up with the auth hook but no rule, which shows the user a bare 403 instead of a login page. Machine secrets (the JWT secret, the session key, the OIDC signing key) generate themselves on first boot and are never committed. OIDC client secrets appear in configuration only as one-way hashes; the plaintext lives in each consuming application's encrypted secret, and the configurator mints both halves from one value.
+
+Adding SSO to a new application is three edits: a client block in `homelab.authelia.oidcClients`, the application's own OIDC settings pointed at the issuer, and the secret file. Removing Authelia later means undoing those edits in every application, and the configurator will warn you which ones it would orphan.
+
+
+
+## Tailscale
+
+URL: https://ww4.github.io/imperfect-homelab/tech-stack/tailscale/
+
+
+Tailscale is how you reach the machine from anywhere that is not your LAN, and the allow list in nginx admits the tailnet's address range along with the LAN's. There is no port forwarding, no reverse proxy on a VPS, and no public IP that answers. Your DNS records point at the machine's tailnet address, so a name resolves from anywhere and connects only from a device on your tailnet. The module library assumes this; it does not install Tailscale for you, because joining a tailnet is an interactive step on each device.
+
+Two things to know. Tailscale's MagicDNS, if turned on for the machine, replaces the resolver containers see and breaks their outbound DNS while names inside the tailnet keep working; the Field notes chapter has the fix. And Tailscale's Funnel feature, which publishes a service to the internet, binds port 443 on the tailnet address and takes every other vhost down with it on a machine where nginx expects that port. Nothing in this guide uses Funnel.
+
+
+
+## Monitoring and alerting
+
+URL: https://ww4.github.io/imperfect-homelab/tech-stack/monitoring-and-alerting/
+
+
+The stack is Prometheus, Grafana and Alertmanager, with the part most setups skip: the library provisions alert rules, contact points, notification policies and mute timings from configuration. A rebuild restores the alert rules and routing along with the daemons. The library ships generic rules (a failed systemd unit, a failed deploy, CPU and NVMe temperatures); your flake adds the site-specific ones through `extraAlertRuleFiles`, which is where rules that name your own exporters belong. Every exporter and watchdog in the library publishes an explicit failure signal when its check fails, never stale data that reads as healthy; the storage chapter has the incident that made that a rule.
+
+Routing is two tiers. Critical alerts page at once, at any hour; everything else holds until morning. Quiet hours are one option (`homelab.quietHours`) rendered into both Grafana and Alertmanager, so the two cannot disagree about when the phone stays silent. Alert descriptions carry the remediation (which journal to read, which unit to check), because the reader is you on a phone at seven in the morning. The reference machine's owner set one rule above the others: nothing network-related wakes anyone, ever, and only fire, flood and electrical faults pierce the quiet hours.
+
+Notifications go to the phone through ntfy, self-hosted. The `ntfy` module runs the server with write-only anonymous access, so any service on the machine can post without a credential, and provisions one subscriber account for the owner's phone. An `alertmanager-ntfy` shim translates Alertmanager's webhook into ntfy messages with priority and a title; both are small, and both are modules because the alternative was a script somebody would forget to reinstall.
+
+
+
+## Containers on NixOS
+
+URL: https://ww4.github.io/imperfect-homelab/tech-stack/containers-on-nixos/
+
+
+Most services here are native NixOS modules, and the ones that are not run as OCI containers declared in Nix (`virtualisation.oci-containers`), which makes each one a systemd unit like everything else. The download stack is the main user: Prowlarr, Sonarr, Radarr, Lidarr, Jellyseerr, and qBittorrent inside a Gluetun VPN namespace. A container's image, environment, volumes and network are in the module; its state is a directory under `/var/lib` that the backup module covers.
+
+Images are pinned by tag and digest, and the digest is what deploys. A bare `:latest` re-pulls on every rebuild, which makes each container a standing supply-chain surface, and the containers sit inside the network gate (bridge networks are in the allowed ranges), so a compromised upstream image would be a LAN-equivalent attacker. Pinning makes an image update a reviewed change. To bump one deliberately, `skopeo inspect` gives you the new digest and a pull request carries it. The download stack's containers share a user-defined bridge network, because the default Docker bridge does not do DNS between containers and their addresses shuffle on restart. That network is IPv4-only on purpose: the bridge has no IPv6 route, Cloudflare-fronted indexers are dual-stack, and glibc prefers the AAAA answer, so a container picks an address it cannot reach and the connection dies with a message that blames DNS.
+
+Two gaps between Docker and NixOS are worth knowing before you hit them. A `MemoryMax` on a `docker-*.service` unit constrains nothing, because dockerd puts the container's processes in their own cgroup scope; the memory limit goes in the container's `extraOptions` as `--memory`. And NixOS's interface-scoped firewall rules do not see traffic from a bridge network to the host, so a container that needs to reach a host service needs a hole for the `br-+` interfaces on that port.
+
+qBittorrent has no network of its own. It borrows Gluetun's namespace, so every byte it sends leaves through the VPN's WireGuard tunnel and there is no path for it to leak onto. Gluetun publishes qBittorrent's web port, and the one setting you carry across is the VPN's forwarded port, set both in the VPN environment and in qBittorrent's listen port.
+
+
+
+## Backups
+
+URL: https://ww4.github.io/imperfect-homelab/tech-stack/backups/
+
+
+The backup has three legs. restic to a repository on the local backup pool, for fast restores that survive the system disk. restic to an offsite repository (Backblaze B2 on the reference machine, any restic backend in the library), for fire, theft and ransomware. And a mirror job for bulk media, which does not belong in restic: dedup and encryption buy nothing on terabytes of video, and the prune would take days. The two restic jobs take the same paths, the same passphrase and the same retention, so the repositories are interchangeable at restore time.
+
+The critical tier is a list of paths in your values file: application state under `/var/lib`, database dumps, keys, documents. The restic job dumps each Postgres database separately rather than running `pg_dumpall`, so one failing database cannot break every backup. The local job declares the pool as a required mount, so a pool that failed to mount yields a skipped run instead of a repository written into the bare mountpoint on the system disk. Retention is seven daily, four weekly, six monthly by default, with an integrity check after each run. A second machine can push its own snapshots into the local repository over SFTP; the library creates a dedicated user for it whose primary group owns the repository, because on a MergerFS pool with the kernel's FUSE permission checks, supplementary groups are not honoured and the obvious setup (add the admin to the group) does not work.
+
+Run the restore drill once, before you need it: list the snapshots, restore one small path to a temporary directory, compare. The Day two chapter walks through it. Disaster recovery closes end to end only if you mirror the repository (secrets included) offsite and escrow the decryption key off the machine, so a total loss of the hardware still leaves a path from the mirror to the key to the backup credentials to the data.
+
+
+# Hardware
+
+URL: https://ww4.github.io/imperfect-homelab/hardware/
+
+
+Storage connectivity decides whether a machine can be this homelab; compute barely matters, and power is the real price. The reference box is a 2014 desktop CPU with twelve drives hanging off it, and the hardware incidents in its history that cost real time were drives dropping off a bus, not slow cores. So this chapter spends its space on ports, bays and watts, and dispatches the CPU question in a sentence. The last page is the evaluation process the reference machine's owner uses on salvage: a decision in under an hour of hands-on time, most of it unattended, with a written card at the end.
+
+
+
+## The reference box
+
+URL: https://ww4.github.io/imperfect-homelab/hardware/the-reference-box/
+
+
+The reference machine is an Intel i5-4690K, four cores from 2014, with 30 GB of RAM. The system disk is a 500 GB NVMe, which holds the OS, every service's state under `/var/lib`, and the databases; nothing on it is bulk media. Six SATA drives sit inside the case and six more hang off USB in external enclosures, and together they make the two pools: a working pool of six disks for media and service files, around 28 TB, and a backup pool of four 6 TB disks that receives the restic repository and the media mirror. A separate scratch disk holds the download client's incomplete files, kept off the pool to spare its I/O.
+
+That mix is what accumulated; do not read it as a recommendation. The USB enclosures are the weak part, and the library's auto-remounter and the drive-temperature exporter exist because of them: the enclosures drop off the bus under load, misreport power state, and one model needs a cold power cycle to clear an over-current fault. If you are buying, put the data disks on SATA or an HBA and keep USB for the backup pool, where a dropped disk only costs a retry. Twelve spinning drives are the largest line in its power draw, which is why the backup pool's disks spin down between jobs.
+
+The fleet has two more hosts: a compute node (a Ryzen 9 5900X with a GPU) that does Nix builds and the photo server's machine learning, and a laptop. The guide's profiles need neither; they are where heavy compute went so the storage box could stay boring.
+
+
+
+## What matters
+
+URL: https://ww4.github.io/imperfect-homelab/hardware/what-matters/
+
+
+Count the storage connectivity before anything else: SATA ports, drive bays, M.2 slots, and whether a PCIe slot could take an HBA. All of it is on the spec sheet, and it ends most evaluations. A four-port board with two bays can run the docs-forge profile on a pair of disks and nothing more; the media-box profile wants a system disk plus at least two data disks and a parity disk, each on its own port. Low-profile slots in a small-form-factor case rule out most HBAs.
+
+Power is the real price. At around twelve cents per kilowatt-hour a machine that runs all day costs about a dollar a year for every watt it idles at. A 35 W desktop is $37 a year; a 10 W mini-PC is $10; a $25 salvage tower that idles at 35 W costs more in its first year of electricity than it did to buy. Vendors publish measured figures (Lenovo's IT Eco Declaration, Dell's Product Environmental Datasheet, the ENERGY STAR finder), and those beat any estimate. Score power against the role's duty cycle: a box that is off 23 hours a day costs a few dollars a year however thirsty it is awake, and off-with-wake-on-LAN draws under a watt.
+
+The NIC: one gigabit port is enough for everything in this guide, and an Intel chipset is the one with the fewest surprises. Out-of-band management (IPMI, Intel AMT) is convenient for a box in a closet, and AMT on old Intel boards needs firmware patched past the 2017 vulnerability before you enable it. Two and a half gigabit or ten is only worth paying for if your pool can feed it, which a few USB disks cannot.
+
+The CPU is the last question. Anything from the last decade with four cores runs every profile; transcoding video for remote playback is the one job that wants more, and a GPU or a modern iGPU covers it. RAM wants 16 GB as a floor and 32 GB if the download stack and the photo server are both on.
+
+
+
+## Evaluating a candidate
+
+URL: https://ww4.github.io/imperfect-homelab/hardware/evaluating-a-candidate/
+
+
+A used machine (a library sale, a decommissioned office PC, a hand-me-down) gets five stages, ordered so that the cheapest can end the evaluation. You decide most boxes at the desk, without powering them on. The output is a one-page card in the configuration repository, so the answer does not have to be re-derived when the box turns up in a closet again.
+
+Stage 0 is the desk pass, from the model number alone: look up the CPU family and TDP, RAM slots and maximum, storage ports and bays, PCIe slots by size, NIC chipset, out-of-band management, the vendor's idle-power figure, and the model's known problems (BIOS whitelists, a bad-capacitor era, a proprietary PSU connector). The intake line has to say the form factor, because one model number ships as a tower, a small-form-factor and a tiny with different bays and slots. Match the result against the roles you need; if none fits, stop here and strip it for RAM, drives and fans. Stage 1 is ten minutes with the side off: bulging capacitors, a missing heatsink, a PSU that does not match the board. Stage 2 is a bench boot from a USB stick with the probe script, which inventories everything and runs the gates unattended. Stage 3 is an overnight burn-in, only for a box you are adopting: memory, disks and thermals under load. Stage 4 writes the card: role, name, next steps, or pass.
+
+The reference machine's owner runs stages 0 and 4 through the agent and does 1 to 3 by hand; 2 and 3 are mostly waiting. The probe script and a sample card are in the configuration repository's `docs/hardware/`.
+
+
+# Install
+
+URL: https://ww4.github.io/imperfect-homelab/install/
+
+
+The install is an answers file, one `generate`, and one `nixos-anywhere` command. The answers file is where the decisions are: which modules, your domain, your disks, your pool. `generate` turns it into a private flake with every secret minted or supplied and encrypted. `nixos-anywhere` installs that flake onto a machine booted from the NixOS ISO, over SSH, and the first boot decrypts the secrets with the host key the generator made for it.
+
+This chapter describes that path as the library's own test runs it, in a virtual machine, for three canned profiles. Your run differs in the disk names and the domain.
+
+
+
+## The installer ISO
+
+URL: https://ww4.github.io/imperfect-homelab/install/the-installer-iso/
+
+
+The installer is the stock NixOS minimal ISO with `homelab-configure` on it, so the machine you are installing needs no URL and compiles nothing. Download the current image and its checksum:
+
+```sh
+base=https://homelab-installer.nyc3.cdn.digitaloceanspaces.com/iso
+name=$(curl -fsSL $base/latest.txt)
+curl -fLO $base/$name && curl -fLO $base/$name.sha256
+sha256sum -c $name.sha256
+```
+
+The image is about 1.5 GB. Write it to a USB stick of 4 GB or more with `dd if=$name of=/dev/sdX bs=4M status=progress` (the stick, not a partition; everything on it is erased) or with Etcher, boot the target from it, and the console prints the two commands to type. Wired network is automatic; for Wi-Fi, `wpa_cli` first. If you would rather use a stock NixOS ISO, `nix run 'git+https://git.rosemaryacres.com/ww4/homelab-modules.git?dir=configurator' -- tui` does the same thing after a compile of a few minutes.
+
+Each release of the image is named by date and library commit; `latest.txt` always names the newest, and the chapter's commands follow it.
+
+
+## The answers file
+
+URL: https://ww4.github.io/imperfect-homelab/install/the-answers-file/
+
+
+Start from one of the three profiles in the library's `configurator/profiles/` directory. `media-box.json` is the media server with the download stack and parity; `docs-forge.json` is the household office with single sign-on; `everything.json` is every module that needs no manual artifact. Copy one and replace every `REPLACE-…` placeholder: the system disk and data disks by their `/dev/disk/by-id/` names, and your SSH public key.
+
+The file has four parts. `host` names the machine, its time zone, the system disk (erased), the data disks (each becomes one filesystem at `/mnt/disks/<name>`) and your SSH keys. `modules` is the list of library modules to import; the generator adds anything a chosen module `requires`, and the foundation set (`system`, `boot`) is always present. `values` holds `homelab.*` options keyed by their full path: your domain, the admin user, the ACME email, the pool definition, the backup paths. `sops.adminRecipient` is your existing age public key, if you have one; leave it out and the generator makes a key and tells you where to move it.
+
+`homelab-configure schema --modules a,b,c` prints the question set for a module list: every option it reads with type, default and whether it is required, and every secret with its class. If any required option has no value, the generator rejects the answers and lists all of the missing ones at once. The foundation rule applies here: `backup` has to be in the list with `homelab.backup.paths` and `homelab.backup.local.repository` set, or the generator rejects the answers and says why; `monitoring` and `ntfy` are not required, but leaving them out produces a warning.
+
+
+
+## Generate
+
+URL: https://ww4.github.io/imperfect-homelab/install/generate/
+
+
+Secrets never go in the answers file. The ones only you can supply come in by `--secret homelab.acme.credentialsFile=@dns.env` (a file) or `=env:VAR`; the generator refuses to run without them and names the flag to pass. Everything else it mints.
+
+```sh
+homelab-configure generate --answers my.json --out ./my-homelab \
+  --secret homelab.acme.credentialsFile=@dns.env
+```
+
+What comes out is a flake you own. `flake.nix` pins nixpkgs to the rev the library was validated on and imports your modules one line each. `homelab-values.nix` holds every value and one sops declaration per secret. `hosts/<name>/` has the host file (your user, SSH, sops), the disko layout, and a placeholder `hardware.nix` the installer fills. `secrets/` holds the encrypted files, each readable by the host's key and by yours. `answers.json` is the copy a later reconfigure starts from. The generator then evaluates the whole system to prove it builds, and prints the DNS names the chosen modules claim.
+
+Two files need you before the first commit. `FIRST-LOGIN.md` holds every show-once value in plaintext: the admin's console password, the application admin passwords, the restic passphrase. Move them to your password manager and delete the file; it is git-ignored, but that is not storage. `keys/admin-age-key.txt`, if the generator made one, is the key that lets you edit secrets later; move it to `~/.config/sops/age/keys.txt` and delete it from the flake directory. Lose it and the host key, and the secrets are gone with them. Commit the rest; from here every change to the machine is a commit to this repository.
+
+
+
+## nixos-anywhere
+
+URL: https://ww4.github.io/imperfect-homelab/install/nixos-anywhere/
+
+
+Boot the target machine from the installer ISO (previous page) and make sure you can SSH to it as root (set a password at the console with `passwd`, or the ISO's documented key method). From the flake directory, the command the generator printed:
+
+```sh
+nixos-anywhere --flake .#<host> --extra-files ./extra-files \
+  --generate-hardware-config nixos-generate-config ./hosts/<host>/hardware.nix \
+  root@<target-ip>
+```
+
+It copies the installer closure to the target, runs disko to partition the system disk and the data disks (erasing them), writes `hardware.nix` from what it finds, runs `nixos-install`, and copies `extra-files/` into the new root so the pre-generated SSH host key is in place before the first boot. That key is why the first activation can decrypt your secrets. Then it reboots the target. Commit `hardware.nix` afterwards; it is the one file in the flake the machine wrote.
+
+The library's own test does exactly this in a virtual machine for each profile: generate, `nixos-anywhere --vm-test`, and a check that the pool mounted after boot. Its first runs found two bugs: an ESP mounted where the boot module did not expect it, and the pool mounting before its member disks.
+
+
+
+## Later: add or remove a module
+
+URL: https://ww4.github.io/imperfect-homelab/install/later-add-or-remove/
+
+
+Run `generate` again on the same directory with `--add paperless`, `--remove glances`, or `--set homelab.backup.keep.daily=14`, and it starts from the recorded answers. It keeps existing secrets rather than minting them again; your keys and console password stay; it leaves the real `hardware.nix` alone. `FIRST-LOGIN.md` appears only when a newly added module minted something. The next step it prints is a rebuild.
+
+The run checks removals. A module another chosen module requires stays, and the run says so. It refuses to remove the foundation modules. A removed service's state under `/var/lib` and its secret file stay where they are until you delete them, which the run also says.
+
+
+
+# Day two
+
+URL: https://ww4.github.io/imperfect-homelab/day-two/
+
+
+The machine is up. Day two is six checks, in this order: the DNS names and the gate, the first logins, a restore you have run, the phone, and the first alert you cause on purpose. The restore drill is the one people skip, so it has the longest page.
+
+
+
+## DNS and the gate
+
+URL: https://ww4.github.io/imperfect-homelab/day-two/dns-and-the-gate/
+
+
+The generator printed the names the chosen modules claim (`jellyfin.<domain>`, `grafana.<domain>`, and so on). Create one record per name pointing at the machine's tailnet address, or its LAN address if you will only ever use it at home. ACME issues a certificate per name over DNS-01 on the first boot, which needs the DNS API token you supplied and nothing inbound. Until ACME issues a certificate, nginx serves a self-signed placeholder, so a browser warning in the first minutes is expected and a browser warning an hour later is not.
+
+Then prove the gate from outside it; that is the one test the Principles chapter cannot run for you. From a device not on your LAN and not on your tailnet (a phone on mobile data will do), try your connection's public IPv6 address, if it has one, with a `Host` header for one of your vhosts. The answer must be a 403 from nginx, not a login page.
+
+
+
+## First logins
+
+URL: https://ww4.github.io/imperfect-homelab/day-two/first-logins/
+
+
+Log in to each application once with the admin password from `FIRST-LOGIN.md`. The ones with single sign-on (Grafana, Forgejo, Nextcloud, Paperless, Immich, when `authelia` is among your modules) will show an SSO button; the admin account you log in with first is the local one, and the application creates the SSO account on first use. Enrol your authenticator in Authelia before anything else, because the forward-auth gate in front of the services without their own login needs it. Two things you must set by hand, because the configuration cannot: the download client's credentials inside Sonarr and Radarr (each app keeps them in its own database), and the first `snapraid sync` if you chose parity.
+
+
+
+## Prove a restore
+
+URL: https://ww4.github.io/imperfect-homelab/day-two/prove-a-restore/
+
+
+The first backup runs at 02:30 the night after install. The next morning, before anything else, restore from it.
+
+List the snapshots: `restic -r /mnt/<pool>/restic --password-file /run/secrets/backup-password snapshots` as root. Pick one small path that is in `homelab.backup.paths` and restore it somewhere harmless: `restic -r … restore latest --target /tmp/restore-test --include /var/lib/<something>`. Compare it with the live copy. Then do the same against the offsite repository if you configured one, with its environment file, because an offsite repository you have never read from is the one that will be unreadable when the house is gone. Write down the two commands somewhere that survives the machine, next to the restic passphrase and the admin age key.
+
+The library's `backup` module runs an integrity check after every job and publishes a failed unit if it fails, which the monitoring stack turns into an alert. That proves the repository is consistent. It does not prove you can restore, and only the drill does.
+
+
+
+## The phone
+
+URL: https://ww4.github.io/imperfect-homelab/day-two/the-phone/
+
+
+The `ntfy` module provisioned a subscriber account for you; its password is in `FIRST-LOGIN.md`. Install the ntfy app, point it at your ntfy vhost, log in, and subscribe to the alerts topic. Then cause one alert on purpose: stop a service the monitoring stack watches (`systemctl stop uptime-kuma`, say) and wait for the failed-unit rule. The notification should arrive within the rule's evaluation window with the unit name and the journal command to run. Start the service again and confirm the resolved notification follows.
+
+`homelab.quietHours` sets quiet hours for both Grafana and Alertmanager. If the alert you caused came through at an hour it should not have, change the window in the values file rather than in either UI.
+
+
+# Services
+
+URL: https://ww4.github.io/imperfect-homelab/services/
+
+
+One page per module, generated from the library's catalog and option
+declarations at the pinned commit. The catalog is checked against the
+library's exported modules at evaluation time, and this section is checked
+against the catalog, so what you read here is what the code does.
+
+| Module | Purpose | Enable | Serves |
+|---|---|---|---|
+| [acme](@/services/acme.md) | Let's Encrypt via DNS-01, the TLS default for every vhost. | import |  |
+| [alertmanager-ntfy](@/services/alertmanager-ntfy.md) | Alertmanager webhook → ntfy phone notifications. | import |  |
+| [arr](@/services/arr.md) | Prowlarr + Sonarr + Radarr + Jellyseerr + qBittorrent inside a Gluetun VPN namespace. | import | `prowlarr.<domain>`, `sonarr.<domain>`, `radarr.<domain>`, `requests.<domain>`, `qbittorrent.<domain>` |
+| [arr-missing-sweep](@/services/arr-missing-sweep.md) | Weekly search for what is still missing in Sonarr/Radarr, with a metadata-mismatch skip rule. | import |  |
+| [audiobookshelf](@/services/audiobookshelf.md) | Audiobookshelf audiobook / podcast server. | import | `abs.<domain>` |
+| [aurral](@/services/aurral.md) | Aurral music discovery/request UI in front of Lidarr. | import | `music.<domain>` |
+| [authelia](@/services/authelia.md) | Authelia SSO: forward-auth gateway + OIDC provider. | `homelab.authelia.enable` | `auth.<domain>` |
+| [boot](@/services/boot.md) | Bootloader and power behaviour for an always-on server. | import |  |
+| [decluttarr](@/services/decluttarr.md) | Reap stalled/failed downloads from Sonarr/Radarr and re-search. | import |  |
+| [deploy-drift-watch](@/services/deploy-drift-watch.md) | Alert when the forge has commits the box never deployed. | `homelab.deployDriftWatch.enable` |  |
+| [disk-io-watch](@/services/disk-io-watch.md) | Count kernel I/O errors and USB resets per device; alert on a device that starts failing. | import |  |
+| [drive-temps](@/services/drive-temps.md) | Drive temperature + SMART-health exporter for spinning disks. | import |  |
+| [forgejo](@/services/forgejo.md) | Forgejo git forge. | import | `git.<domain>` |
+| [glances](@/services/glances.md) | Glances system monitor with a REST/web API. | import | `glances.<domain>` |
+| [immich](@/services/immich.md) | Immich photo & video management. | import | `photos.<domain>` |
+| [jellyfin](@/services/jellyfin.md) | Jellyfin media server. | import | `jellyfin.<domain>` |
+| [lazylibrarian](@/services/lazylibrarian.md) | LazyLibrarian ebook/audiobook automation on the shared /data tree. | import | `lazylibrarian.<domain>` |
+| [lidarr](@/services/lidarr.md) | Lidarr music manager on the shared /data tree. | import | `lidarr.<domain>` |
+| [mergerfs-pools](@/services/mergerfs-pools.md) | Assemble homelab.pools into mounted MergerFS pools. | import |  |
+| [meshagent](@/services/meshagent.md) | MeshCentral MeshAgent so a MeshCentral server can manage this host. | import |  |
+| [metube](@/services/metube.md) | MeTube web GUI for yt-dlp one-off downloads. | import | `metube.<domain>` |
+| [mirror-drift-watch](@/services/mirror-drift-watch.md) | Alert when a git mirror stops tracking its source. | import |  |
+| [monitoring](@/services/monitoring.md) | Prometheus + Grafana + Alertmanager with alerting provisioned declaratively. | `homelab.monitoring.enable` | `grafana.<domain>`, `prometheus.<domain>` |
+| [nextcloud](@/services/nextcloud.md) | Nextcloud with Postgres + Redis, curated apps, optional OIDC SSO. | import | `cloud.<domain>` |
+| [nginx-access](@/services/nginx-access.md) | nginx source-access gate: allow/deny inherited by every vhost from one place. | import |  |
+| [nginx-log-paths-check](@/services/nginx-log-paths-check.md) | Build-time guard: nginx may only be told to write logs where it can write. | import |  |
+| [ntfy](@/services/ntfy.md) | Self-hosted ntfy: write-only anonymous access, self-provisioning subscriber. | import | `ntfy.<domain>` |
+| [paperless](@/services/paperless.md) | Paperless-ngx OCR-indexed document archive. | import | `paperless.<domain>` |
+| [pinchflat](@/services/pinchflat.md) | PinchFlat YouTube archiver. | import | `pinchflat.<domain>` |
+| [pool-autoremount](@/services/pool-autoremount.md) | Self-healing remount for pool members that drop off the bus; detects zombie mounts with real I/O. | import |  |
+| [qbit-vpn-watchdog](@/services/qbit-vpn-watchdog.md) | Self-heal the gluetun-IP-change qBittorrent wedge. | import |  |
+| [recyclarr](@/services/recyclarr.md) | Sync TRaSH-Guides quality profiles into Sonarr & Radarr daily (bring your own profile YAML). | import |  |
+| [remote-desktop](@/services/remote-desktop.md) | xrdp + XFCE remote desktop, Tailscale-only. | import |  |
+| [silverbullet](@/services/silverbullet.md) | SilverBullet markdown notes/tasks, optionally a two-writer space. | import | `notes.<domain>` |
+| [smart-dump](@/services/smart-dump.md) | Dump the full SMART table for every drive to world-readable files. | import |  |
+| [system](@/services/system.md) | Locale, Nix settings, nixpkgs config for an always-on server. | import |  |
+| [tandoor](@/services/tandoor.md) | Tandoor Recipes. | import | `recipes.<domain>` |
+| [unpackerr](@/services/unpackerr.md) | Extract RAR'd releases in place so the *arrs can import them; seeds untouched. | import |  |
+| [uptime-kuma](@/services/uptime-kuma.md) | Uptime Kuma status wall-board. | import | `uptime.<domain>` |
+| [vaultwarden](@/services/vaultwarden.md) | Vaultwarden (Bitwarden-compatible) password server. | import | `<homelab.vaultwarden.subdomain>.<domain>` |
+
+
+## acme
+
+URL: https://ww4.github.io/imperfect-homelab/services/acme/
+
+
+Let's Encrypt via DNS-01, the TLS default for every vhost.
+
+## Enabling it
+
+Importing `nixosModules.acme` enables it; there is no switch.
+
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.acme.credentialsFile` | `<DNS provider API credential, lego variable name>` | `root` | supply |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.acme.credentialsFile`
+
+`string` — **required**
+
+environmentFile with the DNS provider API credential (a sops secret).
+
+#### `homelab.acme.dnsProvider`
+
+`string` — default `"cloudflare"`
+
+lego DNS provider name for DNS-01 challenges.
+
+#### `homelab.acme.email`
+
+`string` — **required**
+
+Contact email for Let's Encrypt.
+
+
+
+## alertmanager-ntfy
+
+URL: https://ww4.github.io/imperfect-homelab/services/alertmanager-ntfy/
+
+
+Alertmanager webhook → ntfy phone notifications.
+
+## Enabling it
+
+Importing `nixosModules.alertmanager-ntfy` enables it; there is no switch.
+
+**Requires:** [monitoring](@/services/monitoring.md), [ntfy](@/services/ntfy.md)
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+#### `homelab.ntfy.topic`
+
+`string` — default `"alerts"`
+
+The alert topic name (subscriber access is granted on it).
+
+
+
+## arr
+
+URL: https://ww4.github.io/imperfect-homelab/services/arr/
+
+
+Prowlarr + Sonarr + Radarr + Jellyseerr + qBittorrent inside a Gluetun VPN namespace.
+
+## Enabling it
+
+Importing `nixosModules.arr` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `prowlarr.<homelab.domain>`, `sonarr.<homelab.domain>`, `radarr.<homelab.domain>`, `requests.<homelab.domain>`, `qbittorrent.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.arrStack.vpnEnvFile` | `WIREGUARD_PRIVATE_KEY`, `WIREGUARD_PRESHARED_KEY`, `WIREGUARD_ADDRESSES`, `SERVER_COUNTRIES`, `FIREWALL_VPN_INPUT_PORTS (optional)` | `root` | supply |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.arrStack.group`
+
+`string` — default `"users"`
+
+Host group owning the stack's directories (matches pgid).
+
+#### `homelab.arrStack.keepersMovies`
+
+`null or string` — default `null`
+
+Optional long-term-keeper library mounted at /keepers/movies — add it as a second Radarr root folder and promote via Edit → Root Folder; the *arr moves the file + updates its DB. 
+
+#### `homelab.arrStack.keepersTv`
+
+`null or string` — default `null`
+
+Optional keeper library mounted at /keepers/tv (Sonarr twin of keepersMovies).
+
+#### `homelab.arrStack.owner`
+
+`string` — **required**
+
+Host user owning the stack's directories (matches puid).
+
+#### `homelab.arrStack.pgid`
+
+`string` — default `"100"`
+
+gid the stack's containers run as.
+
+#### `homelab.arrStack.puid`
+
+`string` — default `"1000"`
+
+uid the stack's containers run as.
+
+#### `homelab.arrStack.root`
+
+`string` — **required** — example `"/mnt/media/arr"`
+
+The shared /data tree (downloads + media subdirs).
+
+#### `homelab.arrStack.scratchDir`
+
+`null or string` — default `null` — example `"/mnt/scratch/qbittorrent-incomplete"`
+
+Incomplete-download dir on a SEPARATE filesystem (spares the pool's IO; the client copies once on completion). null = incomplete stays inside the /data tree. 
+
+#### `homelab.arrStack.vpnEnvFile`
+
+`string` — **required**
+
+environmentFile with the WireGuard credentials for gluetun (WIREGUARD_PRIVATE_KEY / _PRESHARED_KEY / _ADDRESSES, SERVER_COUNTRIES, optionally FIREWALL_VPN_INPUT_PORTS). Read by docker --env-file as root; root:0400 is fine. 
+
+#### `homelab.arrStack.vpnProvider`
+
+`string` — **required** — example `"mullvad"`
+
+gluetun VPN_SERVICE_PROVIDER for the download client's tunnel.
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+
+
+## arr-missing-sweep
+
+URL: https://ww4.github.io/imperfect-homelab/services/arr-missing-sweep/
+
+
+Weekly search for what is still missing in Sonarr/Radarr, with a metadata-mismatch skip rule.
+
+## Enabling it
+
+Importing `nixosModules.arr-missing-sweep` enables it; there is no switch.
+
+**Requires:** [arr](@/services/arr.md)
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.arrMissingSweep.apiEnvFile` | `SONARR_API_KEY`, `RADARR_API_KEY` | `<homelab.arrMissingSweep.user>` | first-boot |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.arrMissingSweep.apiEnvFile`
+
+`string` — **required**
+
+Shell-sourceable file exporting SONARR_API_KEY and RADARR_API_KEY (a sops secret owned by `user`). 
+
+#### `homelab.arrMissingSweep.user`
+
+`string` — default `"root"`
+
+User the weekly *arr missing-sweep runs as. Set it to whichever user owns the secret behind apiEnvFile. 
+
+#### `homelab.ntfy.url`
+
+`string` — default `"http://localhost:8090/alerts"`
+
+Full URL (server + topic) that library modules POST notifications to, in ntfy.sh format. Point it at your own ntfy instance/topic. 
+
+
+
+## audiobookshelf
+
+URL: https://ww4.github.io/imperfect-homelab/services/audiobookshelf/
+
+
+Audiobookshelf audiobook / podcast server.
+
+## Enabling it
+
+Importing `nixosModules.audiobookshelf` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `abs.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+
+
+## aurral
+
+URL: https://ww4.github.io/imperfect-homelab/services/aurral/
+
+
+Aurral music discovery/request UI in front of Lidarr.
+
+## Enabling it
+
+Importing `nixosModules.aurral` enables it; there is no switch.
+
+**Requires:** [lidarr](@/services/lidarr.md)
+**Serves:** `music.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.aurral.envFile` | `LIDARR_API_KEY` | `root` | first-boot |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.arrStack.group`
+
+`string` — default `"users"`
+
+Host group owning the stack's directories (matches pgid).
+
+#### `homelab.arrStack.keepersMovies`
+
+`null or string` — default `null`
+
+Optional long-term-keeper library mounted at /keepers/movies — add it as a second Radarr root folder and promote via Edit → Root Folder; the *arr moves the file + updates its DB. 
+
+#### `homelab.arrStack.keepersTv`
+
+`null or string` — default `null`
+
+Optional keeper library mounted at /keepers/tv (Sonarr twin of keepersMovies).
+
+#### `homelab.arrStack.owner`
+
+`string` — **required**
+
+Host user owning the stack's directories (matches puid).
+
+#### `homelab.arrStack.pgid`
+
+`string` — default `"100"`
+
+gid the stack's containers run as.
+
+#### `homelab.arrStack.puid`
+
+`string` — default `"1000"`
+
+uid the stack's containers run as.
+
+#### `homelab.arrStack.root`
+
+`string` — **required** — example `"/mnt/media/arr"`
+
+The shared /data tree (downloads + media subdirs).
+
+#### `homelab.arrStack.scratchDir`
+
+`null or string` — default `null` — example `"/mnt/scratch/qbittorrent-incomplete"`
+
+Incomplete-download dir on a SEPARATE filesystem (spares the pool's IO; the client copies once on completion). null = incomplete stays inside the /data tree. 
+
+#### `homelab.arrStack.vpnEnvFile`
+
+`string` — **required**
+
+environmentFile with the WireGuard credentials for gluetun (WIREGUARD_PRIVATE_KEY / _PRESHARED_KEY / _ADDRESSES, SERVER_COUNTRIES, optionally FIREWALL_VPN_INPUT_PORTS). Read by docker --env-file as root; root:0400 is fine. 
+
+#### `homelab.arrStack.vpnProvider`
+
+`string` — **required** — example `"mullvad"`
+
+gluetun VPN_SERVICE_PROVIDER for the download client's tunnel.
+
+#### `homelab.aurral.envFile`
+
+`string` — **required**
+
+environmentFile with LIDARR_API_KEY.
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+
+
+## authelia
+
+URL: https://ww4.github.io/imperfect-homelab/services/authelia/
+
+
+Authelia SSO: forward-auth gateway + OIDC provider.
+
+## Enabling it
+
+Import `nixosModules.authelia` and set `homelab.authelia.enable = true`.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `auth.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.adminDisplayName`
+
+`string` — default `"Admin"`
+
+Display name for the administrator.
+
+#### `homelab.adminUser`
+
+`string` — default `"admin"`
+
+Username of the human administrator (SSO seed user, etc.).
+
+#### `homelab.authelia.displayName`
+
+`string` — default `"Homelab"`
+
+WebAuthn display name shown during passkey enrolment.
+
+#### `homelab.authelia.enable`
+
+`boolean` — default `false` — example `true`
+
+Whether to enable Authelia forward-auth + OIDC SSO.
+
+#### `homelab.authelia.oidcClients`
+
+`list of (attribute set)` — default `[ ]`
+
+Authelia OIDC client definitions, passed through verbatim to identity_providers.oidc.clients. Client secrets in these attrsets must be one-way HASHES (authelia crypto hash generate pbkdf2) — the plaintext belongs in the consuming app's sops secret. 
+
+#### `homelab.authelia.protectedVhosts`
+
+`list of string` — default `[ ]` — example `[   "prometheus"   "glances" ]`
+
+Bare subdomain names to put behind forward-auth (two-factor). ONE list drives BOTH the nginx auth_request wiring and the Authelia access-control rule — they must always agree, and making them two separate edits is exactly how a vhost ends up with the auth hook but no rule (result: a bare 403 instead of a login redirect). 
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+
+
+## boot
+
+URL: https://ww4.github.io/imperfect-homelab/services/boot/
+
+
+Bootloader and power behaviour for an always-on server.
+
+## Enabling it
+
+Importing `nixosModules.boot` enables it; there is no switch.
+
+
+## Secrets
+
+None.
+
+## Options
+
+This module reads no `homelab.*` options.
+
+
+## decluttarr
+
+URL: https://ww4.github.io/imperfect-homelab/services/decluttarr/
+
+
+Reap stalled/failed downloads from Sonarr/Radarr and re-search.
+
+## Enabling it
+
+Importing `nixosModules.decluttarr` enables it; there is no switch.
+
+**Requires:** [arr](@/services/arr.md)
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.decluttarr.envFile` | `SONARR_API_KEY`, `RADARR_API_KEY` | `root` | first-boot |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.decluttarr.envFile`
+
+`string` — **required**
+
+environmentFile with SONARR_API_KEY and RADARR_API_KEY.
+
+
+
+## deploy-drift-watch
+
+URL: https://ww4.github.io/imperfect-homelab/services/deploy-drift-watch/
+
+
+Alert when the forge has commits the box never deployed.
+
+## Enabling it
+
+Import `nixosModules.deploy-drift-watch` and set `homelab.deployDriftWatch.enable = true`.
+
+**Requires:** [monitoring](@/services/monitoring.md)
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.deployDriftWatch.branch`
+
+`string` — default `"main"`
+
+Branch the applier deploys.
+
+#### `homelab.deployDriftWatch.cominMetricsUrl`
+
+`string` — default `"http://127.0.0.1:4243/metrics"`
+
+comin's metrics endpoint (source of the deployed commit id).
+
+#### `homelab.deployDriftWatch.enable`
+
+`boolean` — default `false` — example `true`
+
+Whether to enable the forge-vs-deployed drift watcher.
+
+#### `homelab.deployDriftWatch.repoUrl`
+
+`string` — **required** — example `"https://git.example.com/me/flakes.git"`
+
+The flake repo the GitOps applier deploys from.
+
+
+
+## disk-io-watch
+
+URL: https://ww4.github.io/imperfect-homelab/services/disk-io-watch/
+
+
+Count kernel I/O errors and USB resets per device; alert on a device that starts failing.
+
+## Enabling it
+
+Importing `nixosModules.disk-io-watch` enables it; there is no switch.
+
+**Requires:** [monitoring](@/services/monitoring.md)
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.ntfy.url`
+
+`string` — default `"http://localhost:8090/alerts"`
+
+Full URL (server + topic) that library modules POST notifications to, in ntfy.sh format. Point it at your own ntfy instance/topic. 
+
+#### `homelab.quietHours.end`
+
+`integer between 0 and 23 (both inclusive)` — default `7`
+
+Hour (local time) when non-critical notifications resume.
+
+#### `homelab.quietHours.start`
+
+`integer between 0 and 23 (both inclusive)` — default `22`
+
+Hour (local time) when non-critical notifications stop.
+
+
+
+## drive-temps
+
+URL: https://ww4.github.io/imperfect-homelab/services/drive-temps/
+
+
+Drive temperature + SMART-health exporter for spinning disks.
+
+## Enabling it
+
+Importing `nixosModules.drive-temps` enables it; there is no switch.
+
+**Requires:** [monitoring](@/services/monitoring.md)
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.driveTemps.metricPrefix`
+
+`string` — default `"drive_"`
+
+Prefix for the exported metric names (&lt;prefix&gt;temp_celsius etc.). Keep whatever you already dashboard/alert on if migrating. 
+
+#### `homelab.driveTemps.spindownDriveIds`
+
+`list of string` — default `[ ]`
+
+/dev/disk/by-id names of drives that are allowed to spin down AND whose USB bridges misreport power state (so `smartctl -n standby` would wake them). These are SMART-read only while doing block I/O; an idle drive makes ~no heat, so there's nothing to monitor anyway. 
+
+
+
+## forgejo
+
+URL: https://ww4.github.io/imperfect-homelab/services/forgejo/
+
+
+Forgejo git forge.
+
+## Enabling it
+
+Importing `nixosModules.forgejo` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `git.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.forgejo.oidcSecretFile` | `<OIDC client secret, plaintext>` | `forgejo` | generate |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+#### `homelab.forgejo.oidcSecretFile`
+
+`null or string` — default `null`
+
+OIDC client secret path (owner = forgejo); null = no SSO wiring.
+
+
+
+## glances
+
+URL: https://ww4.github.io/imperfect-homelab/services/glances/
+
+
+Glances system monitor with a REST/web API.
+
+## Enabling it
+
+Importing `nixosModules.glances` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `glances.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+
+
+## immich
+
+URL: https://ww4.github.io/imperfect-homelab/services/immich/
+
+
+Immich photo & video management.
+
+## Enabling it
+
+Importing `nixosModules.immich` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `photos.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+#### `homelab.immich.mediaLocation`
+
+`string` — **required** — example `"/mnt/media/immich"`
+
+Where Immich stores photo/video data.
+
+#### `homelab.immich.mlUrl`
+
+`null or string` — default `null` — example `"http://ml-host:3003"`
+
+Remote immich machine-learning endpoint; null = local ML.
+
+
+
+## jellyfin
+
+URL: https://ww4.github.io/imperfect-homelab/services/jellyfin/
+
+
+Jellyfin media server.
+
+## Enabling it
+
+Importing `nixosModules.jellyfin` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `jellyfin.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+
+
+## lazylibrarian
+
+URL: https://ww4.github.io/imperfect-homelab/services/lazylibrarian/
+
+
+LazyLibrarian ebook/audiobook automation on the shared /data tree.
+
+## Enabling it
+
+Importing `nixosModules.lazylibrarian` enables it; there is no switch.
+
+**Requires:** [arr](@/services/arr.md)
+**Serves:** `lazylibrarian.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.arrStack.group`
+
+`string` — default `"users"`
+
+Host group owning the stack's directories (matches pgid).
+
+#### `homelab.arrStack.keepersMovies`
+
+`null or string` — default `null`
+
+Optional long-term-keeper library mounted at /keepers/movies — add it as a second Radarr root folder and promote via Edit → Root Folder; the *arr moves the file + updates its DB. 
+
+#### `homelab.arrStack.keepersTv`
+
+`null or string` — default `null`
+
+Optional keeper library mounted at /keepers/tv (Sonarr twin of keepersMovies).
+
+#### `homelab.arrStack.owner`
+
+`string` — **required**
+
+Host user owning the stack's directories (matches puid).
+
+#### `homelab.arrStack.pgid`
+
+`string` — default `"100"`
+
+gid the stack's containers run as.
+
+#### `homelab.arrStack.puid`
+
+`string` — default `"1000"`
+
+uid the stack's containers run as.
+
+#### `homelab.arrStack.root`
+
+`string` — **required** — example `"/mnt/media/arr"`
+
+The shared /data tree (downloads + media subdirs).
+
+#### `homelab.arrStack.scratchDir`
+
+`null or string` — default `null` — example `"/mnt/scratch/qbittorrent-incomplete"`
+
+Incomplete-download dir on a SEPARATE filesystem (spares the pool's IO; the client copies once on completion). null = incomplete stays inside the /data tree. 
+
+#### `homelab.arrStack.vpnEnvFile`
+
+`string` — **required**
+
+environmentFile with the WireGuard credentials for gluetun (WIREGUARD_PRIVATE_KEY / _PRESHARED_KEY / _ADDRESSES, SERVER_COUNTRIES, optionally FIREWALL_VPN_INPUT_PORTS). Read by docker --env-file as root; root:0400 is fine. 
+
+#### `homelab.arrStack.vpnProvider`
+
+`string` — **required** — example `"mullvad"`
+
+gluetun VPN_SERVICE_PROVIDER for the download client's tunnel.
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+
+
+## lidarr
+
+URL: https://ww4.github.io/imperfect-homelab/services/lidarr/
+
+
+Lidarr music manager on the shared /data tree.
+
+## Enabling it
+
+Importing `nixosModules.lidarr` enables it; there is no switch.
+
+**Requires:** [arr](@/services/arr.md)
+**Serves:** `lidarr.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.arrStack.group`
+
+`string` — default `"users"`
+
+Host group owning the stack's directories (matches pgid).
+
+#### `homelab.arrStack.keepersMovies`
+
+`null or string` — default `null`
+
+Optional long-term-keeper library mounted at /keepers/movies — add it as a second Radarr root folder and promote via Edit → Root Folder; the *arr moves the file + updates its DB. 
+
+#### `homelab.arrStack.keepersTv`
+
+`null or string` — default `null`
+
+Optional keeper library mounted at /keepers/tv (Sonarr twin of keepersMovies).
+
+#### `homelab.arrStack.owner`
+
+`string` — **required**
+
+Host user owning the stack's directories (matches puid).
+
+#### `homelab.arrStack.pgid`
+
+`string` — default `"100"`
+
+gid the stack's containers run as.
+
+#### `homelab.arrStack.puid`
+
+`string` — default `"1000"`
+
+uid the stack's containers run as.
+
+#### `homelab.arrStack.root`
+
+`string` — **required** — example `"/mnt/media/arr"`
+
+The shared /data tree (downloads + media subdirs).
+
+#### `homelab.arrStack.scratchDir`
+
+`null or string` — default `null` — example `"/mnt/scratch/qbittorrent-incomplete"`
+
+Incomplete-download dir on a SEPARATE filesystem (spares the pool's IO; the client copies once on completion). null = incomplete stays inside the /data tree. 
+
+#### `homelab.arrStack.vpnEnvFile`
+
+`string` — **required**
+
+environmentFile with the WireGuard credentials for gluetun (WIREGUARD_PRIVATE_KEY / _PRESHARED_KEY / _ADDRESSES, SERVER_COUNTRIES, optionally FIREWALL_VPN_INPUT_PORTS). Read by docker --env-file as root; root:0400 is fine. 
+
+#### `homelab.arrStack.vpnProvider`
+
+`string` — **required** — example `"mullvad"`
+
+gluetun VPN_SERVICE_PROVIDER for the download client's tunnel.
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+
+
+## mergerfs-pools
+
+URL: https://ww4.github.io/imperfect-homelab/services/mergerfs-pools/
+
+
+Assemble homelab.pools into mounted MergerFS pools.
+
+## Enabling it
+
+Importing `nixosModules.mergerfs-pools` enables it; there is no switch.
+
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.pools`
+
+`attribute set of (submodule)` — default `{ }`
+
+MergerFS pools to assemble. See mergerfs-pools.nix.
+
+#### `homelab.pools.<name>.branches`
+
+`string` — **required** — example `"/mnt/disks/media-*"`
+
+Glob of member-branch mountpoints (mergerfs device string).
+
+#### `homelab.pools.<name>.createPolicy`
+
+`one of "mfs", "epmfs", "ff", "lfs", "rand"` — default `"mfs"`
+
+Where NEW files land. `mfs` (most free space) balances writes. `epmfs` (existing path, most free space) keeps new files on the branch that already holds their parent directory — required if anything hardlinks across the tree (e.g. rsync --link-dest), because mergerfs hardlinks only function within a single branch. 
+
+#### `homelab.pools.<name>.fsname`
+
+`null or string` — default `null`
+
+Optional fsname= shown in df/mount output.
+
+#### `homelab.pools.<name>.memberDir`
+
+`null or string` — default `null` — example `"/mnt/disks"`
+
+Directory the member branches mount under (for the auto-remounter).
+
+#### `homelab.pools.<name>.members`
+
+`list of string` — default `[ ]` — example `[   "D1"   "D2" ]`
+
+Member subdirectory names under memberDir (for the auto-remounter).
+
+#### `homelab.pools.<name>.minFreeSpace`
+
+`null or string` — default `null` — example `"100G"`
+
+Reserve headroom: mergerfs won't place a NEW file on a branch with less than this free. Must exceed your largest single file so a create never hits ENOSPC mid-write — the 4 GiB default once let a mirror job fill a branch until a large temp file no longer fit. Hardlinks and growth of existing files are unaffected (link() co-locates with its target regardless). 
+
+#### `homelab.pools.<name>.mountpoint`
+
+`string` — **required** — example `"/mnt/media"`
+
+Where the pooled filesystem mounts.
+
+
+
+## meshagent
+
+URL: https://ww4.github.io/imperfect-homelab/services/meshagent/
+
+
+MeshCentral MeshAgent so a MeshCentral server can manage this host.
+
+## Enabling it
+
+Importing `nixosModules.meshagent` enables it; there is no switch.
+
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.meshagent.mshFile` | `<server-generated .msh identity file>` | `root` | supply |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.meshagent.mshFile`
+
+`string` — **required**
+
+The server-generated .msh identity file (server URL + MeshID + cert hash; enrollment-capable, so a sops secret). Read by root at start. 
+
+
+
+## metube
+
+URL: https://ww4.github.io/imperfect-homelab/services/metube/
+
+
+MeTube web GUI for yt-dlp one-off downloads.
+
+## Enabling it
+
+Importing `nixosModules.metube` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `metube.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+#### `homelab.metube.downloadDir`
+
+`string` — **required** — example `"/mnt/media/youtube/metube"`
+
+Host directory downloads land in (bind-mounted into the container).
+
+#### `homelab.metube.mediaGid`
+
+`signed integer` — default `984`
+
+gid of the `media` group, hardcoded for the same eval-time-null reason as uid: config.users.groups.media.gid is null at eval when the group was created without an explicit gid. 
+
+#### `homelab.metube.uid`
+
+`signed integer` — default `971`
+
+Fixed uid for the metube user. ⚠️ Must be EXPLICIT: an auto-allocated system uid is null at eval time, which makes the container's UID env empty and the container fall back to uid 1000. Also note NixOS refuses to change an existing user's uid — if the user already exists, pin to whatever it was actually allocated. 
+
+
+
+## mirror-drift-watch
+
+URL: https://ww4.github.io/imperfect-homelab/services/mirror-drift-watch/
+
+
+Alert when a git mirror stops tracking its source.
+
+## Enabling it
+
+Importing `nixosModules.mirror-drift-watch` enables it; there is no switch.
+
+**Requires:** [monitoring](@/services/monitoring.md)
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.mirrorDriftWatch.pairs`
+
+`list of (submodule)` — default `[ ]`
+
+Source/mirror repo pairs to watch (anonymous read — public repos only).
+
+#### `homelab.mirrorDriftWatch.pairs.*.branch`
+
+`string` — default `"main"`
+
+Branch to compare.
+
+#### `homelab.mirrorDriftWatch.pairs.*.mirror`
+
+`string` — **required**
+
+Mirror clone URL.
+
+#### `homelab.mirrorDriftWatch.pairs.*.name`
+
+`string` — **required**
+
+Metric label.
+
+#### `homelab.mirrorDriftWatch.pairs.*.source`
+
+`string` — **required**
+
+Source-of-truth clone URL.
+
+
+
+## monitoring
+
+URL: https://ww4.github.io/imperfect-homelab/services/monitoring/
+
+
+Prometheus + Grafana + Alertmanager with alerting provisioned declaratively.
+
+## Enabling it
+
+Import `nixosModules.monitoring` and set `homelab.monitoring.enable = true`.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `grafana.<homelab.domain>`, `prometheus.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.monitoring.grafanaOidcSecretFile` | `<OIDC client secret, plaintext>` | `grafana` | generate |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+#### `homelab.monitoring.alertWebhookUrl`
+
+`string` — default `"http://127.0.0.1:9095/alert"`
+
+Webhook that both Alertmanager and Grafana alerting deliver to — typically a small local shim that forwards to ntfy. 
+
+#### `homelab.monitoring.enable`
+
+`boolean` — default `false` — example `true`
+
+Whether to enable the Prometheus + Grafana + Alertmanager stack.
+
+#### `homelab.monitoring.extraAlertRuleFiles`
+
+`list of absolute path` — default `[ ]`
+
+Extra Grafana alert-rule files (provisioning format, {apiVersion, groups}) merged after the library's generic rules. Site-specific rules — anything whose expressions reference your own exporters — live in your flake and merge in here. 
+
+#### `homelab.monitoring.extraAlertmanagerRoutes`
+
+`list of (attribute set)` — default `[ ]`
+
+Additional Alertmanager routes (matched before the catch-all). The "nights" mute time interval is available to reference. 
+
+#### `homelab.monitoring.extraDatasources`
+
+`list of (attribute set)` — default `[ ]`
+
+Additional Grafana datasources (site-specific).
+
+#### `homelab.monitoring.extraPlugins`
+
+`list of package` — default `[ ]`
+
+Additional declarative Grafana plugins.
+
+#### `homelab.monitoring.extraScrapeConfigs`
+
+`list of (attribute set)` — default `[ ]`
+
+Additional Prometheus scrape configs (site-specific exporters).
+
+#### `homelab.monitoring.grafanaOidcSecretFile`
+
+`null or string` — default `null`
+
+Path to the plaintext OIDC client secret for Grafana's generic_oauth (e.g. a sops secret path). When set, a "Sign in with SSO" button is added, pointing at auth.&lt;domain&gt; (Authelia-style endpoints); the matching pbkdf2 HASH belongs in homelab.authelia.oidcClients. null disables OIDC login (anon viewer + admin form remain). 
+
+#### `homelab.quietHours.end`
+
+`integer between 0 and 23 (both inclusive)` — default `7`
+
+Hour (local time) when non-critical notifications resume.
+
+#### `homelab.quietHours.start`
+
+`integer between 0 and 23 (both inclusive)` — default `22`
+
+Hour (local time) when non-critical notifications stop.
+
+
+
+## nextcloud
+
+URL: https://ww4.github.io/imperfect-homelab/services/nextcloud/
+
+
+Nextcloud with Postgres + Redis, curated apps, optional OIDC SSO.
+
+## Enabling it
+
+Importing `nixosModules.nextcloud` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `cloud.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.nextcloud.adminPasswordFile` | `<initial admin password>` | `nextcloud` | generate |
+| `homelab.nextcloud.oidcSecretFile` | `<OIDC client secret, plaintext>` | `nextcloud` | generate |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+#### `homelab.nextcloud.adminPasswordFile`
+
+`string` — **required**
+
+Initial admin password file (sops; owner = nextcloud).
+
+#### `homelab.nextcloud.oidcSecretFile`
+
+`null or string` — default `null`
+
+OIDC client secret path (owner = nextcloud); null = no SSO wiring.
+
+
+
+## nginx-access
+
+URL: https://ww4.github.io/imperfect-homelab/services/nginx-access/
+
+
+nginx source-access gate: allow/deny inherited by every vhost from one place.
+
+## Enabling it
+
+Importing `nixosModules.nginx-access` enables it; there is no switch.
+
+
+## Secrets
+
+None.
+
+## Options
+
+This module reads no `homelab.*` options.
+
+
+## nginx-log-paths-check
+
+URL: https://ww4.github.io/imperfect-homelab/services/nginx-log-paths-check/
+
+
+Build-time guard: nginx may only be told to write logs where it can write.
+
+## Enabling it
+
+Importing `nixosModules.nginx-log-paths-check` enables it; there is no switch.
+
+
+## Secrets
+
+None.
+
+## Options
+
+This module reads no `homelab.*` options.
+
+
+## ntfy
+
+URL: https://ww4.github.io/imperfect-homelab/services/ntfy/
+
+
+Self-hosted ntfy: write-only anonymous access, self-provisioning subscriber.
+
+## Enabling it
+
+Importing `nixosModules.ntfy` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `ntfy.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.adminUser`
+
+`string` — default `"admin"`
+
+Username of the human administrator (SSO seed user, etc.).
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+#### `homelab.ntfy.baseUrl`
+
+`string` — default `"http://localhost:8090"`
+
+The URL clients (the phone app) use to reach the ntfy server — typically the host's tailnet IP + port. 
+
+#### `homelab.ntfy.topic`
+
+`string` — default `"alerts"`
+
+The alert topic name (subscriber access is granted on it).
+
+#### `homelab.ntfy.url`
+
+`string` — default `"http://localhost:8090/alerts"`
+
+Full URL (server + topic) that library modules POST notifications to, in ntfy.sh format. Point it at your own ntfy instance/topic. 
+
+
+
+## paperless
+
+URL: https://ww4.github.io/imperfect-homelab/services/paperless/
+
+
+Paperless-ngx OCR-indexed document archive.
+
+## Enabling it
+
+Importing `nixosModules.paperless` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `paperless.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.paperless.adminPasswordFile` | `<initial admin password>` | `paperless` | generate |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+#### `homelab.paperless.adminPasswordFile`
+
+`string` — **required**
+
+Path to the initial admin password (a sops secret owned by paperless).
+
+#### `homelab.paperless.oidcEnvFile`
+
+`null or string` — default `null`
+
+environmentFile carrying the OIDC provider JSON; null disables SSO.
+
+
+
+## pinchflat
+
+URL: https://ww4.github.io/imperfect-homelab/services/pinchflat/
+
+
+PinchFlat YouTube archiver.
+
+## Enabling it
+
+Importing `nixosModules.pinchflat` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `pinchflat.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+#### `homelab.pinchflat.mediaDir`
+
+`string` — **required** — example `"/mnt/media/pinchflat"`
+
+Where PinchFlat stores downloaded media.
+
+
+
+## pool-autoremount
+
+URL: https://ww4.github.io/imperfect-homelab/services/pool-autoremount/
+
+
+Self-healing remount for pool members that drop off the bus; detects zombie mounts with real I/O.
+
+## Enabling it
+
+Importing `nixosModules.pool-autoremount` enables it; there is no switch.
+
+**Requires:** [mergerfs-pools](@/services/mergerfs-pools.md)
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.ntfy.url`
+
+`string` — default `"http://localhost:8090/alerts"`
+
+Full URL (server + topic) that library modules POST notifications to, in ntfy.sh format. Point it at your own ntfy instance/topic. 
+
+#### `homelab.pools`
+
+`attribute set of (submodule)` — default `{ }`
+
+MergerFS pools to assemble. See mergerfs-pools.nix.
+
+#### `homelab.pools.<name>.branches`
+
+`string` — **required** — example `"/mnt/disks/media-*"`
+
+Glob of member-branch mountpoints (mergerfs device string).
+
+#### `homelab.pools.<name>.createPolicy`
+
+`one of "mfs", "epmfs", "ff", "lfs", "rand"` — default `"mfs"`
+
+Where NEW files land. `mfs` (most free space) balances writes. `epmfs` (existing path, most free space) keeps new files on the branch that already holds their parent directory — required if anything hardlinks across the tree (e.g. rsync --link-dest), because mergerfs hardlinks only function within a single branch. 
+
+#### `homelab.pools.<name>.fsname`
+
+`null or string` — default `null`
+
+Optional fsname= shown in df/mount output.
+
+#### `homelab.pools.<name>.memberDir`
+
+`null or string` — default `null` — example `"/mnt/disks"`
+
+Directory the member branches mount under (for the auto-remounter).
+
+#### `homelab.pools.<name>.members`
+
+`list of string` — default `[ ]` — example `[   "D1"   "D2" ]`
+
+Member subdirectory names under memberDir (for the auto-remounter).
+
+#### `homelab.pools.<name>.minFreeSpace`
+
+`null or string` — default `null` — example `"100G"`
+
+Reserve headroom: mergerfs won't place a NEW file on a branch with less than this free. Must exceed your largest single file so a create never hits ENOSPC mid-write — the 4 GiB default once let a mirror job fill a branch until a large temp file no longer fit. Hardlinks and growth of existing files are unaffected (link() co-locates with its target regardless). 
+
+#### `homelab.pools.<name>.mountpoint`
+
+`string` — **required** — example `"/mnt/media"`
+
+Where the pooled filesystem mounts.
+
+
+
+## qbit-vpn-watchdog
+
+URL: https://ww4.github.io/imperfect-homelab/services/qbit-vpn-watchdog/
+
+
+Self-heal the gluetun-IP-change qBittorrent wedge.
+
+## Enabling it
+
+Importing `nixosModules.qbit-vpn-watchdog` enables it; there is no switch.
+
+**Requires:** [arr](@/services/arr.md)
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.ntfy.url`
+
+`string` — default `"http://localhost:8090/alerts"`
+
+Full URL (server + topic) that library modules POST notifications to, in ntfy.sh format. Point it at your own ntfy instance/topic. 
+
+
+
+## recyclarr
+
+URL: https://ww4.github.io/imperfect-homelab/services/recyclarr/
+
+
+Sync TRaSH-Guides quality profiles into Sonarr & Radarr daily (bring your own profile YAML).
+
+## Enabling it
+
+Importing `nixosModules.recyclarr` enables it; there is no switch.
+
+**Requires:** [arr](@/services/arr.md)
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `<manual: /var/lib/recyclarr/secrets.yml>` | `sonarr_api_key`, `radarr_api_key` | `recyclarr` | first-boot |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.recyclarr.configFile`
+
+`absolute path` — **required**
+
+Your recyclarr.yml (profiles, custom formats, upgrade policy).
+
+#### `homelab.recyclarr.schedule`
+
+`string` — default `"*-*-* 05:30:00"`
+
+OnCalendar schedule — pick a quiet-disk window (after any parity sync/scrub).
+
+
+
+## remote-desktop
+
+URL: https://ww4.github.io/imperfect-homelab/services/remote-desktop/
+
+
+xrdp + XFCE remote desktop, Tailscale-only.
+
+## Enabling it
+
+Importing `nixosModules.remote-desktop` enables it; there is no switch.
+
+
+## Secrets
+
+None.
+
+## Options
+
+This module reads no `homelab.*` options.
+
+
+## silverbullet
+
+URL: https://ww4.github.io/imperfect-homelab/services/silverbullet/
+
+
+SilverBullet markdown notes/tasks, optionally a two-writer space.
+
+## Enabling it
+
+Importing `nixosModules.silverbullet` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `notes.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+#### `homelab.silverbullet.indexPage`
+
+`null or string` — default `null` — example `"Home"`
+
+Space page to open on launch (a capture dashboard beats the space map for quick capture).
+
+#### `homelab.silverbullet.package`
+
+`null or package` — default `null`
+
+SilverBullet package override (e.g. from a newer nixpkgs); null = pkgs.silverbullet.
+
+#### `homelab.silverbullet.secondWriter`
+
+`null or string` — default `null` — example `"agent"`
+
+Unix user granted full mutual write access to the space; null = single-writer.
+
+
+
+## smart-dump
+
+URL: https://ww4.github.io/imperfect-homelab/services/smart-dump/
+
+
+Dump the full SMART table for every drive to world-readable files.
+
+## Enabling it
+
+Importing `nixosModules.smart-dump` enables it; there is no switch.
+
+
+## Secrets
+
+None.
+
+## Options
+
+This module reads no `homelab.*` options.
+
+
+## system
+
+URL: https://ww4.github.io/imperfect-homelab/services/system/
+
+
+Locale, Nix settings, nixpkgs config for an always-on server.
+
+## Enabling it
+
+Importing `nixosModules.system` enables it; there is no switch.
+
+
+## Secrets
+
+None.
+
+## Options
+
+This module reads no `homelab.*` options.
+
+
+## tandoor
+
+URL: https://ww4.github.io/imperfect-homelab/services/tandoor/
+
+
+Tandoor Recipes.
+
+## Enabling it
+
+Importing `nixosModules.tandoor` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `recipes.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+
+
+## unpackerr
+
+URL: https://ww4.github.io/imperfect-homelab/services/unpackerr/
+
+
+Extract RAR'd releases in place so the *arrs can import them; seeds untouched.
+
+## Enabling it
+
+Importing `nixosModules.unpackerr` enables it; there is no switch.
+
+**Requires:** [arr](@/services/arr.md)
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.unpackerr.envFile` | `UN_SONARR_0_API_KEY`, `UN_RADARR_0_API_KEY` | `root` | first-boot |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.arrStack.group`
+
+`string` — default `"users"`
+
+Host group owning the stack's directories (matches pgid).
+
+#### `homelab.arrStack.keepersMovies`
+
+`null or string` — default `null`
+
+Optional long-term-keeper library mounted at /keepers/movies — add it as a second Radarr root folder and promote via Edit → Root Folder; the *arr moves the file + updates its DB. 
+
+#### `homelab.arrStack.keepersTv`
+
+`null or string` — default `null`
+
+Optional keeper library mounted at /keepers/tv (Sonarr twin of keepersMovies).
+
+#### `homelab.arrStack.owner`
+
+`string` — **required**
+
+Host user owning the stack's directories (matches puid).
+
+#### `homelab.arrStack.pgid`
+
+`string` — default `"100"`
+
+gid the stack's containers run as.
+
+#### `homelab.arrStack.puid`
+
+`string` — default `"1000"`
+
+uid the stack's containers run as.
+
+#### `homelab.arrStack.root`
+
+`string` — **required** — example `"/mnt/media/arr"`
+
+The shared /data tree (downloads + media subdirs).
+
+#### `homelab.arrStack.scratchDir`
+
+`null or string` — default `null` — example `"/mnt/scratch/qbittorrent-incomplete"`
+
+Incomplete-download dir on a SEPARATE filesystem (spares the pool's IO; the client copies once on completion). null = incomplete stays inside the /data tree. 
+
+#### `homelab.arrStack.vpnEnvFile`
+
+`string` — **required**
+
+environmentFile with the WireGuard credentials for gluetun (WIREGUARD_PRIVATE_KEY / _PRESHARED_KEY / _ADDRESSES, SERVER_COUNTRIES, optionally FIREWALL_VPN_INPUT_PORTS). Read by docker --env-file as root; root:0400 is fine. 
+
+#### `homelab.arrStack.vpnProvider`
+
+`string` — **required** — example `"mullvad"`
+
+gluetun VPN_SERVICE_PROVIDER for the download client's tunnel.
+
+#### `homelab.unpackerr.envFile`
+
+`string` — **required**
+
+environmentFile with UN_SONARR_0_API_KEY and UN_RADARR_0_API_KEY.
+
+
+
+## uptime-kuma
+
+URL: https://ww4.github.io/imperfect-homelab/services/uptime-kuma/
+
+
+Uptime Kuma status wall-board.
+
+## Enabling it
+
+Importing `nixosModules.uptime-kuma` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `uptime.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+
+
+## vaultwarden
+
+URL: https://ww4.github.io/imperfect-homelab/services/vaultwarden/
+
+
+Vaultwarden (Bitwarden-compatible) password server.
+
+## Enabling it
+
+Importing `nixosModules.vaultwarden` enables it; there is no switch.
+
+**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Serves:** `<homelab.vaultwarden.subdomain>.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.vaultwarden.envFile` | `ADMIN_TOKEN (argon2 hash)`, `SMTP_* (optional)` | `root` | generate |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+#### `homelab.vaultwarden.envFile`
+
+`string` — **required**
+
+environmentFile with ADMIN_TOKEN (+ SMTP creds if used).
+
+#### `homelab.vaultwarden.extraConfig`
+
+`attribute set` — default `{ }`
+
+Extra non-secret vaultwarden config (e.g. the SMTP block).
+
+#### `homelab.vaultwarden.subdomain`
+
+`string` — default `"vault"`
+
+Vhost subdomain. (Tip from the field: Chrome Safe Browsing has been known to flag "vault.*" names — pick something else if that bites.) 
+
+
+
+# Extending
+
+URL: https://ww4.github.io/imperfect-homelab/extending/
+
+
+Adding a service to this homelab is one module file, one option group, one catalog entry and one pull request. The module holds the implementation and reads every site fact through `homelab.*`; the catalog entry tells the configurator and this site what the module needs; the pull request carries the proof that the reference machine still builds to the same closure. That loop is the one the agent on the reference machine runs for every change, and this chapter walks it once by hand.
+
+The worked example adds a small web service. The three chapters after it are the parts of the loop you will reuse: the option contract, the proof, and the pull request.
+
+
+
+## A worked example
+
+URL: https://ww4.github.io/imperfect-homelab/extending/a-worked-example/
+
+
+Take a service with one process, one port and one state directory; a system monitor with a web UI is the shape. It needs a NixOS service, a vhost that proxies to it, and a line in the catalog. It needs no secret and no option of its own beyond the domain.
+
+The module file goes in `modules/services/`, and its header comment says what the service is for and which lesson shaped it, because the header is what the next person reads before the code. The body enables the NixOS service, binds it to `127.0.0.1` on its port, and declares the vhost with the shared helper: `services.nginx.virtualHosts."glances.${config.homelab.domain}" = import ../lib/proxy-vhost.nix { port = 61208; }`. The helper adds TLS from the ACME defaults and the forward-auth hook if the name is in the protected list. Nothing in the file names a host, a path on the reference machine, or a person. If the service writes state, a tmpfiles rule in the module creates the state directory, and you add that directory to `homelab.backup.paths` in your values file to get it backed up.
+
+Register it twice. `flake.nix` exports it under `nixosModules.<name>`, and `modules/catalog.nix` gets an entry: a one-line description, `enable = "import"`, the options it reads (`homelab.domain`), what it requires (`acme` and `nginx-access`, because every vhost assumes them), the vhost it claims, and an empty secrets list. The library's flake check refuses to evaluate if the two disagree, so you cannot forget either.
+
+Then run the checks: `tools/leak-scan.sh` for identifiers, `nix flake check` for the catalog, and a build of a machine that imports it. On the reference machine that last step is the proof in the next-but-one chapter. On your own machine it is `nix build .#nixosConfigurations.<host>.config.system.build.toplevel` with the module added to your imports. Deploy by merging. The DNS record for the new name is the one thing you add by hand, and the Day two chapter's probe (every path class, from outside the gate) confirms the vhost is where you think it is.
+
+
+
+## The option contract
+
+URL: https://ww4.github.io/imperfect-homelab/extending/the-option-contract/
+
+
+A value becomes an option the moment a second household would set it differently. Domain, users, paths, schedules, sizes, and every secret are options; the port a service listens on usually is not, because nothing outside the module cares. Options live in `modules/options.nix` under a group named for the module (`homelab.backup.*`), each with a type, a default where a sensible one exists, and a description written for the person reading the generated reference, because that description is the Services page. An option with no default is a required value, and the configurator will ask for it.
+
+Three option shapes recur: a plain value (`homelab.domain`); a feature group with its own `enable` (`homelab.backup.remote.enable`), where a nullable secret under the group only has to be set when the group is on; and a `File` option for a secret, which is a path and nothing else. For that last one the module reads the file, the header says what it must contain, and the catalog entry classes it as something the tooling can mint, something only you can supply, or something a service used to mint on its first run.
+
+The catalog entry is the contract's machine-readable half. Its fields are the description, the enable mechanism, the option prefixes the module reads, the modules it requires, the vhosts it claims, and the secrets with their class. Tooling reads this instead of the module: the configurator builds its question set from it, this site generates the Services section from it, and a future check will enforce that a module touches no `homelab.*` prefix it did not list. Keep the description to one line that says what the module is for; the header comment in the module is where the reasoning goes.
+
+Two rules cost the reference machine time to learn. A module that assumes a group or user exists must declare it (`jellyfin` once assumed a `media` group only the reference box had). And an option added to the library needs a value or a default on every host that imports the module, which the build will tell you about.
+
+
+
+## Proving a change
+
+URL: https://ww4.github.io/imperfect-homelab/extending/proving-a-change/
+
+
+The proof for any library change is a build of a real machine that imports the module, compared against the same machine built from the pinned library. The reference machine is the consumer the library came out of, so every library pull request builds it twice: once with the working checkout as an override (`--override-input homelab-modules path:/path/to/checkout --no-write-lock-file`) and once with the committed pin. Two store paths come out. If they are equal the change is a no-op on that machine, and if they differ, `nix store diff-closures` and a diff of `/etc/systemd/system` say how.
+
+What the diff should contain depends on the change. Moving a module out of a private flake into the library should produce an identical toplevel, or a delta you can list in one line (a unit's Description string, a comment in a script). Adding a feature should add the units the feature creates and nothing else. A change that restarts a running container on the deploy that introduces it needs another look, and the usual fix is `Before=` declared from the new unit's side rather than `Requires=` on the old one. The backup module's move produced one Description string and one comment. The API-key seeder produced four new oneshots and one changed wrapper. Both numbers went in the pull request.
+
+For the enabled path of something the reference machine has turned off, render the configuration rather than the closure. `nix eval` with `extendModules` can force an option on and print the resulting `/etc` file or a unit's `serviceConfig` as JSON, and a diff against the same render from the old module proves the port without a parity drive you do not own. The SnapRAID module's proof was that render: `snapraid.conf` and the sync and scrub units were byte-identical with the module force-enabled, and the deployed delta was one tmpfiles line.
+
+`nixos-rebuild build-vm` is the step for a change you cannot prove by comparison, because it is new behaviour. It boots the configuration in QEMU with a throwaway disk, and you can log in, start the service, and probe the vhost. The configurator's end-to-end test is this at larger scale: a VM booted from the installer ISO, the generated flake installed into it, every chosen service probed. A proof that reads "looks fine" is not one. The pull request says which store paths, which units, which lines.
+
+
+
+## The pull request
+
+URL: https://ww4.github.io/imperfect-homelab/extending/the-pull-request/
+
+
+One topic per pull request. A library change and its consumer change are two pull requests in two repositories, the library's first; the consumer's bumps the pin to the merged commit and carries the values. The description says what changed on the machine in one paragraph a reviewer can check, and then the validation: the store paths, the unit diff, which tests ran. A PR that mixes a refactor with a feature gets reviewed as neither. The reference machine's convention is that one open pull request per topic absorbs follow-up tweaks until it merges.
+
+If you want to see it run before anyone merges, push the same commit to `testing`. The deploy daemon applies it with `nixos-rebuild test`, live but gone on reboot, and you probe the real thing. Report in the PR what you saw there. `testing` has to descend from `main` or the daemon ignores it; reset it first if it has drifted.
+
+Merge, and the daemon rebuilds. Check the deployed commit against the forge head, and check the one unit your change added, because a green deploy proves only that the build succeeded.
+
+
+# Operating with an agent
+
+URL: https://ww4.github.io/imperfect-homelab/agent/
+
+
+An AI agent runs on the reference machine as its own user and does the routine work: wiring a new service, extending the monitoring, moving configuration into the library, keeping the documentation current. It cannot apply anything. Its normal output is a pull request, and a human merging that pull request is what changes the machine. Every gate it meets on the way is mechanical, enforced by file permissions and branch protection rather than by instructions it is asked to follow.
+
+The design question is the one you face with a new hire. A language model can write NixOS modules, so the question is how much access the work needs and what happens on the day it is confidently wrong. The answer here is the one you would give a careful junior engineer with no production access: read everything, propose anything, apply nothing. The chapters that follow are that access model. Read them before you give an agent a shell on anything you care about.
+
+
+
+## Three kinds of action, three gates
+
+URL: https://ww4.github.io/imperfect-homelab/agent/three-gates/
+
+
+The agent's actions fall into three kinds (reading and diagnosing, proposing a change, applying one), and each kind meets a different gate:
+
+| What the agent does | Gate |
+|---|---|
+| Read and diagnose | Standing, read-only: the journal, plus a few scoped read commands |
+| Propose a change | Standing: it edits its own clone and opens a pull request; nothing is applied |
+| Apply a change | A human: a pull-request merge, or a short sudo allowlist for a few safe imperative operations |
+
+Reading is standing access. The agent's user is in the `systemd-journal` group, so it can read every service's log without asking. Where a read needs root (SMART data from a drive, a restic snapshot listing), it gets a wrapper with a closed vocabulary: the SMART wrapper enumerates the drives itself and issues only reads, because `smartctl` with free arguments can start a self-test or rewrite drive settings. The restic wrapper accepts `snapshots`, `ls`, `stats` and `find` and nothing else, so it can prove a backup exists but cannot forget or prune one. Diagnosis is most of what an operator does, and all of it is on this row.
+
+Proposing is also standing access, and it is where the agent spends its day. It has its own clone of the configuration, pushes branches, and opens pull requests through the forge's API under its own bot identity. A pull request is a diff and a description, and it has no effect until someone merges it. The agent can also push to a `testing` branch, which the deploy daemon applies with `nixos-rebuild test` (real, but gone on reboot), so it can check its own work on the running machine before asking for a merge.
+
+Applying needs a human. The `main` branch is protected: one approval, merge restricted to the owner, and the agent's account cannot approve its own work. The deploy daemon only ever rebuilds from `main`. The one exception is a sudo allowlist of exact commands for operations that are safe to repeat (restart this named service, run this named job), with no wildcards on dangerous verbs and no `nixos-rebuild`, so the agent cannot apply configuration by a side door. That list is itself configuration, which means widening it is a pull request the owner reads. The next chapter is the pieces that make each gate hold, and none of them is a policy the agent is asked to respect.
+
+
+
+## The pieces
+
+URL: https://ww4.github.io/imperfect-homelab/agent/the-pieces/
+
+
+A dedicated user. The agent runs as its own system user with its own home directory and does not inherit the owner's SSH keys, wallets, browser sessions, or desktop. Read access to logs comes from group membership, and a root-owned file lists everything else it can do.
+
+A root-owned command guard. Every shell command the agent runs first passes through a guard script installed in `/etc` at mode 0555, owned by root, outside the agent's write access. It denies catastrophic operations however they are phrased: recursive deletes near the root, raw disk writes, force-pushing `main`. It parses git commands instead of pattern-matching them, so it gates a push on the destination ref: `git push origin HEAD:testing` passes and `git push origin main` does not. That precision is a security property. A guard that blocks safe work teaches the operator to route around it, and an operator with a habit of routing around the guard is the thing you were trying to avoid.
+
+A scoped sudo allowlist with fixed-purpose wrappers. The allowlist names exact commands. Where the agent needs a privileged capability, the entry is a wrapper with a closed vocabulary, and the wrapper refuses any argument that would reach the underlying tool. The reference box has three: one for SMART reads, one for read-only restic, one for a handful of network diagnostics. Adding a fourth is a pull request.
+
+The GitOps applier. A daemon on the machine polls the forge, rebuilds when `main` advances, and applies the `testing` branch as a rehearsal that reverts on reboot. Nobody runs `nixos-rebuild` by hand, including the owner, and the agent is not permitted to.
+
+Managed settings. The agent runs under its tool's managed-settings tier, the highest-precedence configuration layer, unwritable by the agent's user, with bypass modes disabled and hooks accepted only from the managed file. It cannot grant itself new powers. Widening its access means editing root-owned files, which means a pull request, which means a human merge.
+
+No secret access. The agent is not a recipient of the encrypted secrets. It can wire a secret's plumbing (the declaration, the file path, the service that reads it) but cannot read any value. When the owner has to hand over a credential, the agent templates a file in an inbox directory and the owner fills in the value. The agent encrypts it from there and deletes the plaintext.
+
+
+
+## How a change flows
+
+URL: https://ww4.github.io/imperfect-homelab/agent/how-a-change-flows/
+
+
+A change starts as an edit in the agent's own clone. The agent commits on a branch, pushes it, and opens a pull request through the forge's API with a description of what changed and how the agent validated it. Validation before the PR is the agent's job: it builds the new system closure and compares it against the running one, and the description says what differed. For a change to the module library it builds the consumer machine both ways, with the library checkout as an override and with the real pinned input, and expects the same store path. The owner reads the diff, approves it in the forge's web interface, and merges.
+
+The rehearsal branch is the step in between. Before asking for a merge, the agent can push the same commit to `testing`, and the deploy daemon applies it with `nixos-rebuild test`: the new configuration is live, services restart, and nothing touches the bootloader, so a reboot returns the machine to the last merged state. The agent then checks the real thing (does the vhost answer, did the timer fire, is the metric present) and reports what it saw in the pull request rather than what it expected.
+
+What it has done through this flow: migrated every secret into encrypted storage, stood up single sign-on across six applications, split the module library out of the private flake over two days and some twenty pull requests, and fixed its own guard when the guard blocked a legitimate push. Scheduled headless runs write a status digest, so the machine also reports on itself.
+
+
+
+## What this does not claim
+
+URL: https://ww4.github.io/imperfect-homelab/agent/what-this-does-not-claim/
+
+
+Stating the limits is part of the model; a threat model with no exclusions is one nobody has examined. The gates constrain what the agent can apply, not what it can read. It reads everything on the machine that group permissions allow, secret values excepted, other users' service data included. If that is not acceptable for your data, the fix is file permissions, and the chapter on principles says where they live. A compromised Tailscale account is inside the network perimeter regardless of the agent, and single sign-on covers only the applications that support it.
+
+The design does not assume the model is trustworthy. The working assumption is that it is capable and sometimes wrong, and each gate sits where a confidently wrong agent produces a rejected pull request instead of an outage. Nothing here stops it from proposing a bad change; the owner's review does that, and the review is only as good as the diff is readable. That is one reason the library insists on one concern per file and on pull requests scoped to one topic. The guard stops the catastrophic class, the review stops the merely wrong one, and the rehearsal branch catches the change that looks right and is not.
+
+
+# Field notes
+
+URL: https://ww4.github.io/imperfect-homelab/field-notes/
+
+
+Each note here is one incident from the reference machine. They are short on purpose: what happened, the mechanism underneath it, and the rule that came out of it. Several of the rules are now code in the library, and the note says which.
+
+Read them when something is misbehaving and the obvious explanation does not fit. Most of these started that way.
+
+
+
+## A mount that answers stat() and fails every read
+
+URL: https://ww4.github.io/imperfect-homelab/field-notes/a-mount-that-answers-stat-and-fails-every-read/
+
+
+A USB member disk of the media pool dropped off the bus under load. The filesystem shut itself down, as XFS does, but the mount entry survived: `/proc/mounts` still listed it, `mountpoint` still said yes, `df` still showed its size, and node_exporter kept reporting it present and healthy because `statfs()` returned the cached superblock. Only an actual read returned an error. Nothing could mount over the corpse, so the recovery service's `systemctl start` on the mount unit failed. It failed again every two minutes for nine hours, 260 times, while the dashboard rule that should have paged counted mount entries and saw a full set. Every service with data on that pool was down the whole time.
+
+The rule: a check that can be satisfied by cached metadata is not a check. The library's remounter probes with a real directory read, asks the kernel's mount table whether a path is mounted instead of stat-ing the path, treats a slow read as ambiguous, and publishes its own health metric. If you write your own watcher for anything, ask what it would report during the failure it exists to catch.
+
+
+
+## A backup that quietly became a full copy
+
+URL: https://ww4.github.io/imperfect-homelab/field-notes/a-backup-that-quietly-became-a-full-copy/
+
+
+A weekly mirror job used `rsync --link-dest` to hardlink unchanged files against the previous run, so each run should have cost only the changed bytes. On a MergerFS pool with the default create policy, the new run's directory landed on whichever branch had the most free space, and the previous run's files sat on another branch. MergerFS cannot hardlink across branches; it returns `EXDEV`, and rsync handles `EXDEV` by copying the file instead of failing. Every weekly run was a full copy, the pool filled, and the first symptom was a job failing with `ENOSPC` months later.
+
+The rule: `epmfs` (existing path, most free space) on any pool that receives hardlinks, so a new file lands on the branch that already holds its parent directory. It is an option on every pool in the library, and the option's description says why. The same incident set `minfreespace` above the largest single file, because the 4 GiB default let a job fill a branch until a temp file no longer fit.
+
+
+
+## A memory limit that limited nothing
+
+URL: https://ww4.github.io/imperfect-homelab/field-notes/a-memory-limit-that-limited-nothing/
+
+
+A container's backend had grown to 3.6 GB of resident memory, the largest process on the box, and the fix seemed obvious: `MemoryMax = "6G"` on its `docker-*.service` unit, the way you cap a native service. It capped nothing. dockerd puts a container's processes in their own cgroup scope under the Docker daemon, not under the systemd unit that started the container, so the unit's limit applies to a cgroup holding only the client process. The limit that works is `--memory=6g` in the container's `extraOptions`, and the proof is `memory.max` in the container's own scope, read from `/sys/fs/cgroup`. The same incident showed that `--memory-swap` did not translate to a swap cap on cgroup v2, so do not cite it as one.
+
+
+
+## Funnel took every vhost down
+
+URL: https://ww4.github.io/imperfect-homelab/field-notes/funnel-took-every-vhost-down/
+
+
+Tailscale Funnel publishes one service to the internet, and turning it on for a single port looked harmless. It binds port 443 on the machine's tailnet address. nginx on the same machine bound 443 on every interface, and a wildcard bind fails when any address on that port is taken, so nginx did not start, and every vhost on the box went dark together. Nothing in this guide uses Funnel; a service that has to be reachable from the public internet belongs on another machine, with this one pushing to it.
+
+
+
+## A MIME block that replaced the map
+
+URL: https://ww4.github.io/imperfect-homelab/field-notes/a-mime-block-that-replaced-the-map/
+
+
+A vhost needed one extra MIME type, so its config gained a `types { ... }` block with that one entry. nginx's `types` directive does not add to the inherited map; it replaces it for that context, so every other file served by that vhost went out as `application/octet-stream` and the browser downloaded stylesheets instead of applying them. Add types with `include mime.types;` inside the block, or set the one type with `default_type` for a location. A related trap from the same incident: a regex `location` wins over a prefix `location` regardless of order, which is how a playlist path 404'd while the rule that should have served it sat two lines above.
+
+
+
+## Containers lost DNS when MagicDNS came on
+
+URL: https://ww4.github.io/imperfect-homelab/field-notes/containers-lost-dns-when-magicdns-came-on/
+
+
+Turning on Tailscale's MagicDNS for the machine rewrote the resolver that containers inherit. Outbound DNS from inside every container stopped while names inside the tailnet kept resolving, so the box looked fine from a shell and broken from any service that fetched anything. The resolver Tailscale installs answers on an address the Docker bridge cannot reach. The fix on the reference machine is a local resolver on the host that containers can reach, and MagicDNS left off for the server; the symptom to recognise is "works on the host, fails in the container, only for names outside the tailnet".
+
+
+
+## A bridge the firewall could not see
+
+URL: https://ww4.github.io/imperfect-homelab/field-notes/a-bridge-the-firewall-could-not-see/
+
+
+A container needed to reach a service on the host, the host's firewall allowed that port on the LAN interface, and the firewall dropped the connection. NixOS scopes firewall rules to the interfaces you name; traffic from a Docker bridge arrives on `br-<id>`, which no rule named. The fix is a rule for the port on the `br-+` interface pattern, so the rule covers any bridge Docker creates. Every container-to-host port on the reference machine has one, and the library's container modules add theirs.
+
+
+
+## Deploys stopped for two days and nothing said so
+
+URL: https://ww4.github.io/imperfect-homelab/field-notes/deploys-stopped-for-two-days-and-nothing-said-so/
+
+
+The deploy daemon on the reference machine polled a GitHub mirror of the configuration, and the token that let the forge push to that mirror expired. Pull requests merged on the forge; the mirror stayed where it was; the daemon saw no change and deployed nothing, correctly, for two days. Every dashboard was green, because a deploy pipeline reading a stale source is healthy by every measure it has.
+
+Two watchdogs came out of it and are in the library: one compares the forge's branch head with the commit the daemon last deployed, and one compares the forge with its mirror. Both alert on drift, and the first measured the real merge-to-deploy latency on its first run. The daemon now polls the forge directly, with the mirror as a fallback.
+
+
+
+## An empty result has two causes
+
+URL: https://ww4.github.io/imperfect-homelab/field-notes/an-empty-result-has-two-causes/
+
+
+An empty answer means "nothing there" or "the lookup failed", and the two look identical unless the tool distinguishes them. The reference machine's operator (the agent, in this case) twice reported a monitoring gap that did not exist, because a `journalctl --since` with a rejected time expression printed nothing and was read as "no entries". A forge API call made with an empty token succeeded with only the public repositories and was read as "those repositories do not exist", three separate times. A `curl` with `|| echo 000` behind a status-code check turned a dead port into a success.
+
+When you write a check, write down what it prints when the lookup itself fails. The reference machine's tooling now holds that rule: a tool that queries something refuses to run with an empty credential, checks the command's own exit status before parsing its output, and treats a result shorter than expected as a reason to prove the query worked before concluding anything is absent.
