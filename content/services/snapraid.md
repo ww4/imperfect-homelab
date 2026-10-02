@@ -111,7 +111,7 @@ OnCalendar for `snapraid scrub`.
 
 #### `homelab.snapraid.scrub.olderThan`
 
-`unsigned integer, meaning &gt;=0` — default `10`
+`unsigned integer, meaning >=0` — default `10`
 
 Skip blocks scrubbed within this many days.
 

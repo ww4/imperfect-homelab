@@ -43,19 +43,19 @@ Regenerable subtrees of `paths` (caches, logs, transcode scratch) to leave out.
 
 #### `homelab.backup.keep.daily`
 
-`positive integer, meaning &gt;0` — default `7`
+`positive integer, meaning >0` — default `7`
 
 Daily snapshots to keep.
 
 #### `homelab.backup.keep.monthly`
 
-`positive integer, meaning &gt;0` — default `6`
+`positive integer, meaning >0` — default `6`
 
 Monthly snapshots to keep.
 
 #### `homelab.backup.keep.weekly`
 
-`positive integer, meaning &gt;0` — default `4`
+`positive integer, meaning >0` — default `4`
 
 Weekly snapshots to keep.
 

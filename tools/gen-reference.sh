@@ -50,6 +50,8 @@ jq -r 'to_entries | sort_by(.key) | .[] | select(.key != "options") | .key' "$ca
       # (an option doc saying "<name>.<domain>" would otherwise open an HTML
       # element the browser never closes, and the table vanishes).
       def cell: gsub("\\|"; "\\|") | gsub("\n+"; " ") | gsub("<"; "&lt;") | gsub(">"; "&gt;");
+      # Inside a code span markdown takes < and > literally, so entities would show as text.
+      def code: gsub("\n+"; " ");
     "+++",
     "title = \"\($n)\"",
     "description = \"\($m.description | esc)\"",
@@ -86,8 +88,8 @@ jq -r 'to_entries | sort_by(.key) | .[] | select(.key != "options") | .key' "$ca
       ($mine[] |
         "#### `\(.name)`",
         "",
-        "`\(.type | cell)` — " + (if .hasDefault then "default `" + (.default | cell) + "`" else "**required**" end)
-          + (if .example then " — example `" + (.example | cell) + "`" else "" end),
+        "`\(.type | code)` — " + (if .hasDefault then "default `" + (.default | code) + "`" else "**required**" end)
+          + (if .example then " — example `" + (.example | code) + "`" else "" end),
         "",
         (.description // "" | cell),
         "")
