@@ -4,7 +4,7 @@ description = "Boot the target from the NixOS ISO, run one command, wait for the
 weight = 3
 +++
 
-Boot the target machine from the NixOS installer ISO and make sure you can SSH to it as root (set a password at the console with `passwd`, or the ISO's documented key method). From the flake directory, the command the generator printed:
+Boot the target machine from the installer ISO (previous page) and make sure you can SSH to it as root (set a password at the console with `passwd`, or the ISO's documented key method). From the flake directory, the command the generator printed:
 
 ```sh
 nixos-anywhere --flake .#<host> --extra-files ./extra-files \
