@@ -80,7 +80,7 @@ This guide does the same thing one generation on, and owes the same debt to two 
 URL: https://ww4.github.io/imperfect-homelab/start-here/for-agents/
 
 
-If you are an AI agent and someone has handed you this site, the short version is in two files: [llms.txt](/llms.txt) says what is where, and [the install skill](/skills/homelab-install/SKILL.md) is the procedure. This page is the contract behind both, written for a reader who will act on it.
+If you are an AI agent and someone has handed you this site, the short version is in two files: [llms.txt](https://ww4.github.io/imperfect-homelab/llms.txt) says what is where, and [the install skill](https://ww4.github.io/imperfect-homelab/skills/homelab-install/SKILL.md) is the procedure. This page is the contract behind both, written for a reader who will act on it.
 
 The configurator is headless first. `homelab-configure` takes an answers file and writes a private NixOS flake; the terminal UI is a front end that produces the same file and calls the same command. Every command takes `--json`. `schema --json` returns the whole question set: each module, the options it reads with type, default and whether it is required, and each secret with its class. `generate` returns exit 0 with a report, exit 2 with every problem it found at once (a missing value, a secret not supplied, a foundation module absent, a removal it refused), or exit 3 when the result failed to evaluate. Nothing is installed by any of this; the output is a directory.
 
@@ -90,7 +90,7 @@ Two things are yours alone. Never ask the user to paste a secret to you; ask the
 
 The box itself is easy to reach. The installer ISO runs sshd; the user sets a password at the console with `passwd` and gives you the address, and `ssh nixos@<address>` lands you on a machine where `homelab-configure` is on the path and `sudo` needs no password. From there the skill's procedure applies as written. If the user is installing a different machine from where you run, generate locally and hand off to `nixos-anywhere` as the generated README says.
 
-Everything on this site is also in [llms-full.txt](/llms-full.txt) as one plain-text file, regenerated from the same source as the pages, so you can read the whole guide in one fetch.
+Everything on this site is also in [llms-full.txt](https://ww4.github.io/imperfect-homelab/llms-full.txt) as one plain-text file, regenerated from the same source as the pages, so you can read the whole guide in one fetch.
 
 
 # Principles
@@ -496,48 +496,48 @@ against the catalog, so what you read here is what the code does.
 
 | Module | Purpose | Enable | Serves |
 |---|---|---|---|
-| [acme](@/services/acme.md) | Let's Encrypt via DNS-01, the TLS default for every vhost. | import |  |
-| [alertmanager-ntfy](@/services/alertmanager-ntfy.md) | Alertmanager webhook → ntfy phone notifications. | import |  |
-| [arr](@/services/arr.md) | Prowlarr + Sonarr + Radarr + Jellyseerr + qBittorrent inside a Gluetun VPN namespace. | import | `prowlarr.<domain>`, `sonarr.<domain>`, `radarr.<domain>`, `requests.<domain>`, `qbittorrent.<domain>` |
-| [arr-missing-sweep](@/services/arr-missing-sweep.md) | Weekly search for what is still missing in Sonarr/Radarr, with a metadata-mismatch skip rule. | import |  |
-| [audiobookshelf](@/services/audiobookshelf.md) | Audiobookshelf audiobook / podcast server. | import | `abs.<domain>` |
-| [aurral](@/services/aurral.md) | Aurral music discovery/request UI in front of Lidarr. | import | `music.<domain>` |
-| [authelia](@/services/authelia.md) | Authelia SSO: forward-auth gateway + OIDC provider. | `homelab.authelia.enable` | `auth.<domain>` |
-| [backup](@/services/backup.md) | restic snapshots of the irreplaceable small state: a local repo on the pool plus an optional offsite one, same paths and retention; optional SFTP push target for a second machine. | import |  |
-| [boot](@/services/boot.md) | Bootloader and power behaviour for an always-on server. | import |  |
-| [decluttarr](@/services/decluttarr.md) | Reap stalled/failed downloads from Sonarr/Radarr and re-search. | import |  |
-| [deploy-drift-watch](@/services/deploy-drift-watch.md) | Alert when the forge has commits the box never deployed. | `homelab.deployDriftWatch.enable` |  |
-| [disk-io-watch](@/services/disk-io-watch.md) | Count kernel I/O errors and USB resets per device; alert on a device that starts failing. | import |  |
-| [drive-temps](@/services/drive-temps.md) | Drive temperature + SMART-health exporter for spinning disks. | import |  |
-| [forgejo](@/services/forgejo.md) | Forgejo git forge. | import | `git.<domain>` |
-| [glances](@/services/glances.md) | Glances system monitor with a REST/web API. | import | `glances.<domain>` |
-| [immich](@/services/immich.md) | Immich photo & video management. | import | `photos.<domain>` |
-| [jellyfin](@/services/jellyfin.md) | Jellyfin media server. | import | `jellyfin.<domain>` |
-| [lazylibrarian](@/services/lazylibrarian.md) | LazyLibrarian ebook/audiobook automation on the shared /data tree. | import | `lazylibrarian.<domain>` |
-| [lidarr](@/services/lidarr.md) | Lidarr music manager on the shared /data tree. | import | `lidarr.<domain>` |
-| [mergerfs-pools](@/services/mergerfs-pools.md) | Assemble homelab.pools into mounted MergerFS pools. | import |  |
-| [meshagent](@/services/meshagent.md) | MeshCentral MeshAgent so a MeshCentral server can manage this host. | import |  |
-| [metube](@/services/metube.md) | MeTube web GUI for yt-dlp one-off downloads. | import | `metube.<domain>` |
-| [mirror-drift-watch](@/services/mirror-drift-watch.md) | Alert when a git mirror stops tracking its source. | import |  |
-| [monitoring](@/services/monitoring.md) | Prometheus + Grafana + Alertmanager with alerting provisioned declaratively. | `homelab.monitoring.enable` | `grafana.<domain>`, `prometheus.<domain>` |
-| [nextcloud](@/services/nextcloud.md) | Nextcloud with Postgres + Redis, curated apps, optional OIDC SSO. | import | `cloud.<domain>` |
-| [nginx-access](@/services/nginx-access.md) | nginx source-access gate: allow/deny inherited by every vhost from one place. | import |  |
-| [nginx-log-paths-check](@/services/nginx-log-paths-check.md) | Build-time guard: nginx may only be told to write logs where it can write. | import |  |
-| [ntfy](@/services/ntfy.md) | Self-hosted ntfy: write-only anonymous access, self-provisioning subscriber. | import | `ntfy.<domain>` |
-| [paperless](@/services/paperless.md) | Paperless-ngx OCR-indexed document archive. | import | `paperless.<domain>` |
-| [pinchflat](@/services/pinchflat.md) | PinchFlat YouTube archiver. | import | `pinchflat.<domain>` |
-| [pool-autoremount](@/services/pool-autoremount.md) | Self-healing remount for pool members that drop off the bus; detects zombie mounts with real I/O. | import |  |
-| [qbit-vpn-watchdog](@/services/qbit-vpn-watchdog.md) | Self-heal the gluetun-IP-change qBittorrent wedge. | import |  |
-| [recyclarr](@/services/recyclarr.md) | Sync TRaSH-Guides quality profiles into Sonarr & Radarr daily (bring your own profile YAML). | import |  |
-| [remote-desktop](@/services/remote-desktop.md) | xrdp + XFCE remote desktop, Tailscale-only. | import |  |
-| [silverbullet](@/services/silverbullet.md) | SilverBullet markdown notes/tasks, optionally a two-writer space. | import | `notes.<domain>` |
-| [smart-dump](@/services/smart-dump.md) | Dump the full SMART table for every drive to world-readable files. | import |  |
-| [snapraid](@/services/snapraid.md) | SnapRAID parity for a MergerFS pool's member disks: nightly sync, weekly partial scrub; any one member recoverable per parity disk. | `homelab.snapraid.enable` |  |
-| [system](@/services/system.md) | Locale, Nix settings, nixpkgs config for an always-on server. | import |  |
-| [tandoor](@/services/tandoor.md) | Tandoor Recipes. | import | `recipes.<domain>` |
-| [unpackerr](@/services/unpackerr.md) | Extract RAR'd releases in place so the *arrs can import them; seeds untouched. | import |  |
-| [uptime-kuma](@/services/uptime-kuma.md) | Uptime Kuma status wall-board. | import | `uptime.<domain>` |
-| [vaultwarden](@/services/vaultwarden.md) | Vaultwarden (Bitwarden-compatible) password server. | import | `<homelab.vaultwarden.subdomain>.<domain>` |
+| [acme](https://ww4.github.io/imperfect-homelab/services/acme/) | Let's Encrypt via DNS-01, the TLS default for every vhost. | import |  |
+| [alertmanager-ntfy](https://ww4.github.io/imperfect-homelab/services/alertmanager-ntfy/) | Alertmanager webhook → ntfy phone notifications. | import |  |
+| [arr](https://ww4.github.io/imperfect-homelab/services/arr/) | Prowlarr + Sonarr + Radarr + Jellyseerr + qBittorrent inside a Gluetun VPN namespace. | import | `prowlarr.<domain>`, `sonarr.<domain>`, `radarr.<domain>`, `requests.<domain>`, `qbittorrent.<domain>` |
+| [arr-missing-sweep](https://ww4.github.io/imperfect-homelab/services/arr-missing-sweep/) | Weekly search for what is still missing in Sonarr/Radarr, with a metadata-mismatch skip rule. | import |  |
+| [audiobookshelf](https://ww4.github.io/imperfect-homelab/services/audiobookshelf/) | Audiobookshelf audiobook / podcast server. | import | `abs.<domain>` |
+| [aurral](https://ww4.github.io/imperfect-homelab/services/aurral/) | Aurral music discovery/request UI in front of Lidarr. | import | `music.<domain>` |
+| [authelia](https://ww4.github.io/imperfect-homelab/services/authelia/) | Authelia SSO: forward-auth gateway + OIDC provider. | `homelab.authelia.enable` | `auth.<domain>` |
+| [backup](https://ww4.github.io/imperfect-homelab/services/backup/) | restic snapshots of the irreplaceable small state: a local repo on the pool plus an optional offsite one, same paths and retention; optional SFTP push target for a second machine. | import |  |
+| [boot](https://ww4.github.io/imperfect-homelab/services/boot/) | Bootloader and power behaviour for an always-on server. | import |  |
+| [decluttarr](https://ww4.github.io/imperfect-homelab/services/decluttarr/) | Reap stalled/failed downloads from Sonarr/Radarr and re-search. | import |  |
+| [deploy-drift-watch](https://ww4.github.io/imperfect-homelab/services/deploy-drift-watch/) | Alert when the forge has commits the box never deployed. | `homelab.deployDriftWatch.enable` |  |
+| [disk-io-watch](https://ww4.github.io/imperfect-homelab/services/disk-io-watch/) | Count kernel I/O errors and USB resets per device; alert on a device that starts failing. | import |  |
+| [drive-temps](https://ww4.github.io/imperfect-homelab/services/drive-temps/) | Drive temperature + SMART-health exporter for spinning disks. | import |  |
+| [forgejo](https://ww4.github.io/imperfect-homelab/services/forgejo/) | Forgejo git forge. | import | `git.<domain>` |
+| [glances](https://ww4.github.io/imperfect-homelab/services/glances/) | Glances system monitor with a REST/web API. | import | `glances.<domain>` |
+| [immich](https://ww4.github.io/imperfect-homelab/services/immich/) | Immich photo & video management. | import | `photos.<domain>` |
+| [jellyfin](https://ww4.github.io/imperfect-homelab/services/jellyfin/) | Jellyfin media server. | import | `jellyfin.<domain>` |
+| [lazylibrarian](https://ww4.github.io/imperfect-homelab/services/lazylibrarian/) | LazyLibrarian ebook/audiobook automation on the shared /data tree. | import | `lazylibrarian.<domain>` |
+| [lidarr](https://ww4.github.io/imperfect-homelab/services/lidarr/) | Lidarr music manager on the shared /data tree. | import | `lidarr.<domain>` |
+| [mergerfs-pools](https://ww4.github.io/imperfect-homelab/services/mergerfs-pools/) | Assemble homelab.pools into mounted MergerFS pools. | import |  |
+| [meshagent](https://ww4.github.io/imperfect-homelab/services/meshagent/) | MeshCentral MeshAgent so a MeshCentral server can manage this host. | import |  |
+| [metube](https://ww4.github.io/imperfect-homelab/services/metube/) | MeTube web GUI for yt-dlp one-off downloads. | import | `metube.<domain>` |
+| [mirror-drift-watch](https://ww4.github.io/imperfect-homelab/services/mirror-drift-watch/) | Alert when a git mirror stops tracking its source. | import |  |
+| [monitoring](https://ww4.github.io/imperfect-homelab/services/monitoring/) | Prometheus + Grafana + Alertmanager with alerting provisioned declaratively. | `homelab.monitoring.enable` | `grafana.<domain>`, `prometheus.<domain>` |
+| [nextcloud](https://ww4.github.io/imperfect-homelab/services/nextcloud/) | Nextcloud with Postgres + Redis, curated apps, optional OIDC SSO. | import | `cloud.<domain>` |
+| [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/) | nginx source-access gate: allow/deny inherited by every vhost from one place. | import |  |
+| [nginx-log-paths-check](https://ww4.github.io/imperfect-homelab/services/nginx-log-paths-check/) | Build-time guard: nginx may only be told to write logs where it can write. | import |  |
+| [ntfy](https://ww4.github.io/imperfect-homelab/services/ntfy/) | Self-hosted ntfy: write-only anonymous access, self-provisioning subscriber. | import | `ntfy.<domain>` |
+| [paperless](https://ww4.github.io/imperfect-homelab/services/paperless/) | Paperless-ngx OCR-indexed document archive. | import | `paperless.<domain>` |
+| [pinchflat](https://ww4.github.io/imperfect-homelab/services/pinchflat/) | PinchFlat YouTube archiver. | import | `pinchflat.<domain>` |
+| [pool-autoremount](https://ww4.github.io/imperfect-homelab/services/pool-autoremount/) | Self-healing remount for pool members that drop off the bus; detects zombie mounts with real I/O. | import |  |
+| [qbit-vpn-watchdog](https://ww4.github.io/imperfect-homelab/services/qbit-vpn-watchdog/) | Self-heal the gluetun-IP-change qBittorrent wedge. | import |  |
+| [recyclarr](https://ww4.github.io/imperfect-homelab/services/recyclarr/) | Sync TRaSH-Guides quality profiles into Sonarr & Radarr daily (bring your own profile YAML). | import |  |
+| [remote-desktop](https://ww4.github.io/imperfect-homelab/services/remote-desktop/) | xrdp + XFCE remote desktop, Tailscale-only. | import |  |
+| [silverbullet](https://ww4.github.io/imperfect-homelab/services/silverbullet/) | SilverBullet markdown notes/tasks, optionally a two-writer space. | import | `notes.<domain>` |
+| [smart-dump](https://ww4.github.io/imperfect-homelab/services/smart-dump/) | Dump the full SMART table for every drive to world-readable files. | import |  |
+| [snapraid](https://ww4.github.io/imperfect-homelab/services/snapraid/) | SnapRAID parity for a MergerFS pool's member disks: nightly sync, weekly partial scrub; any one member recoverable per parity disk. | `homelab.snapraid.enable` |  |
+| [system](https://ww4.github.io/imperfect-homelab/services/system/) | Locale, Nix settings, nixpkgs config for an always-on server. | import |  |
+| [tandoor](https://ww4.github.io/imperfect-homelab/services/tandoor/) | Tandoor Recipes. | import | `recipes.<domain>` |
+| [unpackerr](https://ww4.github.io/imperfect-homelab/services/unpackerr/) | Extract RAR'd releases in place so the *arrs can import them; seeds untouched. | import |  |
+| [uptime-kuma](https://ww4.github.io/imperfect-homelab/services/uptime-kuma/) | Uptime Kuma status wall-board. | import | `uptime.<domain>` |
+| [vaultwarden](https://ww4.github.io/imperfect-homelab/services/vaultwarden/) | Vaultwarden (Bitwarden-compatible) password server. | import | `<homelab.vaultwarden.subdomain>.<domain>` |
 
 
 ## acme
@@ -593,7 +593,7 @@ Alertmanager webhook → ntfy phone notifications.
 
 Importing `nixosModules.alertmanager-ntfy` enables it; there is no switch.
 
-**Requires:** [monitoring](@/services/monitoring.md), [ntfy](@/services/ntfy.md)
+**Requires:** [monitoring](https://ww4.github.io/imperfect-homelab/services/monitoring/), [ntfy](https://ww4.github.io/imperfect-homelab/services/ntfy/)
 
 ## Secrets
 
@@ -626,7 +626,7 @@ Weekly search for what is still missing in Sonarr/Radarr, with a metadata-mismat
 
 Importing `nixosModules.arr-missing-sweep` enables it; there is no switch.
 
-**Requires:** [arr](@/services/arr.md)
+**Requires:** [arr](https://ww4.github.io/imperfect-homelab/services/arr/)
 
 ## Secrets
 
@@ -669,7 +669,7 @@ Prowlarr + Sonarr + Radarr + Jellyseerr + qBittorrent inside a Gluetun VPN names
 
 Importing `nixosModules.arr` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `prowlarr.<homelab.domain>`, `sonarr.<homelab.domain>`, `radarr.<homelab.domain>`, `requests.<homelab.domain>`, `qbittorrent.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -768,7 +768,7 @@ Audiobookshelf audiobook / podcast server.
 
 Importing `nixosModules.audiobookshelf` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `abs.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -796,7 +796,7 @@ Aurral music discovery/request UI in front of Lidarr.
 
 Importing `nixosModules.aurral` enables it; there is no switch.
 
-**Requires:** [lidarr](@/services/lidarr.md)
+**Requires:** [lidarr](https://ww4.github.io/imperfect-homelab/services/lidarr/)
 **Serves:** `music.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -900,7 +900,7 @@ Authelia SSO: forward-auth gateway + OIDC provider.
 
 Import `nixosModules.authelia` and set `homelab.authelia.enable = true`.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `auth.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -1136,7 +1136,7 @@ Reap stalled/failed downloads from Sonarr/Radarr and re-search.
 
 Importing `nixosModules.decluttarr` enables it; there is no switch.
 
-**Requires:** [arr](@/services/arr.md)
+**Requires:** [arr](https://ww4.github.io/imperfect-homelab/services/arr/)
 
 ## Secrets
 
@@ -1167,7 +1167,7 @@ Alert when the forge has commits the box never deployed.
 
 Import `nixosModules.deploy-drift-watch` and set `homelab.deployDriftWatch.enable = true`.
 
-**Requires:** [monitoring](@/services/monitoring.md)
+**Requires:** [monitoring](https://ww4.github.io/imperfect-homelab/services/monitoring/)
 
 ## Secrets
 
@@ -1212,7 +1212,7 @@ Count kernel I/O errors and USB resets per device; alert on a device that starts
 
 Importing `nixosModules.disk-io-watch` enables it; there is no switch.
 
-**Requires:** [monitoring](@/services/monitoring.md)
+**Requires:** [monitoring](https://ww4.github.io/imperfect-homelab/services/monitoring/)
 
 ## Secrets
 
@@ -1251,7 +1251,7 @@ Drive temperature + SMART-health exporter for spinning disks.
 
 Importing `nixosModules.drive-temps` enables it; there is no switch.
 
-**Requires:** [monitoring](@/services/monitoring.md)
+**Requires:** [monitoring](https://ww4.github.io/imperfect-homelab/services/monitoring/)
 
 ## Secrets
 
@@ -1284,7 +1284,7 @@ Forgejo git forge.
 
 Importing `nixosModules.forgejo` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `git.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -1322,7 +1322,7 @@ Glances system monitor with a REST/web API.
 
 Importing `nixosModules.glances` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `glances.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -1350,7 +1350,7 @@ Immich photo & video management.
 
 Importing `nixosModules.immich` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `photos.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -1390,7 +1390,7 @@ Jellyfin media server.
 
 Importing `nixosModules.jellyfin` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `jellyfin.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -1418,7 +1418,7 @@ LazyLibrarian ebook/audiobook automation on the shared /data tree.
 
 Importing `nixosModules.lazylibrarian` enables it; there is no switch.
 
-**Requires:** [arr](@/services/arr.md)
+**Requires:** [arr](https://ww4.github.io/imperfect-homelab/services/arr/)
 **Serves:** `lazylibrarian.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -1512,7 +1512,7 @@ Lidarr music manager on the shared /data tree.
 
 Importing `nixosModules.lidarr` enables it; there is no switch.
 
-**Requires:** [arr](@/services/arr.md)
+**Requires:** [arr](https://ww4.github.io/imperfect-homelab/services/arr/)
 **Serves:** `lidarr.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -1704,7 +1704,7 @@ MeTube web GUI for yt-dlp one-off downloads.
 
 Importing `nixosModules.metube` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `metube.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -1750,7 +1750,7 @@ Alert when a git mirror stops tracking its source.
 
 Importing `nixosModules.mirror-drift-watch` enables it; there is no switch.
 
-**Requires:** [monitoring](@/services/monitoring.md)
+**Requires:** [monitoring](https://ww4.github.io/imperfect-homelab/services/monitoring/)
 
 ## Secrets
 
@@ -1801,7 +1801,7 @@ Prometheus + Grafana + Alertmanager with alerting provisioned declaratively.
 
 Import `nixosModules.monitoring` and set `homelab.monitoring.enable = true`.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `grafana.<homelab.domain>`, `prometheus.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -1893,7 +1893,7 @@ Nextcloud with Postgres + Redis, curated apps, optional OIDC SSO.
 
 Importing `nixosModules.nextcloud` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `cloud.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -1980,7 +1980,7 @@ Self-hosted ntfy: write-only anonymous access, self-provisioning subscriber.
 
 Importing `nixosModules.ntfy` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `ntfy.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -2032,7 +2032,7 @@ Paperless-ngx OCR-indexed document archive.
 
 Importing `nixosModules.paperless` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `paperless.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -2076,7 +2076,7 @@ PinchFlat YouTube archiver.
 
 Importing `nixosModules.pinchflat` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `pinchflat.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -2110,7 +2110,7 @@ Self-healing remount for pool members that drop off the bus; detects zombie moun
 
 Importing `nixosModules.pool-autoremount` enables it; there is no switch.
 
-**Requires:** [mergerfs-pools](@/services/mergerfs-pools.md)
+**Requires:** [mergerfs-pools](https://ww4.github.io/imperfect-homelab/services/mergerfs-pools/)
 
 ## Secrets
 
@@ -2185,7 +2185,7 @@ Self-heal the gluetun-IP-change qBittorrent wedge.
 
 Importing `nixosModules.qbit-vpn-watchdog` enables it; there is no switch.
 
-**Requires:** [arr](@/services/arr.md)
+**Requires:** [arr](https://ww4.github.io/imperfect-homelab/services/arr/)
 
 ## Secrets
 
@@ -2212,7 +2212,7 @@ Sync TRaSH-Guides quality profiles into Sonarr & Radarr daily (bring your own pr
 
 Importing `nixosModules.recyclarr` enables it; there is no switch.
 
-**Requires:** [arr](@/services/arr.md)
+**Requires:** [arr](https://ww4.github.io/imperfect-homelab/services/arr/)
 
 ## Secrets
 
@@ -2332,7 +2332,7 @@ SilverBullet markdown notes/tasks, optionally a two-writer space.
 
 Importing `nixosModules.silverbullet` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `notes.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -2399,7 +2399,7 @@ SnapRAID parity for a MergerFS pool's member disks: nightly sync, weekly partial
 
 Import `nixosModules.snapraid` and set `homelab.snapraid.enable = true`.
 
-**Requires:** [mergerfs-pools](@/services/mergerfs-pools.md)
+**Requires:** [mergerfs-pools](https://ww4.github.io/imperfect-homelab/services/mergerfs-pools/)
 
 ## Secrets
 
@@ -2555,7 +2555,7 @@ Tandoor Recipes.
 
 Importing `nixosModules.tandoor` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `recipes.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -2583,7 +2583,7 @@ Extract RAR'd releases in place so the *arrs can import them; seeds untouched.
 
 Importing `nixosModules.unpackerr` enables it; there is no switch.
 
-**Requires:** [arr](@/services/arr.md)
+**Requires:** [arr](https://ww4.github.io/imperfect-homelab/services/arr/)
 
 ## Secrets
 
@@ -2680,7 +2680,7 @@ Uptime Kuma status wall-board.
 
 Importing `nixosModules.uptime-kuma` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `uptime.<homelab.domain>` — create the DNS record.
 
 ## Secrets
@@ -2708,7 +2708,7 @@ Vaultwarden (Bitwarden-compatible) password server.
 
 Importing `nixosModules.vaultwarden` enables it; there is no switch.
 
-**Requires:** [acme](@/services/acme.md), [nginx-access](@/services/nginx-access.md)
+**Requires:** [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
 **Serves:** `<homelab.vaultwarden.subdomain>.<homelab.domain>` — create the DNS record.
 
 ## Secrets

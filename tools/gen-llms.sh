@@ -9,7 +9,11 @@ set -euo pipefail
 export LC_ALL=C # sort order must not depend on the host locale (en_US ignores hyphens; the sandbox is C)
 content=$1; base=${2%/}
 fm() { awk -v k="$1" 'BEGIN{f=0} /^\+\+\+$/{f++; next} f==1 && $0 ~ "^"k" = " { sub("^"k" = \"?",""); sub("\"$",""); print; exit }' "$2"; }
-body() { awk 'BEGIN{f=0} /^\+\+\+$/{f++; next} f>=2 {print}' "$1"; }
+# Page bodies: Zola's @/ links and the link() shortcode (static files need get_url) become real URLs.
+body() { awk 'BEGIN{f=0} /^\+\+\+$/{f++; next} f>=2 {print}' "$1" \
+  | sed -E -e "s|\(@/([^)#]+)/_index\.md(#[^)]*)?\)|($base/\1/\2)|g" \
+           -e "s|\(@/([^)#]+)\.md(#[^)]*)?\)|($base/\1/\2)|g" \
+           -e "s|\{\{ link\(path=\"([^\"]+)\", text=\"([^\"]+)\"\) \}\}|[\2]($base/\1)|g"; }
 weight() { w=$(fm weight "$1"); echo "${w:-999}"; }
 printf '# %s\n\n' "$(fm title "$content/_index.md")"
 body "$content/_index.md"
