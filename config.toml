@@ -1,9 +1,9 @@
-# Zola configuration — homelab-guide (working name; see README "Name")
-# base_url is the Cloudflare Pages default for the mirror; swap it when the
-# real domain lands. Cloudflare Pages runs `zola build` itself (ZOLA_VERSION
-# in the project settings); nix is only needed for the generated reference.
-base_url = "https://homelab-guide.pages.dev"
-title = "Homelab Guide"
+# Zola configuration — Imperfect Homelab (a hat tip to Perfect Media Server)
+# base_url is the GitHub Pages project URL (the workflow passes it explicitly;
+# the tailnet preview overrides it). Pages runs plain `zola build` itself, so
+# nix is only needed for the generated reference.
+base_url = "https://ww4.github.io/imperfect-homelab"
+title = "Imperfect Homelab"
 description = "Install a complete self-hosted homelab from a public NixOS module library, then learn how it is built so you can add to it."
 default_language = "en"
 

@@ -1,11 +1,12 @@
-# homelab-guide
+# Imperfect Homelab
 
 The guide to the homelab: install it from the public module library
 ([homelab-modules](https://git.rosemaryacres.com/ww4/homelab-modules)), then
-learn how it is built so you can add to it. A Zola site.
+learn how it is built so you can add to it. A Zola site, published at
+https://ww4.github.io/imperfect-homelab.
 
-**Name.** `homelab-guide` is a working name; the repo, title and `base_url`
-rename together when the real one lands.
+The name is a hat tip to [Perfect Media Server](https://perfectmediaserver.com),
+where this homelab started.
 
 ## Layout
 

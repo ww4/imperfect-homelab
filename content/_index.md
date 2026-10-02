@@ -1,5 +1,5 @@
 +++
-title = "Homelab Guide"
+title = "Imperfect Homelab"
 sort_by = "weight"
 template = "index.html"
 +++
@@ -18,3 +18,7 @@ Three promises:
    you cannot inspect.
 3. **You can add the next service yourself**, and the guide shows the loop
    the author's own tooling uses to do it.
+
+## Thanks
+
+This homelab exists because other people wrote theirs down. [Perfect Media Server](https://perfectmediaserver.com) by Alex Kretzschmar is where it started, and the name here is a nod to it: that site taught the shape (independent disks, a union filesystem, parity, one service per container) and the habit of explaining the reasoning. The [Self-Hosted](https://selfhosted.show) podcast and [Linux Unplugged](https://linuxunplugged.com) from Jupiter Broadcasting are the reason the pieces are what they are, from mergerfs to NixOS; years of listening turned into years of running. If anything here is useful to you, it was useful to me first because of them.
