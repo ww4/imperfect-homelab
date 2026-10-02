@@ -6,6 +6,7 @@
 #
 #   gen-llms.sh CONTENT_DIR BASE_URL > llms-full.txt
 set -euo pipefail
+export LC_ALL=C # sort order must not depend on the host locale (en_US ignores hyphens; the sandbox is C)
 content=$1; base=${2%/}
 fm() { awk -v k="$1" 'BEGIN{f=0} /^\+\+\+$/{f++; next} f==1 && $0 ~ "^"k" = " { sub("^"k" = \"?",""); sub("\"$",""); print; exit }' "$2"; }
 body() { awk 'BEGIN{f=0} /^\+\+\+$/{f++; next} f>=2 {print}' "$1"; }

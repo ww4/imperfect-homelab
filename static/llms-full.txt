@@ -615,6 +615,49 @@ The alert topic name (subscriber access is granted on it).
 
 
 
+## arr-missing-sweep
+
+URL: https://ww4.github.io/imperfect-homelab/services/arr-missing-sweep/
+
+
+Weekly search for what is still missing in Sonarr/Radarr, with a metadata-mismatch skip rule.
+
+## Enabling it
+
+Importing `nixosModules.arr-missing-sweep` enables it; there is no switch.
+
+**Requires:** [arr](@/services/arr.md)
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.arrMissingSweep.apiEnvFile` | `SONARR_API_KEY`, `RADARR_API_KEY` | `<homelab.arrMissingSweep.user>` | generate |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.arrMissingSweep.apiEnvFile`
+
+`string` — **required**
+
+Shell-sourceable file exporting SONARR_API_KEY and RADARR_API_KEY (a sops secret owned by `user`). 
+
+#### `homelab.arrMissingSweep.user`
+
+`string` — default `"root"`
+
+User the weekly *arr missing-sweep runs as. Set it to whichever user owns the secret behind apiEnvFile. 
+
+#### `homelab.ntfy.url`
+
+`string` — default `"http://localhost:8090/alerts"`
+
+Full URL (server + topic) that library modules POST notifications to, in ntfy.sh format. Point it at your own ntfy instance/topic. 
+
+
+
 ## arr
 
 URL: https://ww4.github.io/imperfect-homelab/services/arr/
@@ -711,49 +754,6 @@ gluetun VPN_SERVICE_PROVIDER for the download client's tunnel.
 `string` — **required** — example `"example.com"`
 
 The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
-
-
-
-## arr-missing-sweep
-
-URL: https://ww4.github.io/imperfect-homelab/services/arr-missing-sweep/
-
-
-Weekly search for what is still missing in Sonarr/Radarr, with a metadata-mismatch skip rule.
-
-## Enabling it
-
-Importing `nixosModules.arr-missing-sweep` enables it; there is no switch.
-
-**Requires:** [arr](@/services/arr.md)
-
-## Secrets
-
-| Option | File must carry | Read by | Class |
-|---|---|---|---|
-| `homelab.arrMissingSweep.apiEnvFile` | `SONARR_API_KEY`, `RADARR_API_KEY` | `<homelab.arrMissingSweep.user>` | generate |
-
-Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
-
-## Options
-
-#### `homelab.arrMissingSweep.apiEnvFile`
-
-`string` — **required**
-
-Shell-sourceable file exporting SONARR_API_KEY and RADARR_API_KEY (a sops secret owned by `user`). 
-
-#### `homelab.arrMissingSweep.user`
-
-`string` — default `"root"`
-
-User the weekly *arr missing-sweep runs as. Set it to whichever user owns the secret behind apiEnvFile. 
-
-#### `homelab.ntfy.url`
-
-`string` — default `"http://localhost:8090/alerts"`
-
-Full URL (server + topic) that library modules POST notifications to, in ntfy.sh format. Point it at your own ntfy instance/topic. 
 
 
 
@@ -996,19 +996,19 @@ Regenerable subtrees of `paths` (caches, logs, transcode scratch) to leave out.
 
 #### `homelab.backup.keep.daily`
 
-`positive integer, meaning &gt;0` — default `7`
+`positive integer, meaning >0` — default `7`
 
 Daily snapshots to keep.
 
 #### `homelab.backup.keep.monthly`
 
-`positive integer, meaning &gt;0` — default `6`
+`positive integer, meaning >0` — default `6`
 
 Monthly snapshots to keep.
 
 #### `homelab.backup.keep.weekly`
 
-`positive integer, meaning &gt;0` — default `4`
+`positive integer, meaning >0` — default `4`
 
 Weekly snapshots to keep.
 
@@ -2499,7 +2499,7 @@ OnCalendar for `snapraid scrub`.
 
 #### `homelab.snapraid.scrub.olderThan`
 
-`unsigned integer, meaning &gt;=0` — default `10`
+`unsigned integer, meaning >=0` — default `10`
 
 Skip blocks scrubbed within this many days.
 
