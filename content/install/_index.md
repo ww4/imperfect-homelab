@@ -7,4 +7,7 @@ template = "section.html"
 page_template = "page.html"
 +++
 
-> Written as the transcript of the end-to-end run. Stub until Phase 3 is green.
+The install is an answers file, one `generate`, and one `nixos-anywhere` command. The answers file is where the decisions are: which modules, your domain, your disks, your pool. `generate` turns it into a private flake with every secret minted or supplied and encrypted. `nixos-anywhere` installs that flake onto a machine booted from the NixOS ISO, over SSH, and the first boot decrypts the secrets with the host key the generator made for it.
+
+This chapter describes that path as the library's own test runs it, in a virtual machine, for three canned profiles. Your run differs in the disk names and the domain.
+
