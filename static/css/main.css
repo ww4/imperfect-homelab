@@ -31,3 +31,9 @@ main { padding:1.5rem 2rem 4rem; max-width:52rem }
 dl.opt dt { font-family:ui-monospace,monospace; font-weight:600; margin-top:1rem } dl.opt dd { margin:0 0 0 1rem }
 .site-footer { border-top:1px solid var(--line); padding:1rem 1.25rem; color:var(--muted); font-size:.9rem }
 @media (max-width:48rem) { .layout { grid-template-columns:1fr } .sidebar { border-right:0; border-bottom:1px solid var(--line) } }
+.sidebar-toggle > summary { display:none }
+@media (max-width:48rem) {
+  .sidebar { padding:.6rem 1rem }
+  .sidebar-toggle > summary { display:list-item; cursor:pointer; font-weight:600; padding:.25rem 0 }
+  .sidebar-toggle[open] > summary { margin-bottom:.5rem }
+}

@@ -18,6 +18,8 @@
   </header>
   <div class="layout">
     <nav class="sidebar" aria-label="Sections">
+      <details class="sidebar-toggle" open>
+      <summary>Contents</summary>
       {% set root = get_section(path="_index.md") %}
       <ol>
       {% for sub in root.subsections %}
@@ -35,11 +37,18 @@
         </li>
       {% endfor %}
       </ol>
+      </details>
     </nav>
     <main id="main" class="prose">
       {% block content %}{% endblock content %}
     </main>
   </div>
+  <script>
+    // Collapse the section list on narrow screens so the page content comes first.
+    if (window.matchMedia("(max-width: 48rem)").matches) {
+      var d = document.querySelector(".sidebar-toggle"); if (d) d.removeAttribute("open");
+    }
+  </script>
   <footer class="site-footer">
     <p>Text © {{ now() | date(format="%Y") }} — <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Code in the <a href="{{ config.extra.library_url }}">module library</a> is GPL-3.0.</p>
     <p>Built with <a href="https://www.getzola.org/">Zola</a>.</p>
