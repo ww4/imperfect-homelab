@@ -70,22 +70,24 @@
         '');
       };
 
-      checks.${system}.llms-fresh = pkgs.runCommand "llms-fresh" { } ''
-        if diff ${self}/static/llms-full.txt ${llms}/llms-full.txt; then
-          touch $out
-        else
-          echo "static/llms-full.txt is stale — run: tools/gen-llms.sh content https://ww4.github.io/imperfect-homelab > static/llms-full.txt" >&2; exit 1
-        fi
-      '';
-
-      # `nix flake check`: the committed reference must equal the generated one.
-      checks.${system}.reference-fresh = pkgs.runCommand "reference-fresh" { } ''
-        if diff -r ${reference} ${self}/content/services; then
-          touch $out
-        else
-          echo "content/services is stale — run: nix run .#gen-reference" >&2; exit 1
-        fi
-      '';
+      # `nix flake check`: the committed reference and llms-full.txt must equal
+      # the generated ones.
+      checks.${system} = {
+        reference-fresh = pkgs.runCommand "reference-fresh" { } ''
+          if diff -r ${reference} ${self}/content/services; then
+            touch $out
+          else
+            echo "content/services is stale — run: nix run .#gen-reference" >&2; exit 1
+          fi
+        '';
+        llms-fresh = pkgs.runCommand "llms-fresh" { } ''
+          if diff ${self}/static/llms-full.txt ${llms}/llms-full.txt; then
+            touch $out
+          else
+            echo "static/llms-full.txt is stale — run: tools/gen-llms.sh content https://ww4.github.io/imperfect-homelab > static/llms-full.txt" >&2; exit 1
+          fi
+        '';
+      };
 
       devShells.${system}.default = pkgs.mkShell { packages = [ pkgs.zola pkgs.jq ]; };
     };
