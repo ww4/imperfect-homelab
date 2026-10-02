@@ -17,7 +17,7 @@ Importing `nixosModules.decluttarr` enables it; there is no switch.
 
 | Option | File must carry | Read by | Class |
 |---|---|---|---|
-| `homelab.decluttarr.envFile` | `SONARR_API_KEY`, `RADARR_API_KEY` | `root` | first-boot |
+| `homelab.decluttarr.envFile` | `SONARR_API_KEY`, `RADARR_API_KEY` | `root` | generate |
 
 Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
 

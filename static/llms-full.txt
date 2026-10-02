@@ -67,7 +67,7 @@ If you already run a homelab, the install path still applies, but you will proba
 URL: https://ww4.github.io/imperfect-homelab/start-here/where-it-came-from/
 
 
-The reference box is called gromit and lives in rural Kentucky. It has been rebuilt several times over the years, most recently from scratch on NixOS, and what you install from this guide is a cleaned-up copy of what it runs today. Its configuration, the public half anyway, is the library this site documents. The private half is a values file plus the handful of things that are one household's business.
+The reference box has been rebuilt several times over the years, most recently from scratch on NixOS, and what you install from this guide is a cleaned-up copy of what it runs today. Its configuration, the public half anyway, is the library this site documents. The private half is a values file plus the handful of things that are one household's business.
 
 It started from Perfect Media Server. Alex Kretzschmar's site laid out a way to build a home server from independent disks, a union filesystem, parity, and containers, and explained the reasoning as well as the commands. This machine's first version followed that write-up closely. The storage design here still does: MergerFS over disks that each hold whole files, SnapRAID for parity, and a backup tier separate from the media tier. What changed over the years is that the configuration moved from scripts and hand-edited files into one declarative description, and that an agent took over the routine work.
 
@@ -366,7 +366,7 @@ curl -fLO $base/$name && curl -fLO $base/$name.sha256
 sha256sum -c $name.sha256
 ```
 
-The image is about 1.5 GB. Write it to a USB stick of 4 GB or more with `dd if=$name of=/dev/sdX bs=4M status=progress` (the stick, not a partition; everything on it is erased) or with Etcher, boot the target from it, and the console prints the two commands to type. Wired network is automatic; for Wi-Fi, `wpa_cli` first. If you would rather use a stock NixOS ISO, `nix run 'git+https://git.rosemaryacres.com/ww4/homelab-modules.git?dir=configurator' -- tui` does the same thing after a compile of a few minutes.
+The image is about 1.5 GB. Write it to a USB stick of 4 GB or more with `dd if=$name of=/dev/sdX bs=4M status=progress` (the stick, not a partition; everything on it is erased) or with Etcher, boot the target from it, and the console prints the two commands to type. Wired network is automatic; for Wi-Fi, `wpa_cli` first. If you would rather use a stock NixOS ISO, `nix run 'github:ww4/homelab-modules?dir=configurator' -- tui` does the same thing after a compile of a few minutes.
 
 Each release of the image is named by date and library commit; `latest.txt` always names the newest, and the chapter's commands follow it.
 
@@ -503,6 +503,7 @@ against the catalog, so what you read here is what the code does.
 | [audiobookshelf](@/services/audiobookshelf.md) | Audiobookshelf audiobook / podcast server. | import | `abs.<domain>` |
 | [aurral](@/services/aurral.md) | Aurral music discovery/request UI in front of Lidarr. | import | `music.<domain>` |
 | [authelia](@/services/authelia.md) | Authelia SSO: forward-auth gateway + OIDC provider. | `homelab.authelia.enable` | `auth.<domain>` |
+| [backup](@/services/backup.md) | restic snapshots of the irreplaceable small state: a local repo on the pool plus an optional offsite one, same paths and retention; optional SFTP push target for a second machine. | import |  |
 | [boot](@/services/boot.md) | Bootloader and power behaviour for an always-on server. | import |  |
 | [decluttarr](@/services/decluttarr.md) | Reap stalled/failed downloads from Sonarr/Radarr and re-search. | import |  |
 | [deploy-drift-watch](@/services/deploy-drift-watch.md) | Alert when the forge has commits the box never deployed. | `homelab.deployDriftWatch.enable` |  |
@@ -531,6 +532,7 @@ against the catalog, so what you read here is what the code does.
 | [remote-desktop](@/services/remote-desktop.md) | xrdp + XFCE remote desktop, Tailscale-only. | import |  |
 | [silverbullet](@/services/silverbullet.md) | SilverBullet markdown notes/tasks, optionally a two-writer space. | import | `notes.<domain>` |
 | [smart-dump](@/services/smart-dump.md) | Dump the full SMART table for every drive to world-readable files. | import |  |
+| [snapraid](@/services/snapraid.md) | SnapRAID parity for a MergerFS pool's member disks: nightly sync, weekly partial scrub; any one member recoverable per parity disk. | `homelab.snapraid.enable` |  |
 | [system](@/services/system.md) | Locale, Nix settings, nixpkgs config for an always-on server. | import |  |
 | [tandoor](@/services/tandoor.md) | Tandoor Recipes. | import | `recipes.<domain>` |
 | [unpackerr](@/services/unpackerr.md) | Extract RAR'd releases in place so the *arrs can import them; seeds untouched. | import |  |
@@ -632,10 +634,17 @@ Importing `nixosModules.arr` enables it; there is no switch.
 | Option | File must carry | Read by | Class |
 |---|---|---|---|
 | `homelab.arrStack.vpnEnvFile` | `WIREGUARD_PRIVATE_KEY`, `WIREGUARD_PRESHARED_KEY`, `WIREGUARD_ADDRESSES`, `SERVER_COUNTRIES`, `FIREWALL_VPN_INPUT_PORTS (optional)` | `root` | supply |
+| `homelab.arrStack.apiKeyEnvFile` | `SONARR_API_KEY`, `RADARR_API_KEY`, `PROWLARR_API_KEY`, `LIDARR_API_KEY` | `root` | generate |
 
 Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
 
 ## Options
+
+#### `homelab.arrStack.apiKeyEnvFile`
+
+`null or string` — default `null` — example `"/run/secrets/arr-api-keys"`
+
+Env file with SONARR_API_KEY / RADARR_API_KEY / PROWLARR_API_KEY (and LIDARR_API_KEY if lidarr is imported). When set, each app is seeded with its key before first start, so the keys are values the configuration owns rather than something copied out of a UI, and recyclarr renders its secrets from the same file. Read as root; root:0400 is fine. null = each *arr mints its own key on first run. 
 
 #### `homelab.arrStack.group`
 
@@ -722,7 +731,7 @@ Importing `nixosModules.arr-missing-sweep` enables it; there is no switch.
 
 | Option | File must carry | Read by | Class |
 |---|---|---|---|
-| `homelab.arrMissingSweep.apiEnvFile` | `SONARR_API_KEY`, `RADARR_API_KEY` | `<homelab.arrMissingSweep.user>` | first-boot |
+| `homelab.arrMissingSweep.apiEnvFile` | `SONARR_API_KEY`, `RADARR_API_KEY` | `<homelab.arrMissingSweep.user>` | generate |
 
 Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
 
@@ -794,11 +803,17 @@ Importing `nixosModules.aurral` enables it; there is no switch.
 
 | Option | File must carry | Read by | Class |
 |---|---|---|---|
-| `homelab.aurral.envFile` | `LIDARR_API_KEY` | `root` | first-boot |
+| `homelab.aurral.envFile` | `LIDARR_API_KEY` | `root` | generate |
 
 Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
 
 ## Options
+
+#### `homelab.arrStack.apiKeyEnvFile`
+
+`null or string` — default `null` — example `"/run/secrets/arr-api-keys"`
+
+Env file with SONARR_API_KEY / RADARR_API_KEY / PROWLARR_API_KEY (and LIDARR_API_KEY if lidarr is imported). When set, each app is seeded with its key before first start, so the keys are values the configuration owns rather than something copied out of a UI, and recyclarr renders its secrets from the same file. Read as root; root:0400 is fine. null = each *arr mints its own key on first run. 
 
 #### `homelab.arrStack.group`
 
@@ -938,6 +953,157 @@ The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&
 
 
 
+## backup
+
+URL: https://ww4.github.io/imperfect-homelab/services/backup/
+
+
+restic snapshots of the irreplaceable small state: a local repo on the pool plus an optional offsite one, same paths and retention; optional SFTP push target for a second machine.
+
+## Enabling it
+
+Importing `nixosModules.backup` enables it; there is no switch.
+
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.backup.passwordFile` | `<restic repository passphrase, one line>` | `root` | generate |
+| `homelab.backup.remote.environmentFile` | `<backend credentials as restic env vars, e.g. B2_ACCOUNT_ID + B2_ACCOUNT_KEY>` | `root` | supply |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.adminUser`
+
+`string` — default `"admin"`
+
+Username of the human administrator (SSO seed user, etc.).
+
+#### `homelab.backup.checkOpts`
+
+`list of string` — default `[   "--with-cache" ]`
+
+Arguments to `restic check` after each run (structural integrity, using the local cache).
+
+#### `homelab.backup.exclude`
+
+`list of string` — default `[ ]` — example `[   "/var/lib/jellyfin/transcodes"   "/var/lib/jellyfin/cache" ]`
+
+Regenerable subtrees of `paths` (caches, logs, transcode scratch) to leave out.
+
+#### `homelab.backup.keep.daily`
+
+`positive integer, meaning &gt;0` — default `7`
+
+Daily snapshots to keep.
+
+#### `homelab.backup.keep.monthly`
+
+`positive integer, meaning &gt;0` — default `6`
+
+Monthly snapshots to keep.
+
+#### `homelab.backup.keep.weekly`
+
+`positive integer, meaning &gt;0` — default `4`
+
+Weekly snapshots to keep.
+
+#### `homelab.backup.local.enable`
+
+`boolean` — default `true`
+
+Keep a repository on local storage (fast restores; survives the system disk).
+
+#### `homelab.backup.local.name`
+
+`string` — default `"critical-local"`
+
+Job name: the unit is restic-backups-&lt;name&gt;.
+
+#### `homelab.backup.local.onCalendar`
+
+`string` — default `"02:30"`
+
+systemd OnCalendar for the local job (missed runs are caught up).
+
+#### `homelab.backup.local.repository`
+
+`null or string` — default `null` — example `"/mnt/pool/restic"`
+
+Directory of the local repository, normally on a storage pool rather than the system disk.
+
+#### `homelab.backup.local.requiresMountsFor`
+
+`list of string` — default `[ ]` — example `[   "/mnt/pool" ]`
+
+Mountpoints that must be mounted before the local job (and the SFTP-push permission service) may run — so a pool that failed to mount yields a skipped run, not a repository written into the bare mountpoint on the system disk. 
+
+#### `homelab.backup.passwordFile`
+
+`string` — **required** — example `"/run/secrets/restic-password"`
+
+File holding the restic repository passphrase, shared by the local and remote repositories. restic cannot recover a lost passphrase: keep a copy somewhere that is not this machine. 
+
+#### `homelab.backup.paths`
+
+`list of string` — default `[ ]` — example `[   "/var/lib/nextcloud"   "/var/backup/postgresql"   "/home/alice/Documents" ]`
+
+The critical tier: every path whose loss could not be undone. Application state under /var/lib, database dumps, keys, documents. Not bulk media — that is a mirror job, not a restic job. 
+
+#### `homelab.backup.remote.enable`
+
+`boolean` — default `false`
+
+Also push to an offsite repository (survives fire, theft and ransomware).
+
+#### `homelab.backup.remote.environmentFile`
+
+`null or string` — default `null` — example `"/run/secrets/restic-remote-env"`
+
+File of the backend's credentials as restic environment variables (for B2: B2_ACCOUNT_ID and B2_ACCOUNT_KEY; for S3: AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY). Null for backends that need none, such as sftp: with a key. 
+
+#### `homelab.backup.remote.name`
+
+`string` — default `"critical-remote"`
+
+Job name: the unit is restic-backups-&lt;name&gt;.
+
+#### `homelab.backup.remote.onCalendar`
+
+`string` — default `"03:00"`
+
+systemd OnCalendar for the remote job (missed runs are caught up).
+
+#### `homelab.backup.remote.repository`
+
+`null or string` — default `null` — example `"b2:my-bucket"`
+
+A restic backend URL: b2:, s3:, azure:, gs:, sftp:, rest:.
+
+#### `homelab.backup.sftpPush.authorizedKeys`
+
+`list of string` — default `[ ]` — example `[   "restrict,command=\"internal-sftp\" ssh-ed25519 AAAA... backup@otherbox" ]`
+
+The pushing machine's public keys. Prefix each with restrict,command="internal-sftp" so the key can do nothing but SFTP, whatever the client asks for. 
+
+#### `homelab.backup.sftpPush.enable`
+
+`boolean` — default `false`
+
+Let a second machine push its own restic snapshots over SFTP into the local repository (one repo for the household). Creates a dedicated system user whose primary group owns the repository. 
+
+#### `homelab.backup.sftpPush.user`
+
+`string` — default `"restic-push"`
+
+Name of the SFTP-only system user the other machine logs in as.
+
+
+
 ## boot
 
 URL: https://ww4.github.io/imperfect-homelab/services/boot/
@@ -976,7 +1142,7 @@ Importing `nixosModules.decluttarr` enables it; there is no switch.
 
 | Option | File must carry | Read by | Class |
 |---|---|---|---|
-| `homelab.decluttarr.envFile` | `SONARR_API_KEY`, `RADARR_API_KEY` | `root` | first-boot |
+| `homelab.decluttarr.envFile` | `SONARR_API_KEY`, `RADARR_API_KEY` | `root` | generate |
 
 Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
 
@@ -1261,6 +1427,12 @@ None.
 
 ## Options
 
+#### `homelab.arrStack.apiKeyEnvFile`
+
+`null or string` — default `null` — example `"/run/secrets/arr-api-keys"`
+
+Env file with SONARR_API_KEY / RADARR_API_KEY / PROWLARR_API_KEY (and LIDARR_API_KEY if lidarr is imported). When set, each app is seeded with its key before first start, so the keys are values the configuration owns rather than something copied out of a UI, and recyclarr renders its secrets from the same file. Read as root; root:0400 is fine. null = each *arr mints its own key on first run. 
+
 #### `homelab.arrStack.group`
 
 `string` — default `"users"`
@@ -1348,6 +1520,12 @@ Importing `nixosModules.lidarr` enables it; there is no switch.
 None.
 
 ## Options
+
+#### `homelab.arrStack.apiKeyEnvFile`
+
+`null or string` — default `null` — example `"/run/secrets/arr-api-keys"`
+
+Env file with SONARR_API_KEY / RADARR_API_KEY / PROWLARR_API_KEY (and LIDARR_API_KEY if lidarr is imported). When set, each app is seeded with its key before first start, so the keys are values the configuration owns rather than something copied out of a UI, and recyclarr renders its secrets from the same file. Read as root; root:0400 is fine. null = each *arr mints its own key on first run. 
 
 #### `homelab.arrStack.group`
 
@@ -2038,13 +2216,75 @@ Importing `nixosModules.recyclarr` enables it; there is no switch.
 
 ## Secrets
 
-| Option | File must carry | Read by | Class |
-|---|---|---|---|
-| `<manual: /var/lib/recyclarr/secrets.yml>` | `sonarr_api_key`, `radarr_api_key` | `recyclarr` | first-boot |
-
-Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+None.
 
 ## Options
+
+#### `homelab.arrStack.apiKeyEnvFile`
+
+`null or string` — default `null` — example `"/run/secrets/arr-api-keys"`
+
+Env file with SONARR_API_KEY / RADARR_API_KEY / PROWLARR_API_KEY (and LIDARR_API_KEY if lidarr is imported). When set, each app is seeded with its key before first start, so the keys are values the configuration owns rather than something copied out of a UI, and recyclarr renders its secrets from the same file. Read as root; root:0400 is fine. null = each *arr mints its own key on first run. 
+
+#### `homelab.arrStack.group`
+
+`string` — default `"users"`
+
+Host group owning the stack's directories (matches pgid).
+
+#### `homelab.arrStack.keepersMovies`
+
+`null or string` — default `null`
+
+Optional long-term-keeper library mounted at /keepers/movies — add it as a second Radarr root folder and promote via Edit → Root Folder; the *arr moves the file + updates its DB. 
+
+#### `homelab.arrStack.keepersTv`
+
+`null or string` — default `null`
+
+Optional keeper library mounted at /keepers/tv (Sonarr twin of keepersMovies).
+
+#### `homelab.arrStack.owner`
+
+`string` — **required**
+
+Host user owning the stack's directories (matches puid).
+
+#### `homelab.arrStack.pgid`
+
+`string` — default `"100"`
+
+gid the stack's containers run as.
+
+#### `homelab.arrStack.puid`
+
+`string` — default `"1000"`
+
+uid the stack's containers run as.
+
+#### `homelab.arrStack.root`
+
+`string` — **required** — example `"/mnt/media/arr"`
+
+The shared /data tree (downloads + media subdirs).
+
+#### `homelab.arrStack.scratchDir`
+
+`null or string` — default `null` — example `"/mnt/scratch/qbittorrent-incomplete"`
+
+Incomplete-download dir on a SEPARATE filesystem (spares the pool's IO; the client copies once on completion). null = incomplete stays inside the /data tree. 
+
+#### `homelab.arrStack.vpnEnvFile`
+
+`string` — **required**
+
+environmentFile with the WireGuard credentials for gluetun (WIREGUARD_PRIVATE_KEY / _PRESHARED_KEY / _ADDRESSES, SERVER_COUNTRIES, optionally FIREWALL_VPN_INPUT_PORTS). Read by docker --env-file as root; root:0400 is fine. 
+
+#### `homelab.arrStack.vpnProvider`
+
+`string` — **required** — example `"mullvad"`
+
+gluetun VPN_SERVICE_PROVIDER for the download client's tunnel.
 
 #### `homelab.recyclarr.configFile`
 
@@ -2148,6 +2388,141 @@ None.
 This module reads no `homelab.*` options.
 
 
+## snapraid
+
+URL: https://ww4.github.io/imperfect-homelab/services/snapraid/
+
+
+SnapRAID parity for a MergerFS pool's member disks: nightly sync, weekly partial scrub; any one member recoverable per parity disk.
+
+## Enabling it
+
+Import `nixosModules.snapraid` and set `homelab.snapraid.enable = true`.
+
+**Requires:** [mergerfs-pools](@/services/mergerfs-pools.md)
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.pools`
+
+`attribute set of (submodule)` — default `{ }`
+
+MergerFS pools to assemble. See mergerfs-pools.nix.
+
+#### `homelab.pools.<name>.branches`
+
+`string` — **required** — example `"/mnt/disks/media-*"`
+
+Glob of member-branch mountpoints (mergerfs device string).
+
+#### `homelab.pools.<name>.createPolicy`
+
+`one of "mfs", "epmfs", "ff", "lfs", "rand"` — default `"mfs"`
+
+Where NEW files land. `mfs` (most free space) balances writes. `epmfs` (existing path, most free space) keeps new files on the branch that already holds their parent directory — required if anything hardlinks across the tree (e.g. rsync --link-dest), because mergerfs hardlinks only function within a single branch. 
+
+#### `homelab.pools.<name>.fsname`
+
+`null or string` — default `null`
+
+Optional fsname= shown in df/mount output.
+
+#### `homelab.pools.<name>.memberDir`
+
+`null or string` — default `null` — example `"/mnt/disks"`
+
+Directory the member branches mount under (for the auto-remounter).
+
+#### `homelab.pools.<name>.members`
+
+`list of string` — default `[ ]` — example `[   "D1"   "D2" ]`
+
+Member subdirectory names under memberDir (for the auto-remounter).
+
+#### `homelab.pools.<name>.minFreeSpace`
+
+`null or string` — default `null` — example `"100G"`
+
+Reserve headroom: mergerfs won't place a NEW file on a branch with less than this free. Must exceed your largest single file so a create never hits ENOSPC mid-write — the 4 GiB default once let a mirror job fill a branch until a large temp file no longer fit. Hardlinks and growth of existing files are unaffected (link() co-locates with its target regardless). 
+
+#### `homelab.pools.<name>.mountpoint`
+
+`string` — **required** — example `"/mnt/media"`
+
+Where the pooled filesystem mounts.
+
+#### `homelab.snapraid.contentDir`
+
+`string` — default `"/var/lib/snapraid"`
+
+Persistent local directory for a copy of the content (database) file; every data disk also carries one.
+
+#### `homelab.snapraid.enable`
+
+`boolean` — default `false`
+
+Parity-protect a MergerFS pool's member disks with SnapRAID. Off by default on purpose: the first sync is a manual, hours-long step after the parity disk is mounted (see the module header). 
+
+#### `homelab.snapraid.exclude`
+
+`list of string` — default `[   "*.unrecoverable"   "/tmp/"   "lost+found/"   ".pool-member" ]`
+
+Patterns SnapRAID skips (the pool-member sentinel the auto-remounter writes is here by default).
+
+#### `homelab.snapraid.extraExclude`
+
+`list of string` — default `[ ]` — example `[   "/downloads/incomplete/" ]`
+
+Site-specific patterns appended to `exclude` — transient download scratch, caches.
+
+#### `homelab.snapraid.parityFiles`
+
+`list of string` — default `[ ]` — example `[   "/mnt/parity1/snapraid.parity" ]`
+
+One parity file per parity disk, each on a disk that is NOT a pool member and at least as large as the largest member. One file = any one member recoverable; two = any two. 
+
+#### `homelab.snapraid.pool`
+
+`string` — **required** — example `"media"`
+
+Name of the homelab.pools entry whose memberDir + members are the data disks.
+
+#### `homelab.snapraid.scrub.interval`
+
+`string` — default `"Mon *-*-* 05:00:00"`
+
+OnCalendar for `snapraid scrub`.
+
+#### `homelab.snapraid.scrub.olderThan`
+
+`unsigned integer, meaning &gt;=0` — default `10`
+
+Skip blocks scrubbed within this many days.
+
+#### `homelab.snapraid.scrub.plan`
+
+`integer between 0 and 100 (both inclusive)` — default `12`
+
+Percent of the array verified per scrub run.
+
+#### `homelab.snapraid.sync.interval`
+
+`string` — default `"*-*-* 04:00:00"`
+
+OnCalendar for `snapraid sync` (a no-op when nothing changed; keep it clear of mirror jobs).
+
+#### `homelab.snapraid.touchBeforeSync`
+
+`boolean` — default `true`
+
+Run `snapraid touch` first so files with zero sub-second timestamps get unique ones (SnapRAID's own recommendation).
+
+
+
 ## system
 
 URL: https://ww4.github.io/imperfect-homelab/services/system/
@@ -2214,11 +2589,17 @@ Importing `nixosModules.unpackerr` enables it; there is no switch.
 
 | Option | File must carry | Read by | Class |
 |---|---|---|---|
-| `homelab.unpackerr.envFile` | `UN_SONARR_0_API_KEY`, `UN_RADARR_0_API_KEY` | `root` | first-boot |
+| `homelab.unpackerr.envFile` | `UN_SONARR_0_API_KEY`, `UN_RADARR_0_API_KEY` | `root` | generate |
 
 Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
 
 ## Options
+
+#### `homelab.arrStack.apiKeyEnvFile`
+
+`null or string` — default `null` — example `"/run/secrets/arr-api-keys"`
+
+Env file with SONARR_API_KEY / RADARR_API_KEY / PROWLARR_API_KEY (and LIDARR_API_KEY if lidarr is imported). When set, each app is seeded with its key before first start, so the keys are values the configuration owns rather than something copied out of a UI, and recyclarr renders its secrets from the same file. Read as root; root:0400 is fine. null = each *arr mints its own key on first run. 
 
 #### `homelab.arrStack.group`
 

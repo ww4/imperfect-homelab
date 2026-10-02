@@ -24,5 +24,5 @@ external_links_target_blank = false
 smart_punctuation = true
 
 [extra]
-library_url = "https://git.rosemaryacres.com/ww4/homelab-modules"
+library_url = "https://github.com/ww4/homelab-modules"
 library_mirror = "https://github.com/ww4/homelab-modules"

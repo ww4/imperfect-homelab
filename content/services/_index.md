@@ -23,6 +23,7 @@ against the catalog, so what you read here is what the code does.
 | [audiobookshelf](@/services/audiobookshelf.md) | Audiobookshelf audiobook / podcast server. | import | `abs.<domain>` |
 | [aurral](@/services/aurral.md) | Aurral music discovery/request UI in front of Lidarr. | import | `music.<domain>` |
 | [authelia](@/services/authelia.md) | Authelia SSO: forward-auth gateway + OIDC provider. | `homelab.authelia.enable` | `auth.<domain>` |
+| [backup](@/services/backup.md) | restic snapshots of the irreplaceable small state: a local repo on the pool plus an optional offsite one, same paths and retention; optional SFTP push target for a second machine. | import |  |
 | [boot](@/services/boot.md) | Bootloader and power behaviour for an always-on server. | import |  |
 | [decluttarr](@/services/decluttarr.md) | Reap stalled/failed downloads from Sonarr/Radarr and re-search. | import |  |
 | [deploy-drift-watch](@/services/deploy-drift-watch.md) | Alert when the forge has commits the box never deployed. | `homelab.deployDriftWatch.enable` |  |
@@ -51,6 +52,7 @@ against the catalog, so what you read here is what the code does.
 | [remote-desktop](@/services/remote-desktop.md) | xrdp + XFCE remote desktop, Tailscale-only. | import |  |
 | [silverbullet](@/services/silverbullet.md) | SilverBullet markdown notes/tasks, optionally a two-writer space. | import | `notes.<domain>` |
 | [smart-dump](@/services/smart-dump.md) | Dump the full SMART table for every drive to world-readable files. | import |  |
+| [snapraid](@/services/snapraid.md) | SnapRAID parity for a MergerFS pool's member disks: nightly sync, weekly partial scrub; any one member recoverable per parity disk. | `homelab.snapraid.enable` |  |
 | [system](@/services/system.md) | Locale, Nix settings, nixpkgs config for an always-on server. | import |  |
 | [tandoor](@/services/tandoor.md) | Tandoor Recipes. | import | `recipes.<domain>` |
 | [unpackerr](@/services/unpackerr.md) | Extract RAR'd releases in place so the *arrs can import them; seeds untouched. | import |  |

@@ -17,7 +17,7 @@ Importing `nixosModules.arr-missing-sweep` enables it; there is no switch.
 
 | Option | File must carry | Read by | Class |
 |---|---|---|---|
-| `homelab.arrMissingSweep.apiEnvFile` | `SONARR_API_KEY`, `RADARR_API_KEY` | `<homelab.arrMissingSweep.user>` | first-boot |
+| `homelab.arrMissingSweep.apiEnvFile` | `SONARR_API_KEY`, `RADARR_API_KEY` | `<homelab.arrMissingSweep.user>` | generate |
 
 Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
 

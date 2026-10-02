@@ -15,13 +15,75 @@ Importing `nixosModules.recyclarr` enables it; there is no switch.
 
 ## Secrets
 
-| Option | File must carry | Read by | Class |
-|---|---|---|---|
-| `<manual: /var/lib/recyclarr/secrets.yml>` | `sonarr_api_key`, `radarr_api_key` | `recyclarr` | first-boot |
-
-Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+None.
 
 ## Options
+
+#### `homelab.arrStack.apiKeyEnvFile`
+
+`null or string` — default `null` — example `"/run/secrets/arr-api-keys"`
+
+Env file with SONARR_API_KEY / RADARR_API_KEY / PROWLARR_API_KEY (and LIDARR_API_KEY if lidarr is imported). When set, each app is seeded with its key before first start, so the keys are values the configuration owns rather than something copied out of a UI, and recyclarr renders its secrets from the same file. Read as root; root:0400 is fine. null = each *arr mints its own key on first run. 
+
+#### `homelab.arrStack.group`
+
+`string` — default `"users"`
+
+Host group owning the stack's directories (matches pgid).
+
+#### `homelab.arrStack.keepersMovies`
+
+`null or string` — default `null`
+
+Optional long-term-keeper library mounted at /keepers/movies — add it as a second Radarr root folder and promote via Edit → Root Folder; the *arr moves the file + updates its DB. 
+
+#### `homelab.arrStack.keepersTv`
+
+`null or string` — default `null`
+
+Optional keeper library mounted at /keepers/tv (Sonarr twin of keepersMovies).
+
+#### `homelab.arrStack.owner`
+
+`string` — **required**
+
+Host user owning the stack's directories (matches puid).
+
+#### `homelab.arrStack.pgid`
+
+`string` — default `"100"`
+
+gid the stack's containers run as.
+
+#### `homelab.arrStack.puid`
+
+`string` — default `"1000"`
+
+uid the stack's containers run as.
+
+#### `homelab.arrStack.root`
+
+`string` — **required** — example `"/mnt/media/arr"`
+
+The shared /data tree (downloads + media subdirs).
+
+#### `homelab.arrStack.scratchDir`
+
+`null or string` — default `null` — example `"/mnt/scratch/qbittorrent-incomplete"`
+
+Incomplete-download dir on a SEPARATE filesystem (spares the pool's IO; the client copies once on completion). null = incomplete stays inside the /data tree. 
+
+#### `homelab.arrStack.vpnEnvFile`
+
+`string` — **required**
+
+environmentFile with the WireGuard credentials for gluetun (WIREGUARD_PRIVATE_KEY / _PRESHARED_KEY / _ADDRESSES, SERVER_COUNTRIES, optionally FIREWALL_VPN_INPUT_PORTS). Read by docker --env-file as root; root:0400 is fine. 
+
+#### `homelab.arrStack.vpnProvider`
+
+`string` — **required** — example `"mullvad"`
+
+gluetun VPN_SERVICE_PROVIDER for the download client's tunnel.
 
 #### `homelab.recyclarr.configFile`
 

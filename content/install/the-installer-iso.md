@@ -13,6 +13,6 @@ curl -fLO $base/$name && curl -fLO $base/$name.sha256
 sha256sum -c $name.sha256
 ```
 
-The image is about 1.5 GB. Write it to a USB stick of 4 GB or more with `dd if=$name of=/dev/sdX bs=4M status=progress` (the stick, not a partition; everything on it is erased) or with Etcher, boot the target from it, and the console prints the two commands to type. Wired network is automatic; for Wi-Fi, `wpa_cli` first. If you would rather use a stock NixOS ISO, `nix run 'git+https://git.rosemaryacres.com/ww4/homelab-modules.git?dir=configurator' -- tui` does the same thing after a compile of a few minutes.
+The image is about 1.5 GB. Write it to a USB stick of 4 GB or more with `dd if=$name of=/dev/sdX bs=4M status=progress` (the stick, not a partition; everything on it is erased) or with Etcher, boot the target from it, and the console prints the two commands to type. Wired network is automatic; for Wi-Fi, `wpa_cli` first. If you would rather use a stock NixOS ISO, `nix run 'github:ww4/homelab-modules?dir=configurator' -- tui` does the same thing after a compile of a few minutes.
 
 Each release of the image is named by date and library commit; `latest.txt` always names the newest, and the chapter's commands follow it.

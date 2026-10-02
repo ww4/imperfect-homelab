@@ -5,7 +5,7 @@
   # The library is a flake input so the reference is generated from a PINNED
   # commit: `nix flake update homelab-modules` then `nix run .#gen-reference`
   # is the whole refresh loop.
-  inputs.homelab-modules.url = "git+https://git.rosemaryacres.com/ww4/homelab-modules.git";
+  inputs.homelab-modules.url = "github:ww4/homelab-modules";
 
   outputs = { self, nixpkgs, homelab-modules }:
     let

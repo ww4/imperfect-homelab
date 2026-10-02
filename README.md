@@ -1,7 +1,7 @@
 # Imperfect Homelab
 
 The guide to the homelab: install it from the public module library
-([homelab-modules](https://git.rosemaryacres.com/ww4/homelab-modules)), then
+([homelab-modules](https://github.com/ww4/homelab-modules)), then
 learn how it is built so you can add to it. A Zola site, published at
 https://ww4.github.io/imperfect-homelab.
 

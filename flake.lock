@@ -2,17 +2,17 @@
   "nodes": {
     "homelab-modules": {
       "locked": {
-        "lastModified": 1790555725,
-        "narHash": "sha256-nZ4MiBYOqIxWmky/4c9z79ngJRmsvonKRsmRUMVJPEo=",
-        "ref": "refs/heads/main",
-        "rev": "8fb950cdabddeae52e0eb9616601598b5ba2c27b",
-        "revCount": 17,
-        "type": "git",
-        "url": "https://git.rosemaryacres.com/ww4/homelab-modules.git"
+        "lastModified": 1790969507,
+        "narHash": "sha256-COqmxuAuCjSBZgM2CEXE2xFOO/P0LFmznemdB9I61X4=",
+        "owner": "ww4",
+        "repo": "homelab-modules",
+        "rev": "63677d65ed0c98dd368a8dcbb6158b28045d54e0",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "https://git.rosemaryacres.com/ww4/homelab-modules.git"
+        "owner": "ww4",
+        "repo": "homelab-modules",
+        "type": "github"
       }
     },
     "nixpkgs": {

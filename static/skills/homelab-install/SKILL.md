@@ -32,7 +32,7 @@ boot the ISO, run `passwd` on the console, tell you the IP. `ssh nixos@<ip>`
 `homelab-configure`. Work in `/home/nixos`.
 
 **From any machine with nix** (installing a different box over SSH):
-`nix run 'git+https://git.rosemaryacres.com/ww4/homelab-modules.git?dir=configurator' -- <command>`,
+`nix run 'github:ww4/homelab-modules?dir=configurator' -- <command>`,
 then `nixos-anywhere` as the generated README says.
 
 ## Procedure
