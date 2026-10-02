@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ section.title }}</h1>
+{{ section.content | safe }}
+<h2>The path</h2>
+<ol class="path">
+{% for sub in section.subsections %}
+  {% set s = get_section(path=sub) %}
+  <li><a href="{{ s.permalink }}">{{ s.title }}</a>{% if s.description %} — {{ s.description }}{% endif %}</li>
+{% endfor %}
+</ol>
+{% endblock content %}

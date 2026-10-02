@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% if page.title %}{{ page.title }} — {{ config.title }}{% elif section.title and current_path != "/" %}{{ section.title }} — {{ config.title }}{% else %}{{ config.title }}{% endif %}{% endblock title %}</title>
+  <meta name="description" content="{% if page.description %}{{ page.description }}{% elif section.description %}{{ section.description }}{% else %}{{ config.description }}{% endif %}">
+  <link rel="canonical" href="{% if page.permalink %}{{ page.permalink }}{% elif section.permalink %}{{ section.permalink }}{% else %}{{ config.base_url }}/{% endif %}">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/giallo-light.css" media="(prefers-color-scheme: light)">
+  <link rel="stylesheet" href="/giallo-dark.css" media="(prefers-color-scheme: dark)">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="/">{{ config.title }}</a>
+    <nav aria-label="Top"><a href="{{ config.extra.library_url }}">module library</a></nav>
+  </header>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Sections">
+      {% set root = get_section(path="_index.md") %}
+      <ol>
+      {% for sub in root.subsections %}
+        {% set s = get_section(path=sub) %}
+        {% set active = current_path is defined and current_path is starting_with(s.path) %}
+        <li{% if active %} class="active"{% endif %}>
+          <a href="{{ s.permalink }}">{{ s.title }}</a>
+          {% if active and s.pages %}
+          <ul>
+          {% for p in s.pages %}
+            <li{% if current_path is defined and current_path == p.path %} class="current"{% endif %}><a href="{{ p.permalink }}">{{ p.title }}</a></li>
+          {% endfor %}
+          </ul>
+          {% endif %}
+        </li>
+      {% endfor %}
+      </ol>
+    </nav>
+    <main id="main" class="prose">
+      {% block content %}{% endblock content %}
+    </main>
+  </div>
+  <footer class="site-footer">
+    <p>Text © {{ now() | date(format="%Y") }} — <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Code in the <a href="{{ config.extra.library_url }}">module library</a> is GPL-3.0.</p>
+    <p>Built with <a href="https://www.getzola.org/">Zola</a>.</p>
+  </footer>
+</body>
+</html>

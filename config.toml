@@ -1,0 +1,28 @@
+# Zola configuration — homelab-guide (working name; see README "Name")
+# base_url is the Cloudflare Pages default for the mirror; swap it when the
+# real domain lands. Cloudflare Pages runs `zola build` itself (ZOLA_VERSION
+# in the project settings); nix is only needed for the generated reference.
+base_url = "https://homelab-guide.pages.dev"
+title = "Homelab Guide"
+description = "Install a complete self-hosted homelab from a public NixOS module library, then learn how it is built so you can add to it."
+default_language = "en"
+
+compile_sass = false
+minify_html = true
+generate_feeds = false
+build_search_index = false
+
+[markdown]
+
+[markdown.highlighting]
+light_theme = "github-light"
+dark_theme = "github-dark"
+style = "class"
+
+
+external_links_target_blank = false
+smart_punctuation = true
+
+[extra]
+library_url = "https://git.rosemaryacres.com/ww4/homelab-modules"
+library_mirror = "https://github.com/ww4/homelab-modules"
