@@ -48,6 +48,16 @@
     if (window.matchMedia("(max-width: 48rem)").matches) {
       var d = document.querySelector(".sidebar-toggle"); if (d) d.removeAttribute("open");
     }
+    // A Copy button on every code block. Without a clipboard (http, old browser) the button stays hidden.
+    if (navigator.clipboard) document.querySelectorAll(".prose pre").forEach(function (pre) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "copy"; b.textContent = "Copy";
+      b.addEventListener("click", function () {
+        navigator.clipboard.writeText(pre.querySelector("code") ? pre.querySelector("code").innerText : pre.innerText).then(function () {
+          b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1500);
+        });
+      });
+      pre.appendChild(b);
+    });
   </script>
   <footer class="site-footer">
     <p>Text © {{ now() | date(format="%Y") }} — <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Code in the <a href="{{ config.extra.library_url }}">module library</a> is GPL-3.0.</p>
