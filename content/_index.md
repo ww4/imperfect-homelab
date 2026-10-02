@@ -9,6 +9,10 @@ single sign-on, monitoring, phone alerts, 3-2-1 backups — that you install
 from a public NixOS module library in one pass, and then understand well
 enough to add to.
 
+If you have never used Linux, the [Quick start](@/quick-start/_index.md) is
+the short road: one evening, click by click, and the Starter kit is running.
+The rest of the site is the long road, for when you want to know why.
+
 Three promises:
 
 1. **One command from the installer ISO** answers questions and leaves you

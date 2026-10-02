@@ -7,6 +7,8 @@ generated = true
 
 Let's Encrypt via DNS-01, the TLS default for every vhost.
 
+Memory: no long-running process of its own.
+
 ## Enabling it
 
 Importing `nixosModules.acme` enables it; there is no switch.

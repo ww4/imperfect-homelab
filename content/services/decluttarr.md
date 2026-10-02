@@ -7,6 +7,8 @@ generated = true
 
 Reap stalled/failed downloads from Sonarr/Radarr and re-search.
 
+Memory: about 64 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.decluttarr` enables it; there is no switch.

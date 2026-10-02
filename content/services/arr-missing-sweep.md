@@ -7,6 +7,8 @@ generated = true
 
 Weekly search for what is still missing in Sonarr/Radarr, with a metadata-mismatch skip rule.
 
+Memory: about 8 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.arr-missing-sweep` enables it; there is no switch.

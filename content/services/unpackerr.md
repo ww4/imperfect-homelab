@@ -7,6 +7,8 @@ generated = true
 
 Extract RAR'd releases in place so the *arrs can import them; seeds untouched.
 
+Memory: about 48 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.unpackerr` enables it; there is no switch.

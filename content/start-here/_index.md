@@ -1,7 +1,7 @@
 +++
 title = "Start here"
 description = "What this is, who it is for, and the box it came from"
-weight = 0
+weight = 1
 sort_by = "weight"
 template = "section.html"
 page_template = "page.html"

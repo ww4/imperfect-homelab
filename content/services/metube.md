@@ -7,6 +7,8 @@ generated = true
 
 MeTube web GUI for yt-dlp one-off downloads.
 
+Memory: about 192 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.metube` enables it; there is no switch.

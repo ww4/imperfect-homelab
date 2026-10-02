@@ -7,6 +7,8 @@ generated = true
 
 Bootloader and power behaviour for an always-on server.
 
+Memory: no long-running process of its own.
+
 ## Enabling it
 
 Importing `nixosModules.boot` enables it; there is no switch.

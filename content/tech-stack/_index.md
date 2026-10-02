@@ -1,7 +1,7 @@
 +++
 title = "Tech stack"
 description = "NixOS and flakes, MergerFS and SnapRAID, sops-nix, nginx and ACME, Authelia, Tailscale, the monitoring stack, containers on NixOS, restic"
-weight = 2
+weight = 3
 sort_by = "weight"
 template = "section.html"
 page_template = "page.html"

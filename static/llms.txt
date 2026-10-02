@@ -6,6 +6,7 @@ If you are an agent helping someone install or extend this, read these in order:
 
 - [For agents](https://ww4.github.io/imperfect-homelab/start-here/for-agents/): the headless contract — every command takes `--json`, exit codes, where secrets go, what to never do
 - [The install skill](https://ww4.github.io/imperfect-homelab/skills/homelab-install/SKILL.md): the procedure, step by step, as an Agent Skill
+- [Quick start](https://ww4.github.io/imperfect-homelab/quick-start/): the beginner's path, click by click (Windows, Rufus, boot menu, the seven TUI screens, first login) — hand this to a person who has never used Linux
 - [The installer ISO](https://ww4.github.io/imperfect-homelab/install/the-installer-iso/): download, checksum, write, boot
 - [The configurator's README](https://github.com/ww4/homelab-modules/blob/main/configurator/README.md): commands, the answers file, what comes out
 - [Services](https://ww4.github.io/imperfect-homelab/services/): every module, its options and secrets (generated from the library's catalog)

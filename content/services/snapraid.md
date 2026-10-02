@@ -7,6 +7,8 @@ generated = true
 
 SnapRAID parity for a MergerFS pool's member disks: nightly sync, weekly partial scrub; any one member recoverable per parity disk.
 
+Memory: about 64 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Import `nixosModules.snapraid` and set `homelab.snapraid.enable = true`.

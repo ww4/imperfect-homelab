@@ -19,7 +19,7 @@ mkdir -p "$out"
 +++
 title = "Services"
 description = "Every module in the library — what it does, what it reads, what it needs"
-weight = 6
+weight = 7
 sort_by = "title"
 template = "section.html"
 page_template = "page.html"
@@ -32,11 +32,11 @@ declarations at the pinned commit. The catalog is checked against the
 library's exported modules at evaluation time, and this section is checked
 against the catalog, so what you read here is what the code does.
 
-| Module | Purpose | Enable | Serves |
-|---|---|---|---|
+| Module | Purpose | Memory | Enable | Serves |
+|---|---|---|---|---|
 HDR
   jq -r 'to_entries | sort_by(.key) | .[] | select(.key != "options")
-    | "| [\(.key)](@/services/\(.key).md) | \(.value.description) | \(if .value.enable == "import" then "import" else "`" + .value.enable + "`" end) | \(.value.vhosts | map("`" + . + ".<domain>`") | join(", ")) |"' "$catalog"
+    | "| [\(.key)](@/services/\(.key).md) | \(.value.description) | \(if (.value.memory // 0) == 0 then "—" else (.value.memory|tostring) + " MiB" end) | \(if .value.enable == "import" then "import" else "`" + .value.enable + "`" end) | \(.value.vhosts | map("`" + . + ".<domain>`") | join(", ")) |"' "$catalog"
 } > "$out/_index.md"
 
 # One page per module.
@@ -60,6 +60,8 @@ jq -r 'to_entries | sort_by(.key) | .[] | select(.key != "options") | .key' "$ca
     "+++",
     "",
     $m.description,
+    "",
+    (if ($m.memory // 0) == 0 then "Memory: no long-running process of its own." else "Memory: about \($m.memory) MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra)." end),
     "",
     "## Enabling it",
     "",

@@ -7,6 +7,8 @@ generated = true
 
 Self-hosted ntfy: write-only anonymous access, self-provisioning subscriber.
 
+Memory: about 32 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.ntfy` enables it; there is no switch.

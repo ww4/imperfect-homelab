@@ -2,11 +2,11 @@
   "nodes": {
     "homelab-modules": {
       "locked": {
-        "lastModified": 1790969507,
-        "narHash": "sha256-COqmxuAuCjSBZgM2CEXE2xFOO/P0LFmznemdB9I61X4=",
+        "lastModified": 1790975586,
+        "narHash": "sha256-FkC5s+YLr65+Tu1FgeHAJAHRXlxF4SboNbwYqZxDvLM=",
         "owner": "ww4",
         "repo": "homelab-modules",
-        "rev": "63677d65ed0c98dd368a8dcbb6158b28045d54e0",
+        "rev": "311aaa64b00ecf2023d486b00794d82ee7f92b0a",
         "type": "github"
       },
       "original": {

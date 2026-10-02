@@ -1,7 +1,7 @@
 +++
 title = "Install"
 description = "The configurator: answers in, a private flake out, nixos-anywhere does the rest"
-weight = 4
+weight = 5
 sort_by = "weight"
 template = "section.html"
 page_template = "page.html"

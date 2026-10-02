@@ -1,7 +1,7 @@
 +++
 title = "Principles"
 description = "Implementations vs values, secrets as paths, importing enables, the network perimeter, GitOps with a rehearsal branch"
-weight = 1
+weight = 2
 sort_by = "weight"
 template = "section.html"
 page_template = "page.html"

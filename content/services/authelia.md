@@ -7,6 +7,8 @@ generated = true
 
 Authelia SSO: forward-auth gateway + OIDC provider.
 
+Memory: about 160 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Import `nixosModules.authelia` and set `homelab.authelia.enable = true`.

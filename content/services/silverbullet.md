@@ -7,6 +7,8 @@ generated = true
 
 SilverBullet markdown notes/tasks, optionally a two-writer space.
 
+Memory: about 128 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.silverbullet` enables it; there is no switch.

@@ -7,6 +7,8 @@ generated = true
 
 Paperless-ngx OCR-indexed document archive.
 
+Memory: about 1024 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.paperless` enables it; there is no switch.

@@ -7,6 +7,8 @@ generated = true
 
 Assemble homelab.pools into mounted MergerFS pools.
 
+Memory: about 96 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.mergerfs-pools` enables it; there is no switch.

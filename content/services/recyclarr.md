@@ -7,6 +7,8 @@ generated = true
 
 Sync TRaSH-Guides quality profiles into Sonarr & Radarr daily (bring your own profile YAML).
 
+Memory: about 16 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.recyclarr` enables it; there is no switch.

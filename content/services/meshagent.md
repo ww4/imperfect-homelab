@@ -7,6 +7,8 @@ generated = true
 
 MeshCentral MeshAgent so a MeshCentral server can manage this host.
 
+Memory: about 48 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.meshagent` enables it; there is no switch.

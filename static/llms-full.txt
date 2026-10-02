@@ -6,6 +6,10 @@ single sign-on, monitoring, phone alerts, 3-2-1 backups — that you install
 from a public NixOS module library in one pass, and then understand well
 enough to add to.
 
+If you have never used Linux, the [Quick start](https://ww4.github.io/imperfect-homelab/quick-start/) is
+the short road: one evening, click by click, and the Starter kit is running.
+The rest of the site is the long road, for when you want to know why.
+
 Three promises:
 
 1. **One command from the installer ISO** answers questions and leaves you
@@ -19,6 +23,127 @@ Three promises:
 ## Thanks
 
 This homelab exists because other people wrote theirs down. [Perfect Media Server](https://perfectmediaserver.com) by Alex Kretzschmar is where it started, and the name here is a nod to it: that site taught the shape (independent disks, a union filesystem, parity, one service per container) and the habit of explaining the reasoning. The [Self-Hosted](https://selfhosted.show) podcast and [Linux Unplugged](https://linuxunplugged.com) from Jupiter Broadcasting are the reason the pieces are what they are, from mergerfs to NixOS; years of listening turned into years of running. If anything here is useful to you, it was useful to me first because of them.
+
+
+# Quick start
+
+URL: https://ww4.github.io/imperfect-homelab/quick-start/
+
+
+This is the short road. With a spare PC, a USB stick and a domain name, you can have the Starter kit running in an evening: a movie and TV server (Jellyfin), a recipe app (Tandoor), nightly backups, and monitoring that sends alerts to your phone. You do not need to know Linux. The installer asks its questions on screen, this guide tells you what to answer, and when it says it is done, it is.
+
+Six steps, each on its own page, each with the exact clicks and keys. The pages assume Windows on the computer you are reading this on, because that is what most people have; the steps on the PC you are installing to are the same for everyone, and if a step does not match what you see, the page says what to check, and the Field notes chapter has the rest.
+
+This alpha release supports one DNS provider, Cloudflare, because that is the simplest way to get certificates for a machine on a home network; a local-only setup without a domain is planned but not built. The installer wipes the PC you install on. Everything else is reversible.
+
+1. [Before you begin](https://ww4.github.io/imperfect-homelab/quick-start/before-you-begin/): the five things you need.
+2. [Make the stick](https://ww4.github.io/imperfect-homelab/quick-start/make-the-stick/): put the installer on a USB stick with Rufus.
+3. [Boot it](https://ww4.github.io/imperfect-homelab/quick-start/boot-it/): start the PC from the stick.
+4. [Answer the questions](https://ww4.github.io/imperfect-homelab/quick-start/answer-the-questions/): seven screens, then one command.
+5. [First look](https://ww4.github.io/imperfect-homelab/quick-start/first-look/): open it from your other computer and log in.
+6. [When something is wrong](https://ww4.github.io/imperfect-homelab/quick-start/when-something-is-wrong/): the usual three, and how to get help.
+
+
+## Before you begin
+
+URL: https://ww4.github.io/imperfect-homelab/quick-start/before-you-begin/
+
+
+You need five things, and the domain is the only one that costs money. Gather them before you start, because the middle of the install is a bad time to discover the stick is too small.
+
+- A PC you can give up. Step 4 erases its disk. Anything from the last ten years works if it has 8 GB of memory or more; the Starter kit uses about 3 GB of that, and the installer adds up whatever you pick and tells you if the machine is short. It needs a wired network connection to your router for the install.
+- A USB stick of 4 GB or more; step 2 erases it.
+- The computer you are reading this on, for making the stick and later for using the apps.
+- A domain name at Cloudflare. See below.
+- An email address, which the certificate authority wants.
+
+The PC is the one piece people hesitate over. An old gaming machine, a retired office desktop, a mini PC from a marketplace: any of them. A second disk inside it is nice for media but not required for the Starter kit, which lives on the one disk. If the machine has a disk you want to keep, take it out before you start; the installer erases every disk you point it at and nothing else, but taking the disk out removes the chance of a mistake.
+
+The domain is how the apps get names like `recipes.yourdomain.com` and real certificates, so your browser does not warn you every time. For this alpha release the installer only knows how to do that through Cloudflare's DNS. If you have no domain, register one at Cloudflare: sign in at dash.cloudflare.com, open Domain Registration, search a name, pay about ten dollars a year, and the DNS is already there. If you own a domain somewhere else, add it to a free Cloudflare account (Add a site, Free plan) and change the nameservers at your registrar to the two Cloudflare shows you; the registrar's help pages have the clicks for that, and the change takes anywhere from minutes to a day.
+
+Set aside an evening. Most of it is waiting: the stick takes a few minutes to write, and the install downloads two or three gigabytes.
+
+
+## Make the stick
+
+URL: https://ww4.github.io/imperfect-homelab/quick-start/make-the-stick/
+
+
+Download two things on your Windows computer: the installer image, which is about 1.5 GB, and Rufus, which writes it to the stick. The image is at `https://homelab-installer.nyc3.cdn.digitaloceanspaces.com/iso/homelab-installer-latest.iso`. Save it anywhere. Rufus is a single program with nothing to install; get `rufus-x.xx.exe` from [rufus.ie](https://rufus.ie) and run it. Plug in the stick.
+
+1. In Rufus, under Device, pick the stick. Check the size; if there is more than one drive listed, pick the one that matches the stick, because Rufus erases whatever you pick.
+2. Click SELECT and choose the `.iso` you downloaded.
+3. Leave Partition scheme on GPT and Target system on UEFI (non CSM).
+4. Click START. Rufus asks how to write the image; choose "Write in DD Image mode" and click OK. It warns that it will erase the device; click OK.
+5. Wait for the green READY bar, then click CLOSE.
+
+Eject the stick from the taskbar before you pull it out, the way you would any drive. If Rufus says the image is not bootable or stops with an error, the download is usually incomplete: compare the file size with the number next to the download link, and download it again.
+
+
+## Boot it
+
+URL: https://ww4.github.io/imperfect-homelab/quick-start/boot-it/
+
+
+Plug the stick into the PC you are giving up, plug in the network cable, and turn it on. The PC will try to start whatever is on its disk; you want it to start from the stick instead, and the way to ask is a key pressed right after power-on.
+
+Tap the boot-menu key repeatedly as soon as the machine's logo appears. Which key depends on who made the machine or its motherboard: F12 on Dell, Lenovo and Acer, F11 on MSI, F8 on ASUS, Esc on HP. A menu appears listing drives; pick the entry that names your USB stick, preferring one that starts with "UEFI". If no menu comes and Windows starts, turn it off and try again faster; if the key does nothing at all, enter the setup screen instead (Del or F2 at the same moment) and look for a Boot tab where you can put the USB drive first. While you are in setup, find Secure Boot, usually under Boot or Security, and set it to Disabled; the installer will not start with it on.
+
+When it worked, the screen goes through a few seconds of text and ends on a short green message that starts with "Homelab installer" and shows two commands to type. You are logged in already. Nothing is installed yet; the stick runs in memory and you can turn the PC off at any point before step 4 with no effect.
+
+The network is automatic over a cable. Wi-Fi works but needs typing (`wpa_cli`); a cable is easier, and you can move the machine afterwards.
+
+
+## Answer the questions
+
+URL: https://ww4.github.io/imperfect-homelab/quick-start/answer-the-questions/
+
+
+Type `homelab-configure tui` and press Enter. A full-screen form opens with seven tabs along the top. Tab moves to the next screen and Shift-Tab back, the arrow keys move up and down a list, and the last line of the screen always says what the keys do on the screen you are on. You can go back and change anything until the last screen.
+
+**1 Kit.** Move to Starter and press Space. This chooses the modules for you; the box at the bottom lists them. The other kits are for later, when you know what you want.
+
+**2 Host.** Press Enter on a line to edit it, type, press Enter to keep it. Host name: one word, letters and digits, like `homelab`. Admin password: the password you will log in with; pick a good one and write it down, because there is no reset email. Time zone: yours, in the form `America/New_York`. Leave the disk lines alone; the next screen fills them. SSH public key and GitHub user are for people who already use SSH; skip them.
+
+**3 Disks.** The screen lists every drive in the machine. Move to the one the system should go on and press Space until it says SYSTEM. If the machine has a second drive you want for media, press Space on it until it says data. The installer erases everything marked here.
+
+**4 Modules.** Already set by the kit. Look, do not touch.
+
+**5 Values.** The lines at the top, marked with a red `!`, are the required ones: `homelab.domain` is your domain, like `example.com`, with nothing in front of it, and `homelab.acme.email` is your email address. The rest have defaults; leave them.
+
+**6 Secrets.** One line, the Cloudflare token. Press `v` and the screen explains how to create the token at Cloudflare: My Profile, API Tokens, Create Token, the "Edit zone DNS" template, your domain as the one zone. Create it there, type it here (you can type it from the other computer's screen; it is one long string), press Enter. The configurator checks it against your domain at once and says so.
+
+**7 Review.** If you have filled everything, the line is green. Press `g`. The screen fills with text for a minute while the configurator writes and checks the configuration, and ends with a list that starts with "next:"; the first item is the command you want: `sudo homelab-configure install ./my-homelab`.
+
+Type that command and press Enter. It shows the disks it is about to erase and asks you to type the host name to confirm. Type it. Then it partitions the disk, downloads the system, and installs it; on a home connection this is twenty to forty minutes, and the screen scrolls the whole time. It is done when it prints "installed" followed by your host name, the addresses to open, and the login to use.
+
+If it stops with an error instead, read [When something is wrong](https://ww4.github.io/imperfect-homelab/quick-start/when-something-is-wrong/). Nothing is lost; the stick is still running, and `homelab-configure tui` opens the form again with your answers in it.
+
+
+## First look
+
+URL: https://ww4.github.io/imperfect-homelab/quick-start/first-look/
+
+
+Type `reboot`, press Enter, and pull the stick out as soon as the screen goes dark. The first boot takes a few minutes longer than later ones, because the machine requests its certificates and starts every service for the first time; give it five minutes before you judge it. The first backup runs by itself at 2:30 that night.
+
+On your other computer, open `https://recipes.` followed by your domain, so `https://recipes.example.com`. Jellyfin is at `jellyfin.`, the monitoring dashboards at `grafana.`, and the alert feed at `ntfy.`, all on your domain. The install created these names at Cloudflare, pointing at the machine's address on your home network, so they work from any device in the house. If the browser says the site cannot be reached, wait another minute and reload; if it warns about the certificate, same answer. Jellyfin and Tandoor ask you to create their first account the first time you visit; use whatever you like, those are separate from the machine. The dashboards and the few apps that come with a fixed login have their passwords in a file on the machine called `FIRST-LOGIN.md`. To read it, sit at the machine, log in as `admin` with the password you typed on the Host screen, and type `sudo cat /root/homelab/FIRST-LOGIN.md`. Copy what you need into a password manager and the file can go.
+
+Tandoor is usable at once: paste a recipe URL and it imports the recipe. Jellyfin needs your video files copied onto the machine before there is anything to watch, and the Starter kit has no file share yet, so for now that step needs a terminal or a USB drive plugged into the machine. Install the ntfy app on your phone, subscribe it to your `ntfy.` address, and alerts will arrive there. When you want more, [Day two](https://ww4.github.io/imperfect-homelab/day-two/) is the next chapter. [Start here](https://ww4.github.io/imperfect-homelab/start-here/) explains what you now have.
+
+
+## When something is wrong
+
+URL: https://ww4.github.io/imperfect-homelab/quick-start/when-something-is-wrong/
+
+
+Three things cover most first-evening trouble, and none of them means you did it wrong. The first is that the machine will not start from the stick: Secure Boot is on, or the boot menu picked the stick's non-UEFI entry. Go back into setup, disable Secure Boot, and pick the entry that starts with UEFI. On a few older machines the stick needs to be in a rear USB port rather than a front one.
+
+The install stopped with an error. Read the last few lines; they say which step failed. "no such device" means the form names a disk that is not there; open the form again and redo the Disks screen. A download error means the network dropped; run the install command again and it starts from the beginning. Anything else, copy the last twenty lines somewhere and move to the last paragraph.
+
+The names do not open. Give the first boot five minutes. Then, on the Windows computer, open a command prompt and type `nslookup recipes.example.com` with your domain; it should answer with an address starting 192.168 or 10. If it answers with nothing, Cloudflare has not got the records: sit at the machine, log in, and run `sudo homelab-configure dns /root/homelab`. If it answers with an address but the page does not open, some home routers refuse public names that point at private addresses ("DNS rebind protection"); the router's settings page has a switch for it, often under DNS or Security. If the machine's address changed, give it a fixed one in the router (a DHCP reservation) and run the `dns` command again.
+
+For anything else, hand the problem to an AI agent. Paste `https://ww4.github.io/imperfect-homelab/llms.txt` into Claude, ChatGPT or whatever you use, say what you were doing and what the screen says, and it will have the whole guide and the installer's commands to work from. If you can give it a way to reach the machine, it can look for itself; the [Operating with an agent](https://ww4.github.io/imperfect-homelab/agent/) chapter is about doing that safely.
 
 
 # Start here
@@ -325,6 +450,8 @@ Power is the real price. At around twelve cents per kilowatt-hour a machine that
 
 The NIC: one gigabit port is enough for everything in this guide, and an Intel chipset is the one with the fewest surprises. Out-of-band management (IPMI, Intel AMT) is convenient for a box in a closet, and AMT on old Intel boards needs firmware patched past the 2017 vulnerability before you enable it. Two and a half gigabit or ten is only worth paying for if your pool can feed it, which a few USB disks cannot.
 
+Memory is the number to size by, and it is additive. Each module in the Services chapter carries a rough resident figure for household load, the configurator adds them up for whatever you pick, puts a gigabyte under them for the kernel, systemd and the container runtime, and compares the sum with the machine it is running on; a kit that does not fit is marked red before you install anything. The sums today: the Starter kit about 3 GB, the media box about 5 GB, documents and forge about 7 GB, everything about 10 GB. Those are steady-state numbers; a transcode, Immich's machine-learning pass or a SnapRAID sync adds a gigabyte or two for as long as it runs, so buy a quarter more than the sum and never less than 8 GB. Memory is also the cheapest upgrade a used desktop takes.
+
 The CPU is the last question. Anything from the last decade with four cores runs every profile; transcoding video for remote playback is the one job that wants more, and a GPU or a modern iGPU covers it. RAM wants 16 GB as a floor and 32 GB if the download stack and the photo server are both on.
 
 
@@ -366,7 +493,7 @@ curl -fLO $base/$name && curl -fLO $base/$name.sha256
 sha256sum -c $name.sha256
 ```
 
-The image is about 1.5 GB. Write it to a USB stick of 4 GB or more with `dd if=$name of=/dev/sdX bs=4M status=progress` (the stick, not a partition; everything on it is erased) or with Etcher, boot the target from it, and the console prints the two commands to type. Wired network is automatic; for Wi-Fi, `wpa_cli` first. If you would rather use a stock NixOS ISO, `nix run 'github:ww4/homelab-modules?dir=configurator' -- tui` does the same thing after a compile of a few minutes.
+The newest image is also always at `$base/homelab-installer-latest.iso` (the same bytes under a fixed name, with its `.sha256` beside it), which is what the [Quick start](https://ww4.github.io/imperfect-homelab/quick-start/) links. The image is about 1.5 GB. Write it to a USB stick of 4 GB or more with `dd if=$name of=/dev/sdX bs=4M status=progress` (the stick, not a partition; everything on it is erased) or with Etcher, boot the target from it, and the console prints the two commands to type. Wired network is automatic; for Wi-Fi, `wpa_cli` first. If you would rather use a stock NixOS ISO, `nix run 'github:ww4/homelab-modules?dir=configurator' -- tui` does the same thing after a compile of a few minutes.
 
 Each release of the image is named by date and library commit; `latest.txt` always names the newest, and the chapter's commands follow it.
 
@@ -494,50 +621,50 @@ declarations at the pinned commit. The catalog is checked against the
 library's exported modules at evaluation time, and this section is checked
 against the catalog, so what you read here is what the code does.
 
-| Module | Purpose | Enable | Serves |
-|---|---|---|---|
-| [acme](https://ww4.github.io/imperfect-homelab/services/acme/) | Let's Encrypt via DNS-01, the TLS default for every vhost. | import |  |
-| [alertmanager-ntfy](https://ww4.github.io/imperfect-homelab/services/alertmanager-ntfy/) | Alertmanager webhook → ntfy phone notifications. | import |  |
-| [arr](https://ww4.github.io/imperfect-homelab/services/arr/) | Prowlarr + Sonarr + Radarr + Jellyseerr + qBittorrent inside a Gluetun VPN namespace. | import | `prowlarr.<domain>`, `sonarr.<domain>`, `radarr.<domain>`, `requests.<domain>`, `qbittorrent.<domain>` |
-| [arr-missing-sweep](https://ww4.github.io/imperfect-homelab/services/arr-missing-sweep/) | Weekly search for what is still missing in Sonarr/Radarr, with a metadata-mismatch skip rule. | import |  |
-| [audiobookshelf](https://ww4.github.io/imperfect-homelab/services/audiobookshelf/) | Audiobookshelf audiobook / podcast server. | import | `abs.<domain>` |
-| [aurral](https://ww4.github.io/imperfect-homelab/services/aurral/) | Aurral music discovery/request UI in front of Lidarr. | import | `music.<domain>` |
-| [authelia](https://ww4.github.io/imperfect-homelab/services/authelia/) | Authelia SSO: forward-auth gateway + OIDC provider. | `homelab.authelia.enable` | `auth.<domain>` |
-| [backup](https://ww4.github.io/imperfect-homelab/services/backup/) | restic snapshots of the irreplaceable small state: a local repo on the pool plus an optional offsite one, same paths and retention; optional SFTP push target for a second machine. | import |  |
-| [boot](https://ww4.github.io/imperfect-homelab/services/boot/) | Bootloader and power behaviour for an always-on server. | import |  |
-| [decluttarr](https://ww4.github.io/imperfect-homelab/services/decluttarr/) | Reap stalled/failed downloads from Sonarr/Radarr and re-search. | import |  |
-| [deploy-drift-watch](https://ww4.github.io/imperfect-homelab/services/deploy-drift-watch/) | Alert when the forge has commits the box never deployed. | `homelab.deployDriftWatch.enable` |  |
-| [disk-io-watch](https://ww4.github.io/imperfect-homelab/services/disk-io-watch/) | Count kernel I/O errors and USB resets per device; alert on a device that starts failing. | import |  |
-| [drive-temps](https://ww4.github.io/imperfect-homelab/services/drive-temps/) | Drive temperature + SMART-health exporter for spinning disks. | import |  |
-| [forgejo](https://ww4.github.io/imperfect-homelab/services/forgejo/) | Forgejo git forge. | import | `git.<domain>` |
-| [glances](https://ww4.github.io/imperfect-homelab/services/glances/) | Glances system monitor with a REST/web API. | import | `glances.<domain>` |
-| [immich](https://ww4.github.io/imperfect-homelab/services/immich/) | Immich photo & video management. | import | `photos.<domain>` |
-| [jellyfin](https://ww4.github.io/imperfect-homelab/services/jellyfin/) | Jellyfin media server. | import | `jellyfin.<domain>` |
-| [lazylibrarian](https://ww4.github.io/imperfect-homelab/services/lazylibrarian/) | LazyLibrarian ebook/audiobook automation on the shared /data tree. | import | `lazylibrarian.<domain>` |
-| [lidarr](https://ww4.github.io/imperfect-homelab/services/lidarr/) | Lidarr music manager on the shared /data tree. | import | `lidarr.<domain>` |
-| [mergerfs-pools](https://ww4.github.io/imperfect-homelab/services/mergerfs-pools/) | Assemble homelab.pools into mounted MergerFS pools. | import |  |
-| [meshagent](https://ww4.github.io/imperfect-homelab/services/meshagent/) | MeshCentral MeshAgent so a MeshCentral server can manage this host. | import |  |
-| [metube](https://ww4.github.io/imperfect-homelab/services/metube/) | MeTube web GUI for yt-dlp one-off downloads. | import | `metube.<domain>` |
-| [mirror-drift-watch](https://ww4.github.io/imperfect-homelab/services/mirror-drift-watch/) | Alert when a git mirror stops tracking its source. | import |  |
-| [monitoring](https://ww4.github.io/imperfect-homelab/services/monitoring/) | Prometheus + Grafana + Alertmanager with alerting provisioned declaratively. | `homelab.monitoring.enable` | `grafana.<domain>`, `prometheus.<domain>` |
-| [nextcloud](https://ww4.github.io/imperfect-homelab/services/nextcloud/) | Nextcloud with Postgres + Redis, curated apps, optional OIDC SSO. | import | `cloud.<domain>` |
-| [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/) | nginx source-access gate: allow/deny inherited by every vhost from one place. | import |  |
-| [nginx-log-paths-check](https://ww4.github.io/imperfect-homelab/services/nginx-log-paths-check/) | Build-time guard: nginx may only be told to write logs where it can write. | import |  |
-| [ntfy](https://ww4.github.io/imperfect-homelab/services/ntfy/) | Self-hosted ntfy: write-only anonymous access, self-provisioning subscriber. | import | `ntfy.<domain>` |
-| [paperless](https://ww4.github.io/imperfect-homelab/services/paperless/) | Paperless-ngx OCR-indexed document archive. | import | `paperless.<domain>` |
-| [pinchflat](https://ww4.github.io/imperfect-homelab/services/pinchflat/) | PinchFlat YouTube archiver. | import | `pinchflat.<domain>` |
-| [pool-autoremount](https://ww4.github.io/imperfect-homelab/services/pool-autoremount/) | Self-healing remount for pool members that drop off the bus; detects zombie mounts with real I/O. | import |  |
-| [qbit-vpn-watchdog](https://ww4.github.io/imperfect-homelab/services/qbit-vpn-watchdog/) | Self-heal the gluetun-IP-change qBittorrent wedge. | import |  |
-| [recyclarr](https://ww4.github.io/imperfect-homelab/services/recyclarr/) | Sync TRaSH-Guides quality profiles into Sonarr & Radarr daily (bring your own profile YAML). | import |  |
-| [remote-desktop](https://ww4.github.io/imperfect-homelab/services/remote-desktop/) | xrdp + XFCE remote desktop, Tailscale-only. | import |  |
-| [silverbullet](https://ww4.github.io/imperfect-homelab/services/silverbullet/) | SilverBullet markdown notes/tasks, optionally a two-writer space. | import | `notes.<domain>` |
-| [smart-dump](https://ww4.github.io/imperfect-homelab/services/smart-dump/) | Dump the full SMART table for every drive to world-readable files. | import |  |
-| [snapraid](https://ww4.github.io/imperfect-homelab/services/snapraid/) | SnapRAID parity for a MergerFS pool's member disks: nightly sync, weekly partial scrub; any one member recoverable per parity disk. | `homelab.snapraid.enable` |  |
-| [system](https://ww4.github.io/imperfect-homelab/services/system/) | Locale, Nix settings, nixpkgs config for an always-on server. | import |  |
-| [tandoor](https://ww4.github.io/imperfect-homelab/services/tandoor/) | Tandoor Recipes. | import | `recipes.<domain>` |
-| [unpackerr](https://ww4.github.io/imperfect-homelab/services/unpackerr/) | Extract RAR'd releases in place so the *arrs can import them; seeds untouched. | import |  |
-| [uptime-kuma](https://ww4.github.io/imperfect-homelab/services/uptime-kuma/) | Uptime Kuma status wall-board. | import | `uptime.<domain>` |
-| [vaultwarden](https://ww4.github.io/imperfect-homelab/services/vaultwarden/) | Vaultwarden (Bitwarden-compatible) password server. | import | `<homelab.vaultwarden.subdomain>.<domain>` |
+| Module | Purpose | Memory | Enable | Serves |
+|---|---|---|---|---|
+| [acme](https://ww4.github.io/imperfect-homelab/services/acme/) | Let's Encrypt via DNS-01, the TLS default for every vhost. | — | import |  |
+| [alertmanager-ntfy](https://ww4.github.io/imperfect-homelab/services/alertmanager-ntfy/) | Alertmanager webhook → ntfy phone notifications. | 64 MiB | import |  |
+| [arr](https://ww4.github.io/imperfect-homelab/services/arr/) | Prowlarr + Sonarr + Radarr + Jellyseerr + qBittorrent inside a Gluetun VPN namespace. | 1280 MiB | import | `prowlarr.<domain>`, `sonarr.<domain>`, `radarr.<domain>`, `requests.<domain>`, `qbittorrent.<domain>` |
+| [arr-missing-sweep](https://ww4.github.io/imperfect-homelab/services/arr-missing-sweep/) | Weekly search for what is still missing in Sonarr/Radarr, with a metadata-mismatch skip rule. | 8 MiB | import |  |
+| [audiobookshelf](https://ww4.github.io/imperfect-homelab/services/audiobookshelf/) | Audiobookshelf audiobook / podcast server. | 192 MiB | import | `abs.<domain>` |
+| [aurral](https://ww4.github.io/imperfect-homelab/services/aurral/) | Aurral music discovery/request UI in front of Lidarr. | 96 MiB | import | `music.<domain>` |
+| [authelia](https://ww4.github.io/imperfect-homelab/services/authelia/) | Authelia SSO: forward-auth gateway + OIDC provider. | 160 MiB | `homelab.authelia.enable` | `auth.<domain>` |
+| [backup](https://ww4.github.io/imperfect-homelab/services/backup/) | restic snapshots of the irreplaceable small state: a local repo on the pool plus an optional offsite one, same paths and retention; optional SFTP push target for a second machine. | 64 MiB | import |  |
+| [boot](https://ww4.github.io/imperfect-homelab/services/boot/) | Bootloader and power behaviour for an always-on server. | — | import |  |
+| [decluttarr](https://ww4.github.io/imperfect-homelab/services/decluttarr/) | Reap stalled/failed downloads from Sonarr/Radarr and re-search. | 64 MiB | import |  |
+| [deploy-drift-watch](https://ww4.github.io/imperfect-homelab/services/deploy-drift-watch/) | Alert when the forge has commits the box never deployed. | 8 MiB | `homelab.deployDriftWatch.enable` |  |
+| [disk-io-watch](https://ww4.github.io/imperfect-homelab/services/disk-io-watch/) | Count kernel I/O errors and USB resets per device; alert on a device that starts failing. | 8 MiB | import |  |
+| [drive-temps](https://ww4.github.io/imperfect-homelab/services/drive-temps/) | Drive temperature + SMART-health exporter for spinning disks. | 8 MiB | import |  |
+| [forgejo](https://ww4.github.io/imperfect-homelab/services/forgejo/) | Forgejo git forge. | 320 MiB | import | `git.<domain>` |
+| [glances](https://ww4.github.io/imperfect-homelab/services/glances/) | Glances system monitor with a REST/web API. | 96 MiB | import | `glances.<domain>` |
+| [immich](https://ww4.github.io/imperfect-homelab/services/immich/) | Immich photo & video management. | 1536 MiB | import | `photos.<domain>` |
+| [jellyfin](https://ww4.github.io/imperfect-homelab/services/jellyfin/) | Jellyfin media server. | 512 MiB | import | `jellyfin.<domain>` |
+| [lazylibrarian](https://ww4.github.io/imperfect-homelab/services/lazylibrarian/) | LazyLibrarian ebook/audiobook automation on the shared /data tree. | 192 MiB | import | `lazylibrarian.<domain>` |
+| [lidarr](https://ww4.github.io/imperfect-homelab/services/lidarr/) | Lidarr music manager on the shared /data tree. | 320 MiB | import | `lidarr.<domain>` |
+| [mergerfs-pools](https://ww4.github.io/imperfect-homelab/services/mergerfs-pools/) | Assemble homelab.pools into mounted MergerFS pools. | 96 MiB | import |  |
+| [meshagent](https://ww4.github.io/imperfect-homelab/services/meshagent/) | MeshCentral MeshAgent so a MeshCentral server can manage this host. | 48 MiB | import |  |
+| [metube](https://ww4.github.io/imperfect-homelab/services/metube/) | MeTube web GUI for yt-dlp one-off downloads. | 192 MiB | import | `metube.<domain>` |
+| [mirror-drift-watch](https://ww4.github.io/imperfect-homelab/services/mirror-drift-watch/) | Alert when a git mirror stops tracking its source. | 8 MiB | import |  |
+| [monitoring](https://ww4.github.io/imperfect-homelab/services/monitoring/) | Prometheus + Grafana + Alertmanager with alerting provisioned declaratively. | 640 MiB | `homelab.monitoring.enable` | `grafana.<domain>`, `prometheus.<domain>` |
+| [nextcloud](https://ww4.github.io/imperfect-homelab/services/nextcloud/) | Nextcloud with Postgres + Redis, curated apps, optional OIDC SSO. | 768 MiB | import | `cloud.<domain>` |
+| [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/) | nginx source-access gate: allow/deny inherited by every vhost from one place. | 64 MiB | import |  |
+| [nginx-log-paths-check](https://ww4.github.io/imperfect-homelab/services/nginx-log-paths-check/) | Build-time guard: nginx may only be told to write logs where it can write. | 8 MiB | import |  |
+| [ntfy](https://ww4.github.io/imperfect-homelab/services/ntfy/) | Self-hosted ntfy: write-only anonymous access, self-provisioning subscriber. | 32 MiB | import | `ntfy.<domain>` |
+| [paperless](https://ww4.github.io/imperfect-homelab/services/paperless/) | Paperless-ngx OCR-indexed document archive. | 1024 MiB | import | `paperless.<domain>` |
+| [pinchflat](https://ww4.github.io/imperfect-homelab/services/pinchflat/) | PinchFlat YouTube archiver. | 320 MiB | import | `pinchflat.<domain>` |
+| [pool-autoremount](https://ww4.github.io/imperfect-homelab/services/pool-autoremount/) | Self-healing remount for pool members that drop off the bus; detects zombie mounts with real I/O. | 8 MiB | import |  |
+| [qbit-vpn-watchdog](https://ww4.github.io/imperfect-homelab/services/qbit-vpn-watchdog/) | Self-heal the gluetun-IP-change qBittorrent wedge. | 8 MiB | import |  |
+| [recyclarr](https://ww4.github.io/imperfect-homelab/services/recyclarr/) | Sync TRaSH-Guides quality profiles into Sonarr & Radarr daily (bring your own profile YAML). | 16 MiB | import |  |
+| [remote-desktop](https://ww4.github.io/imperfect-homelab/services/remote-desktop/) | xrdp + XFCE remote desktop, Tailscale-only. | 256 MiB | import |  |
+| [silverbullet](https://ww4.github.io/imperfect-homelab/services/silverbullet/) | SilverBullet markdown notes/tasks, optionally a two-writer space. | 128 MiB | import | `notes.<domain>` |
+| [smart-dump](https://ww4.github.io/imperfect-homelab/services/smart-dump/) | Dump the full SMART table for every drive to world-readable files. | 8 MiB | import |  |
+| [snapraid](https://ww4.github.io/imperfect-homelab/services/snapraid/) | SnapRAID parity for a MergerFS pool's member disks: nightly sync, weekly partial scrub; any one member recoverable per parity disk. | 64 MiB | `homelab.snapraid.enable` |  |
+| [system](https://ww4.github.io/imperfect-homelab/services/system/) | Locale, Nix settings, nixpkgs config for an always-on server. | — | import |  |
+| [tandoor](https://ww4.github.io/imperfect-homelab/services/tandoor/) | Tandoor Recipes. | 384 MiB | import | `recipes.<domain>` |
+| [unpackerr](https://ww4.github.io/imperfect-homelab/services/unpackerr/) | Extract RAR'd releases in place so the *arrs can import them; seeds untouched. | 48 MiB | import |  |
+| [uptime-kuma](https://ww4.github.io/imperfect-homelab/services/uptime-kuma/) | Uptime Kuma status wall-board. | 192 MiB | import | `uptime.<domain>` |
+| [vaultwarden](https://ww4.github.io/imperfect-homelab/services/vaultwarden/) | Vaultwarden (Bitwarden-compatible) password server. | 96 MiB | import | `<homelab.vaultwarden.subdomain>.<domain>` |
 
 
 ## acme
@@ -546,6 +673,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/acme/
 
 
 Let's Encrypt via DNS-01, the TLS default for every vhost.
+
+Memory: no long-running process of its own.
 
 ## Enabling it
 
@@ -589,6 +718,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/alertmanager-ntfy/
 
 Alertmanager webhook → ntfy phone notifications.
 
+Memory: about 64 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.alertmanager-ntfy` enables it; there is no switch.
@@ -621,6 +752,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/arr-missing-sweep/
 
 
 Weekly search for what is still missing in Sonarr/Radarr, with a metadata-mismatch skip rule.
+
+Memory: about 8 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -664,6 +797,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/arr/
 
 
 Prowlarr + Sonarr + Radarr + Jellyseerr + qBittorrent inside a Gluetun VPN namespace.
+
+Memory: about 1280 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -764,6 +899,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/audiobookshelf/
 
 Audiobookshelf audiobook / podcast server.
 
+Memory: about 192 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.audiobookshelf` enables it; there is no switch.
@@ -791,6 +928,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/aurral/
 
 
 Aurral music discovery/request UI in front of Lidarr.
+
+Memory: about 96 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -896,6 +1035,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/authelia/
 
 Authelia SSO: forward-auth gateway + OIDC provider.
 
+Memory: about 160 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Import `nixosModules.authelia` and set `homelab.authelia.enable = true`.
@@ -959,6 +1100,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/backup/
 
 
 restic snapshots of the irreplaceable small state: a local repo on the pool plus an optional offsite one, same paths and retention; optional SFTP push target for a second machine.
+
+Memory: about 64 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -1111,6 +1254,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/boot/
 
 Bootloader and power behaviour for an always-on server.
 
+Memory: no long-running process of its own.
+
 ## Enabling it
 
 Importing `nixosModules.boot` enables it; there is no switch.
@@ -1131,6 +1276,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/decluttarr/
 
 
 Reap stalled/failed downloads from Sonarr/Radarr and re-search.
+
+Memory: about 64 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -1162,6 +1309,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/deploy-drift-watch/
 
 
 Alert when the forge has commits the box never deployed.
+
+Memory: about 8 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -1208,6 +1357,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/disk-io-watch/
 
 Count kernel I/O errors and USB resets per device; alert on a device that starts failing.
 
+Memory: about 8 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.disk-io-watch` enables it; there is no switch.
@@ -1247,6 +1398,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/drive-temps/
 
 Drive temperature + SMART-health exporter for spinning disks.
 
+Memory: about 8 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.drive-temps` enables it; there is no switch.
@@ -1279,6 +1432,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/forgejo/
 
 
 Forgejo git forge.
+
+Memory: about 320 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -1318,6 +1473,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/glances/
 
 Glances system monitor with a REST/web API.
 
+Memory: about 96 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.glances` enables it; there is no switch.
@@ -1345,6 +1502,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/immich/
 
 
 Immich photo & video management.
+
+Memory: about 1536 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -1386,6 +1545,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/jellyfin/
 
 Jellyfin media server.
 
+Memory: about 512 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.jellyfin` enables it; there is no switch.
@@ -1413,6 +1574,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/lazylibrarian/
 
 
 LazyLibrarian ebook/audiobook automation on the shared /data tree.
+
+Memory: about 192 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -1508,6 +1671,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/lidarr/
 
 Lidarr music manager on the shared /data tree.
 
+Memory: about 320 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.lidarr` enables it; there is no switch.
@@ -1602,6 +1767,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/mergerfs-pools/
 
 Assemble homelab.pools into mounted MergerFS pools.
 
+Memory: about 96 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.mergerfs-pools` enables it; there is no switch.
@@ -1670,6 +1837,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/meshagent/
 
 MeshCentral MeshAgent so a MeshCentral server can manage this host.
 
+Memory: about 48 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.meshagent` enables it; there is no switch.
@@ -1699,6 +1868,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/metube/
 
 
 MeTube web GUI for yt-dlp one-off downloads.
+
+Memory: about 192 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -1745,6 +1916,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/mirror-drift-watch/
 
 
 Alert when a git mirror stops tracking its source.
+
+Memory: about 8 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -1796,6 +1969,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/monitoring/
 
 
 Prometheus + Grafana + Alertmanager with alerting provisioned declaratively.
+
+Memory: about 640 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -1889,6 +2064,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/nextcloud/
 
 Nextcloud with Postgres + Redis, curated apps, optional OIDC SSO.
 
+Memory: about 768 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.nextcloud` enables it; there is no switch.
@@ -1934,6 +2111,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/nginx-access/
 
 nginx source-access gate: allow/deny inherited by every vhost from one place.
 
+Memory: about 64 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.nginx-access` enables it; there is no switch.
@@ -1955,6 +2134,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/nginx-log-paths-check/
 
 Build-time guard: nginx may only be told to write logs where it can write.
 
+Memory: about 8 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.nginx-log-paths-check` enables it; there is no switch.
@@ -1975,6 +2156,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/ntfy/
 
 
 Self-hosted ntfy: write-only anonymous access, self-provisioning subscriber.
+
+Memory: about 32 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -2028,6 +2211,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/paperless/
 
 Paperless-ngx OCR-indexed document archive.
 
+Memory: about 1024 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.paperless` enables it; there is no switch.
@@ -2072,6 +2257,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/pinchflat/
 
 PinchFlat YouTube archiver.
 
+Memory: about 320 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.pinchflat` enables it; there is no switch.
@@ -2105,6 +2292,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/pool-autoremount/
 
 
 Self-healing remount for pool members that drop off the bus; detects zombie mounts with real I/O.
+
+Memory: about 8 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -2181,6 +2370,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/qbit-vpn-watchdog/
 
 Self-heal the gluetun-IP-change qBittorrent wedge.
 
+Memory: about 8 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.qbit-vpn-watchdog` enables it; there is no switch.
@@ -2207,6 +2398,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/recyclarr/
 
 
 Sync TRaSH-Guides quality profiles into Sonarr & Radarr daily (bring your own profile YAML).
+
+Memory: about 16 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -2307,6 +2500,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/remote-desktop/
 
 xrdp + XFCE remote desktop, Tailscale-only.
 
+Memory: about 256 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.remote-desktop` enables it; there is no switch.
@@ -2327,6 +2522,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/silverbullet/
 
 
 SilverBullet markdown notes/tasks, optionally a two-writer space.
+
+Memory: about 128 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -2374,6 +2571,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/smart-dump/
 
 Dump the full SMART table for every drive to world-readable files.
 
+Memory: about 8 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.smart-dump` enables it; there is no switch.
@@ -2394,6 +2593,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/snapraid/
 
 
 SnapRAID parity for a MergerFS pool's member disks: nightly sync, weekly partial scrub; any one member recoverable per parity disk.
+
+Memory: about 64 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -2530,6 +2731,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/system/
 
 Locale, Nix settings, nixpkgs config for an always-on server.
 
+Memory: no long-running process of its own.
+
 ## Enabling it
 
 Importing `nixosModules.system` enables it; there is no switch.
@@ -2550,6 +2753,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/tandoor/
 
 
 Tandoor Recipes.
+
+Memory: about 384 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -2578,6 +2783,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/unpackerr/
 
 
 Extract RAR'd releases in place so the *arrs can import them; seeds untouched.
+
+Memory: about 48 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 
@@ -2676,6 +2883,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/uptime-kuma/
 
 Uptime Kuma status wall-board.
 
+Memory: about 192 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Importing `nixosModules.uptime-kuma` enables it; there is no switch.
@@ -2703,6 +2912,8 @@ URL: https://ww4.github.io/imperfect-homelab/services/vaultwarden/
 
 
 Vaultwarden (Bitwarden-compatible) password server.
+
+Memory: about 96 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
 
 ## Enabling it
 

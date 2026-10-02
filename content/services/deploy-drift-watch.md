@@ -7,6 +7,8 @@ generated = true
 
 Alert when the forge has commits the box never deployed.
 
+Memory: about 8 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Import `nixosModules.deploy-drift-watch` and set `homelab.deployDriftWatch.enable = true`.

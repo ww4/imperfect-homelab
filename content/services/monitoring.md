@@ -7,6 +7,8 @@ generated = true
 
 Prometheus + Grafana + Alertmanager with alerting provisioned declaratively.
 
+Memory: about 640 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
 ## Enabling it
 
 Import `nixosModules.monitoring` and set `homelab.monitoring.enable = true`.
