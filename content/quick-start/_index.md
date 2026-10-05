@@ -14,6 +14,6 @@ This alpha release supports one DNS provider, Cloudflare, because that is the si
 1. [Before you begin](@/quick-start/before-you-begin.md): the five things you need.
 2. [Make the stick](@/quick-start/make-the-stick.md): put the installer on a USB stick with Rufus.
 3. [Boot it](@/quick-start/boot-it.md): start the PC from the stick.
-4. [Answer the questions](@/quick-start/answer-the-questions.md): seven screens, then one command.
+4. [Answer the questions](@/quick-start/answer-the-questions.md): eight screens, then it installs by itself.
 5. [First look](@/quick-start/first-look.md): open it from your other computer and log in.
 6. [When something is wrong](@/quick-start/when-something-is-wrong.md): the usual three, and how to get help.

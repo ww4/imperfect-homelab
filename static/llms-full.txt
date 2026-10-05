@@ -39,7 +39,7 @@ This alpha release supports one DNS provider, Cloudflare, because that is the si
 1. [Before you begin](https://ww4.github.io/imperfect-homelab/quick-start/before-you-begin/): the five things you need.
 2. [Make the stick](https://ww4.github.io/imperfect-homelab/quick-start/make-the-stick/): put the installer on a USB stick with Rufus.
 3. [Boot it](https://ww4.github.io/imperfect-homelab/quick-start/boot-it/): start the PC from the stick.
-4. [Answer the questions](https://ww4.github.io/imperfect-homelab/quick-start/answer-the-questions/): seven screens, then one command.
+4. [Answer the questions](https://ww4.github.io/imperfect-homelab/quick-start/answer-the-questions/): eight screens, then it installs by itself.
 5. [First look](https://ww4.github.io/imperfect-homelab/quick-start/first-look/): open it from your other computer and log in.
 6. [When something is wrong](https://ww4.github.io/imperfect-homelab/quick-start/when-something-is-wrong/): the usual three, and how to get help.
 
@@ -89,7 +89,7 @@ Plug the stick into the PC you are giving up, plug in the network cable, and tur
 
 Tap the boot-menu key repeatedly as soon as the machine's logo appears. Which key depends on who made the machine or its motherboard: F12 on Dell, Lenovo and Acer, F11 on MSI, F8 on ASUS, Esc on HP. A menu appears listing drives; pick the entry that names your USB stick, preferring one that starts with "UEFI". If no menu comes and Windows starts, turn it off and try again faster; if the key does nothing at all, enter the setup screen instead (Del or F2 at the same moment) and look for a Boot tab where you can put the USB drive first. While you are in setup, find Secure Boot, usually under Boot or Security, and set it to Disabled; the installer will not start with it on.
 
-When it worked, the screen goes through a few seconds of text and ends on a short green message that starts with "Homelab installer" and shows two commands to type. You are logged in already. Nothing is installed yet; the stick runs in memory and you can turn the PC off at any point before step 4 with no effect.
+When it worked, the screen goes through a few seconds of text and ends on a short green message that starts with "Homelab installer"; it then spends about a minute looking for a newer installer on the internet (a stick burned months ago still runs today's installer), and the installer's form opens over it. You are logged in already. Nothing is installed yet; the stick runs in memory and you can turn the PC off at any point before step 4 with no effect.
 
 The network is automatic over a cable. Wi-Fi works but needs typing (`wpa_cli`); a cable is easier, and you can move the machine afterwards.
 
@@ -99,25 +99,25 @@ The network is automatic over a cable. Wi-Fi works but needs typing (`wpa_cli`);
 URL: https://ww4.github.io/imperfect-homelab/quick-start/answer-the-questions/
 
 
-Type `homelab-configure tui` and press Enter. A full-screen form opens with seven tabs along the top. Tab moves to the next screen and Shift-Tab back, the arrow keys move up and down a list, and the last line of the screen always says what the keys do on the screen you are on. You can go back and change anything until the last screen.
+The installer opens by itself a few seconds after the green welcome text. It is a form with one question per screen: read the paragraph at the top, fill in the lines, move to Continue at the bottom and press Enter. Back goes to the previous screen and keeps what you typed. The arrow keys or Tab move between lines; the one you are on is shown in reverse video with a › in front of it. Enter on a line lets you type; Enter again keeps it, Esc throws it away. When something goes wrong, the bottom line of the screen says what, in red.
 
-**1 Kit.** Move to Starter and press Space. This chooses the modules for you; the box at the bottom lists them. The other kits are for later, when you know what you want.
+**1 Welcome.** Says what is about to happen and what the machine has: memory, disks, and whether it can reach the internet. If it says the internet is not reachable, check the cable before going on.
 
-**2 Host.** Press Enter on a line to edit it, type, press Enter to keep it. Host name: one word, letters and digits, like `homelab`. Admin password: the password you will log in with; pick a good one and write it down, because there is no reset email. Time zone: yours, in the form `America/New_York`. Leave the disk lines alone; the next screen fills them. SSH public key and GitHub user are for people who already use SSH; skip them.
+**2 What should this machine be?** Move to Starter and press Space. The number next to each kit is the memory it needs on this machine, green when it fits.
 
-**3 Disks.** The screen lists every drive in the machine. Move to the one the system should go on and press Space until it says SYSTEM. If the machine has a second drive you want for media, press Space on it until it says data. The installer erases everything marked here.
+**3 Storage.** Every disk in the machine is listed except the USB stick you booted from. Move to the one the system should go on and press Space until it says SYSTEM; that disk is erased. If you have a second disk for your files, press Space on it until it says data. Continue refuses until one disk says SYSTEM.
 
-**4 Modules.** Already set by the kit. Look, do not touch.
+**4 Profile.** The machine's name (one word, like `homelab`), the admin username (`admin` is fine), the password twice, and the time zone in the form `America/New_York`. Write the password down; there is no reset email.
 
-**5 Values.** The lines at the top, marked with a red `!`, are the required ones: `homelab.domain` is your domain, like `example.com`, with nothing in front of it, and `homelab.acme.email` is your email address. The rest have defaults; leave them.
+**5 SSH access.** This is for reaching the machine from another computer without sitting at it. If you have a GitHub account with keys on it, type the username on the first line and press Enter; the keys appear in the list below. If you do not know what an SSH key is, press Continue twice: the first press warns you that only the machine's own screen will work, the second accepts that.
 
-**6 Secrets.** One line, the Cloudflare token. Press `v` and the screen explains how to create the token at Cloudflare: My Profile, API Tokens, Create Token, the "Edit zone DNS" template, your domain as the one zone. Create it there, type it here (you can type it from the other computer's screen; it is one long string), press Enter. The configurator checks it against your domain at once and says so.
+**6 Domain and certificates.** Your domain (`example.com`, nothing in front of it) and your email address. Then the Cloudflare token: move to that line and the help box explains where to make it (My Profile, API Tokens, Create Token, the "Edit zone DNS" template, your domain as the one zone). Create it there, press Enter here, type it, press Enter. The installer checks it against your domain at once and shows a green tick or a red reason.
 
-**7 Review.** If you have filled everything, the line is green. Press `g`. The screen fills with text for a minute while the configurator writes and checks the configuration, and ends with a list that starts with "next:"; the first item is the command you want: `sudo homelab-configure install ./my-homelab`.
+**7 Modules.** The kit's list, already filled in. Look, do not touch. The paragraph at the top repeats the memory verdict.
 
-Type that command and press Enter. It shows the disks it is about to erase and asks you to type the host name to confirm. Type it. Then it partitions the disk, downloads the system, and installs it; on a home connection this is twenty to forty minutes, and the screen scrolls the whole time. It is done when it prints "installed" followed by your host name, the addresses to open, and the login to use.
+**8 Review.** Everything on one screen, with the disks that will be erased in red. Move to Install and press Enter.
 
-If it stops with an error instead, read [When something is wrong](https://ww4.github.io/imperfect-homelab/quick-start/when-something-is-wrong/). Nothing is lost; the stick is still running, and `homelab-configure tui` opens the form again with your answers in it.
+From here it works on its own: it writes the configuration and checks it, partitions the disk, downloads the system onto it, and installs it. On a home connection that is twenty to forty minutes, and the screen scrolls the whole time. When it finishes, the screen says "installed" with your machine's name, the addresses to open, and the login to use, with a Close button under it. If it stops with an error instead, read [When something is wrong](https://ww4.github.io/imperfect-homelab/quick-start/when-something-is-wrong/). You lose nothing: press Close, and `homelab-configure tui` opens the form again with everything you typed still in it.
 
 
 ## First look
@@ -125,7 +125,7 @@ If it stops with an error instead, read [When something is wrong](https://ww4.gi
 URL: https://ww4.github.io/imperfect-homelab/quick-start/first-look/
 
 
-Type `reboot`, press Enter, and pull the stick out as soon as the screen goes dark. The first boot takes a few minutes longer than later ones, because the machine requests its certificates and starts every service for the first time; give it five minutes before you judge it. The first backup runs by itself at 2:30 that night.
+Press Close, type `reboot`, press Enter, and pull the stick out as soon as the screen goes dark. The first boot takes a few minutes longer than later ones, because the machine requests its certificates and starts every service for the first time; give it five minutes before you judge it. The first backup runs by itself at 2:30 that night.
 
 On your other computer, open `https://recipes.` followed by your domain, so `https://recipes.example.com`. Jellyfin is at `jellyfin.`, the monitoring dashboards at `grafana.`, and the alert feed at `ntfy.`, all on your domain. The install created these names at Cloudflare, pointing at the machine's address on your home network, so they work from any device in the house. If the browser says the site cannot be reached, wait another minute and reload; if it warns about the certificate, same answer. Jellyfin and Tandoor ask you to create their first account the first time you visit; use whatever you like, those are separate from the machine. The dashboards and the few apps that come with a fixed login have their passwords in a file on the machine called `FIRST-LOGIN.md`. To read it, sit at the machine, log in as `admin` with the password you typed on the Host screen, and type `sudo cat /root/homelab/FIRST-LOGIN.md`. Copy what you need into a password manager and the file can go.
 
@@ -493,7 +493,7 @@ curl -fLO $base/$name && curl -fLO $base/$name.sha256
 sha256sum -c $name.sha256
 ```
 
-The newest image is also always at `$base/homelab-installer-latest.iso` (the same bytes under a fixed name, with its `.sha256` beside it), which is what the [Quick start](https://ww4.github.io/imperfect-homelab/quick-start/) links. The image is about 1.5 GB. Write it to a USB stick of 4 GB or more with `dd if=$name of=/dev/sdX bs=4M status=progress` (the stick, not a partition; everything on it is erased) or with Etcher, boot the target from it, and the console prints the two commands to type. Wired network is automatic; for Wi-Fi, `wpa_cli` first. If you would rather use a stock NixOS ISO, `nix run 'github:ww4/homelab-modules?dir=configurator' -- tui` does the same thing after a compile of a few minutes.
+The newest image is also always at `$base/homelab-installer-latest.iso` (the same bytes under a fixed name, with its `.sha256` beside it), which is what the [Quick start](https://ww4.github.io/imperfect-homelab/quick-start/) links. The image is about 1.5 GB. Write it to a USB stick of 4 GB or more with `dd if=$name of=/dev/sdX bs=4M status=progress` (the stick, not a partition; everything on it is erased) or with Etcher, boot the target from it, and the installer opens by itself on the console after it has looked for a newer version of itself on the project's binary cache (so an old stick runs the current installer; `--max-jobs 0` means it downloads or falls back to the copy on the stick, never compiles). `homelab-configure tui` opens it again; Ctrl-Q leaves it and the shell is behind it. Wired network is automatic; for Wi-Fi, `wpa_cli` first. If you would rather use a stock NixOS ISO, `nix run 'github:ww4/homelab-modules?dir=configurator' -- tui` does the same thing after a compile of a few minutes.
 
 Each release of the image is named by date and library commit; `latest.txt` always names the newest, and the chapter's commands follow it.
 

@@ -15,7 +15,7 @@ with every problem listed · 3 validation failed · 1 anything else.
 
 - Secrets never go in the answers file or in chat. Supplied secrets come in
   by `--secret <option>=@<file>` or `=env:VAR`. Ask the user to put the
-  value in a file (or type it into the TUI's `v` prompt); never ask them to
+  value in a file (or type it on the TUI's Domain screen); never ask them to
   paste it to you.
 - `install` erases disks. Run it only with the user's explicit go-ahead for
   the exact device names, and prefer letting them type the confirmation.
