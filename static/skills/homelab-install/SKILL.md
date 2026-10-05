@@ -11,6 +11,32 @@ installed until `install` (on the box) or `nixos-anywhere` (from elsewhere)
 runs. Every command takes `--json`. Exit codes: 0 ok · 2 answers rejected,
 with every problem listed · 3 validation failed · 1 anything else.
 
+
+## Driving the installer over HTTP
+
+The booted installer serves the same wizard at `http://<machine>:8099`, and its
+API is the supported way for an agent to drive it without a console:
+
+- `GET  /api/state?code=<code>` — the whole wizard as JSON: the step, every
+  field with its label and help, the kits with their memory figures, the disks
+  and roles, each credential as a form of named variables, the review, and the
+  install log.
+- `POST /api/action?code=<code>` — one action: `{"do":"set_kit","index":0}`,
+  `set_disk {index, role}`, `set_profile {key, value}`, `github {user}`,
+  `add_key {text}`, `set_domain {key, value}`, `set_secret {option, var, value}`,
+  `save_secret {option}`, `skip_secret {option}`, `set_value {name, value}`,
+  `toggle_module {name}`, `back`, `continue`. The reply is the new state.
+
+The six-character code is shown on the machine's console beside the URL; ask the
+user for it (it stops anyone else on the network from driving an install). Every
+rule lives in the model, so the API cannot do anything the console could not:
+`continue` returns the same refusal text a person would see, and a soft warning
+(no SSH key, no password, an unverified token) is accepted by sending `continue`
+again. Secrets are forms: fill each variable with `set_secret`, then
+`save_secret`, which writes a 600 file and verifies the value where the provider
+has an API. Never ask the user to paste a secret to you — have them type it into
+the form, or set it and tell you it is saved.
+
 ## Rules that are not yours to relax
 
 - Secrets never go in the answers file or in chat. Supplied secrets come in
