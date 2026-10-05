@@ -4,7 +4,7 @@ description = "Download the installer image, write it with Rufus"
 weight = 2
 +++
 
-Download two things on your Windows computer: the installer image, which is about 1.5 GB, and Rufus, which writes it to the stick. The image is at `https://homelab-installer.nyc3.cdn.digitaloceanspaces.com/iso/homelab-installer-latest.iso`. Save it anywhere. Rufus is a single program with nothing to install; get `rufus-x.xx.exe` from [rufus.ie](https://rufus.ie) and run it. Plug in the stick.
+Download two things on your Windows computer: the installer image, which is about 1.5 GB, and Rufus, which writes it to the stick. The image is at `https://homelab-installer.nyc3.digitaloceanspaces.com/iso/homelab-installer-latest.iso`. Save it anywhere. If you want to be sure the download is whole, open a Command Prompt in the folder and run `certutil -hashfile homelab-installer-latest.iso SHA256`; the long number it prints should match the one at the same address with `.sha256` added. Rufus is a single program with nothing to install; get `rufus-x.xx.exe` from [rufus.ie](https://rufus.ie) and run it. Plug in the stick.
 
 1. In Rufus, under Device, pick the stick. Check the size; if there is more than one drive listed, pick the one that matches the stick, because Rufus erases whatever you pick.
 2. Click SELECT and choose the `.iso` you downloaded.
