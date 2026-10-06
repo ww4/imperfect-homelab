@@ -7,5 +7,5 @@ template = "section.html"
 page_template = "page.html"
 +++
 
-The machine is up. Day two is six checks, in this order: the DNS names and the gate, the first logins, a restore you have run, the phone, and the first alert you cause on purpose. The restore drill is the one people skip, so it has the longest page.
+The machine is up. Day two is four jobs, in this order: the DNS names and the gate, the first logins, a restore you have run yourself, and the first alert you cause on purpose. Each page is a numbered procedure, and the restore drill is the one people skip, so it has the most steps.
 

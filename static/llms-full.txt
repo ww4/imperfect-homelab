@@ -654,11 +654,48 @@ The CPU is the last question. Anything from the last decade with four cores runs
 URL: https://ww4.github.io/imperfect-homelab/hardware/evaluating-a-candidate/
 
 
-A used machine (a library sale, a decommissioned office PC, a hand-me-down) gets five stages, ordered so that the cheapest can end the evaluation. You decide most boxes at the desk, without powering them on. The output is a one-page card in the configuration repository, so the answer does not have to be re-derived when the box turns up in a closet again.
+At the end of this you will have a one-page card saying what a used machine is for, or that it is not worth keeping, reached in under an hour of hands-on time. The stages are ordered so the cheapest can end the evaluation, and most boxes are decided at the desk without being powered on. The card goes in the configuration repository, so the answer does not have to be worked out again when the box turns up in a closet two years later.
 
-Stage 0 is the desk pass, from the model number alone: look up the CPU family and TDP, RAM slots and maximum, storage ports and bays, PCIe slots by size, NIC chipset, out-of-band management, the vendor's idle-power figure, and the model's known problems (BIOS whitelists, a bad-capacitor era, a proprietary PSU connector). The intake line has to say the form factor, because one model number ships as a tower, a small-form-factor and a tiny with different bays and slots. Match the result against the roles you need; if none fits, stop here and strip it for RAM, drives and fans. Stage 1 is ten minutes with the side off: bulging capacitors, a missing heatsink, a PSU that does not match the board. Stage 2 is a bench boot from a USB stick with the probe script, which inventories everything and runs the gates unattended. Stage 3 is an overnight burn-in, only for a box you are adopting: memory, disks and thermals under load. Stage 4 writes the card: role, name, next steps, or pass.
+## Prerequisites
 
-The reference machine's owner runs stages 0 and 4 through the agent and does 1 to 3 by hand; 2 and 3 are mostly waiting. The probe script and a sample card are in the configuration repository's `docs/hardware/`.
+- The machine's exact model number, and the form factor. One model number ships as a tower, a small-form-factor and a tiny, with different bays and slots, so the intake line has to say which.
+- The list of roles you need filled.
+- A USB stick with the probe script, for Step 3.
+
+## Step 1 — The desk pass
+
+From the model number alone, look up:
+
+- CPU family and TDP
+- RAM slots and the maximum the board takes
+- storage ports and drive bays
+- PCIe slots, by physical size
+- NIC chipset
+- out-of-band management
+- the vendor's measured idle-power figure
+- the model's known problems: BIOS whitelists, a bad-capacitor era, a proprietary PSU connector
+
+Match the result against the roles you need. If none fits, stop here and strip the machine for RAM, drives and fans. Most candidates end at this step, which is the point of putting it first.
+
+## Step 2 — Ten minutes with the side off
+
+Open it and look for bulging capacitors, a missing heatsink, and a PSU that does not match the board. Any one of those ends the evaluation on a machine you did not pay for.
+
+## Step 3 — A bench boot with the probe script
+
+Boot it from a USB stick carrying the probe script. The script inventories the hardware and runs the gates unattended, so this stage is mostly waiting.
+
+## Step 4 — An overnight burn-in
+
+Only for a box you have decided to adopt. Load memory, disks and thermals overnight and read the results in the morning. Like Step 3, it is mostly waiting.
+
+## Step 5 — Write the card
+
+One page: the role, the name you are giving it, the next steps, or a pass. Commit it to the configuration repository next to the others.
+
+## Conclusion
+
+You have a decision and a record of how you reached it. The probe script and a sample card live in the configuration repository's `docs/hardware/`. On the reference machine the agent runs Steps 1 and 5 and a person does 2 through 4, which splits the work along the line between looking things up and having hands on the machine.
 
 
 # Accounts and keys
@@ -1202,7 +1239,7 @@ The run checks removals. A module another chosen module requires stays, and the 
 URL: https://ww4.github.io/imperfect-homelab/day-two/
 
 
-The machine is up. Day two is six checks, in this order: the DNS names and the gate, the first logins, a restore you have run, the phone, and the first alert you cause on purpose. The restore drill is the one people skip, so it has the longest page.
+The machine is up. Day two is four jobs, in this order: the DNS names and the gate, the first logins, a restore you have run yourself, and the first alert you cause on purpose. Each page is a numbered procedure, and the restore drill is the one people skip, so it has the most steps.
 
 
 
@@ -1211,10 +1248,47 @@ The machine is up. Day two is six checks, in this order: the DNS names and the g
 URL: https://ww4.github.io/imperfect-homelab/day-two/dns-and-the-gate/
 
 
-The generator printed the names the chosen modules claim (`jellyfin.<domain>`, `grafana.<domain>`, and so on). Create one record per name pointing at the machine's tailnet address, or its LAN address if you will only ever use it at home. ACME issues a certificate per name over DNS-01 on the first boot, which needs the DNS API token you supplied and nothing inbound. Until ACME issues a certificate, nginx serves a self-signed placeholder, so a browser warning in the first minutes is expected and a browser warning an hour later is not.
+At the end of this every service name will resolve to your machine, each one will have a real certificate, and you will have proved from outside your network that nobody else can reach any of them. The last part is the one check this guide cannot run for you, because it has to come from a device that is not yours.
 
-Then prove the gate from outside it; that is the one test the Principles chapter cannot run for you. From a device not on your LAN and not on your tailnet (a phone on mobile data will do), try your connection's public IPv6 address, if it has one, with a `Host` header for one of your vhosts. The answer must be a 403 from nginx, not a login page.
+## Prerequisites
 
+- The machine installed and booted.
+- The list of names the generator printed (`jellyfin.<domain>`, `grafana.<domain>`, and so on).
+- The machine's tailnet address, or its LAN address if you will only ever use it at home.
+- A device that is not on your LAN and not on your tailnet. A phone on mobile data will do.
+
+## Step 1 — Create one record per name
+
+Create an A record for each name, pointing at the machine's address. With the Cloudflare token on the machine, the configurator does it for you, and the command is safe to run again:
+
+```sh
+sudo homelab-configure dns /root/homelab
+```
+
+It points the names at the address the machine has when it runs, which is the tailnet address once Tailscale has joined, and it prints what it created, updated and left alone. Pass `--ip` to name an address yourself, and `--dry-run` to see the plan without writing anything.
+
+Every record is proxied off. The network gate is the perimeter here, and Cloudflare's proxy would sit outside it.
+
+## Step 2 — Wait for the certificates
+
+ACME issues a certificate per name over DNS-01 on the first boot, which needs the DNS API token you supplied and nothing inbound.
+
+Until a name has one, nginx serves a self-signed placeholder, so a browser warning in the first minutes is expected. A warning an hour later means the token or the zone is wrong, and [Cloudflare DNS and the API token](https://ww4.github.io/imperfect-homelab/accounts/cloudflare-dns/) has the four failure messages and what each one means.
+
+## Step 3 — Prove the gate from outside it
+
+Take a device off your LAN and off your tailnet. If your connection has a public IPv6 address, aim a request at it with a `Host` header naming one of your vhosts:
+
+```sh
+curl -sk -o /dev/null -w '%{http_code}\n' \
+  -H "Host: jellyfin.example.com" "https://[YOUR-PUBLIC-IPV6]/"
+```
+
+The answer must be `403`, from nginx. A login page is a failure and not a partial pass: it means the request reached the application, and only that application's password stands between a stranger and your data.
+
+## Conclusion
+
+The names work, the certificates are real, and the gate holds from the one place that can test it. Next, [First logins](https://ww4.github.io/imperfect-homelab/day-two/first-logins/) goes through each application once.
 
 
 ## First logins
@@ -1222,8 +1296,45 @@ Then prove the gate from outside it; that is the one test the Principles chapter
 URL: https://ww4.github.io/imperfect-homelab/day-two/first-logins/
 
 
-Log in to each application once with the admin password from `FIRST-LOGIN.md`. The ones with single sign-on (Grafana, Forgejo, Nextcloud, Paperless, Immich, when `authelia` is among your modules) will show an SSO button; the admin account you log in with first is the local one, and the application creates the SSO account on first use. Enrol your authenticator in Authelia before anything else, because the forward-auth gate in front of the services without their own login needs it. Two things you must set by hand, because the configuration cannot: the download client's credentials inside Sonarr and Radarr (each app keeps them in its own database), and the first `snapraid sync` if you chose parity. If the download client is not connecting at all, its tunnel is the place to look, and [A VPN account for the download client](https://ww4.github.io/imperfect-homelab/accounts/vpn/) has the checks.
+At the end of this you will have signed in to every application once, enrolled an authenticator, and set the two values no configuration file can set for you. None of it takes long; the order is what matters, because the authenticator gates the services that have no login of their own.
 
+## Prerequisites
+
+- `FIRST-LOGIN.md`, or the passwords from it already in your password manager.
+- An authenticator app on your phone, if `authelia` is among your modules.
+- The service names resolving, from [DNS and the gate](https://ww4.github.io/imperfect-homelab/day-two/dns-and-the-gate/).
+
+## Step 1 — Enrol your authenticator in Authelia
+
+Do this first. The forward-auth gate in front of the services that have no login of their own needs it, so until it is enrolled those services are closed to you as well as to everyone else.
+
+Open your Authelia address, sign in with the admin password from `FIRST-LOGIN.md`, and register a one-time-password app when it asks.
+
+## Step 2 — Log in to each application once
+
+Work down the list with the admin password from `FIRST-LOGIN.md`. The applications wired for single sign-on (Grafana, Forgejo, Nextcloud, Paperless and Immich, when `authelia` is among your modules) show an SSO button next to the password form.
+
+The admin account you log in with first is the application's own local account. The application creates the SSO account the first time somebody signs in through the button, so both exist and the local one is your way back in if single sign-on ever breaks.
+
+## Step 3 — Tell Sonarr and Radarr about the download client
+
+Each of those applications keeps the download client's address and credentials in its own database, which is why the configuration cannot set them. Open qBittorrent's web UI first and set the web-UI login you want. Then open Sonarr and Radarr, go to the download-client settings in each, add qBittorrent, and give it that address and that login.
+
+If the download client is not reachable at all, its tunnel is the place to look, and [A VPN account for the download client](https://ww4.github.io/imperfect-homelab/accounts/vpn/) has the checks.
+
+## Step 4 — Run the first snapraid sync
+
+If you chose parity, it does not exist until the first sync has run, and that run builds it from scratch over hours. The module leaves it to you for that reason:
+
+```sh
+sudo snapraid sync
+```
+
+Start it somewhere a dropped SSH session will not take it with you, under `tmux` or `screen`. The nightly timer takes over afterwards, and finds nothing to do until something changes.
+
+## Conclusion
+
+Every application has an account you can get back into, and the two hand-set values are set. Next, [Prove a restore](https://ww4.github.io/imperfect-homelab/day-two/prove-a-restore/) is the drill most people skip.
 
 
 ## Prove a restore
@@ -1231,12 +1342,63 @@ Log in to each application once with the admin password from `FIRST-LOGIN.md`. T
 URL: https://ww4.github.io/imperfect-homelab/day-two/prove-a-restore/
 
 
-The first backup runs at 02:30 the night after install. The next morning, before anything else, restore from it.
+At the end of this you will have pulled a real file out of a real snapshot and compared it with the live copy, from both repositories, and you will have the two commands written down somewhere that is not the machine. A backup you have not restored from is a hypothesis, and this is the step people skip.
 
-List the snapshots: `restic -r /mnt/<pool>/restic --password-file /run/secrets/backup-password snapshots` as root. Pick one small path that is in `homelab.backup.paths` and restore it somewhere harmless: `restic -r … restore latest --target /tmp/restore-test --include /var/lib/<something>`. Compare it with the live copy. Then do the same against the offsite repository if you configured one, with its environment file, because an offsite repository you have never read from is the one that will be unreadable when the house is gone. Write down the two commands somewhere that survives the machine, next to the restic passphrase and the admin age key.
+## Prerequisites
 
-The library's `backup` module runs an integrity check after every job and publishes a failed unit if it fails, which the monitoring stack turns into an alert. That proves the repository is consistent. It does not prove you can restore, and only the drill does.
+- One night's wait. The first backup runs at 02:30 the night after the install, so do this the next morning.
+- Root on the machine.
+- The pool name you gave `homelab.backup.local.repository`.
+- The offsite repository's environment file, if you configured one.
 
+## Step 1 — List the snapshots
+
+As root:
+
+```sh
+restic -r /mnt/<pool>/restic --password-file /run/secrets/backup-password snapshots
+```
+
+You should see at least one snapshot with last night's date. No snapshots at all means the job did not run, and `journalctl -u restic-backups-critical-local.service` says why (`critical-local` is the default job name; `homelab.backup.local.name` sets it).
+
+## Step 2 — Restore one path somewhere harmless
+
+Pick one small path that is in `homelab.backup.paths` and restore it to a scratch directory, never over the live copy:
+
+```sh
+restic -r /mnt/<pool>/restic --password-file /run/secrets/backup-password \
+  restore latest --target /tmp/restore-test --include /var/lib/<something>
+```
+
+## Step 3 — Compare it with the live copy
+
+```sh
+diff -r /tmp/restore-test/var/lib/<something> /var/lib/<something>
+```
+
+A running service writes to its state directory, so expect differences in a database file or a log. What you are checking is that the files are there, the sizes are right, and the content is readable.
+
+## Step 4 — Do the same against the offsite repository
+
+Repeat Steps 1 to 3 against the remote repository, with its environment file sourced so restic has the credentials:
+
+```sh
+set -a; . <homelab.backup.remote.environmentFile>; set +a
+restic -r <homelab.backup.remote.repository> \
+  --password-file /run/secrets/backup-password snapshots
+```
+
+An offsite repository you have never read from is the one that will be unreadable on the day the house is gone. The local copy passing tells you nothing about the remote one.
+
+## Step 5 — Write the commands down off the machine
+
+Put the two restore commands somewhere that survives the machine, next to the restic passphrase and the admin age key. On the day you need them, the machine that holds your notes is the machine that is missing.
+
+## Conclusion
+
+You have restored from both repositories and you know the commands work. The `backup` module runs an integrity check after every job and publishes a failed unit when the check fails, which the monitoring stack turns into an alert, so the repository's consistency is watched from here on. Consistency is not the same as a restore, and only the drill proves that one.
+
+Next, [The phone](https://ww4.github.io/imperfect-homelab/day-two/the-phone/) is the alert you cause on purpose.
 
 
 ## The phone
@@ -1244,9 +1406,47 @@ The library's `backup` module runs an integrity check after every job and publis
 URL: https://ww4.github.io/imperfect-homelab/day-two/the-phone/
 
 
-The `ntfy` module provisioned a subscriber account for you; its password is in `FIRST-LOGIN.md`. Install the ntfy app, point it at your ntfy vhost, log in, and subscribe to the alerts topic. Then cause one alert on purpose: stop a service the monitoring stack watches (`systemctl stop uptime-kuma`, say) and wait for the failed-unit rule. The notification should arrive within the rule's evaluation window with the unit name and the journal command to run. Start the service again and confirm the resolved notification follows.
+At the end of this your phone will have received a real alert from the machine and the matching all-clear, so you will know the path works before something breaks at three in the morning. The whole drill takes about ten minutes, most of it waiting for a rule to fire.
 
-`homelab.quietHours` sets quiet hours for both Grafana and Alertmanager. If the alert you caused came through at an hour it should not have, change the window in the values file rather than in either UI.
+## Prerequisites
+
+- The ntfy subscriber account from `FIRST-LOGIN.md`. The `ntfy` module provisioned it for you.
+- Your ntfy address resolving and holding a real certificate, from [DNS and the gate](https://ww4.github.io/imperfect-homelab/day-two/dns-and-the-gate/).
+- A phone, and root on the machine.
+
+## Step 1 — Subscribe the phone
+
+Install the ntfy app, point it at your ntfy vhost, and log in with the subscriber account. Subscribe it to the alerts topic.
+
+## Step 2 — Cause an alert on purpose
+
+Stop a service the monitoring stack watches, and leave it stopped:
+
+```sh
+sudo systemctl stop uptime-kuma
+```
+
+The failed-unit rule picks it up on its next evaluation. The notification carries the unit name and the journal command to run, because the reader of an alert is you on a phone, half awake, with no context.
+
+If nothing arrives after a few evaluation windows, check Alertmanager's own view of the alert before suspecting the phone: the alert either did not fire or did not route, and those are different problems.
+
+## Step 3 — Confirm the all-clear
+
+Start the service again:
+
+```sh
+sudo systemctl start uptime-kuma
+```
+
+A resolved notification should follow. An alert path that fires but never resolves trains you to ignore it, which is worse than no alert at all.
+
+## Step 4 — Fix the quiet hours if it came at the wrong time
+
+`homelab.quietHours` sets quiet hours for Grafana and Alertmanager from one place. If the alert you caused came through at an hour it should not have, change the window in your values file and rebuild. Changing it in either UI leaves the two disagreeing, and the next rebuild puts it back.
+
+## Conclusion
+
+The machine can reach your phone, and you have seen both halves of the cycle. That closes Day two. [Tech stack](https://ww4.github.io/imperfect-homelab/tech-stack/) is where the chapters stop telling you what to do and start explaining why each piece is the one that got picked.
 
 
 # Services
@@ -3612,14 +3812,74 @@ The worked example adds a small web service. The three chapters after it are the
 URL: https://ww4.github.io/imperfect-homelab/extending/a-worked-example/
 
 
-Take a service with one process, one port and one state directory; a system monitor with a web UI is the shape. It needs a NixOS service, a vhost that proxies to it, and a line in the catalog. It needs no secret and no option of its own beyond the domain.
+At the end of this you will have added a service to the library: one module file, one catalog entry, two export lines, and a build that proves the machine still evaluates. The example is a service with one process, one port and one state directory, which is the shape a system monitor with a web UI takes. It needs no secret and no option of its own beyond the domain.
 
-The module file goes in `modules/services/`, and its header comment says what the service is for and which lesson shaped it, because the header is what the next person reads before the code. The body enables the NixOS service, binds it to `127.0.0.1` on its port, and declares the vhost with the shared helper: `services.nginx.virtualHosts."glances.${config.homelab.domain}" = import ../lib/proxy-vhost.nix { port = 61208; }`. The helper adds TLS from the ACME defaults and the forward-auth hook if the name is in the protected list. Nothing in the file names a host, a path on the reference machine, or a person. If the service writes state, a tmpfiles rule in the module creates the state directory, and you add that directory to `homelab.backup.paths` in your values file to get it backed up.
+## Prerequisites
 
-Register it twice. `flake.nix` exports it under `nixosModules.<name>`, and `modules/catalog.nix` gets an entry: a one-line description, `enable = "import"`, the options it reads (`homelab.domain`), what it requires (`acme` and `nginx-access`, because every vhost assumes them), the vhost it claims, and an empty secrets list. The library's flake check refuses to evaluate if the two disagree, so you cannot forget either.
+- A checkout of the module library.
+- A NixOS machine you can build, with the library as an input you can override.
+- `nix` with flakes enabled.
 
-Then run the checks: `tools/leak-scan.sh` for identifiers, `nix flake check` for the catalog, and a build of a machine that imports it. On the reference machine that last step is the proof in the next-but-one chapter. On your own machine it is `nix build .#nixosConfigurations.<host>.config.system.build.toplevel` with the module added to your imports. Deploy by merging. The DNS record for the new name is the one thing you add by hand, and the Day two chapter's probe (every path class, from outside the gate) confirms the vhost is where you think it is.
+## Step 1 — Write the module file
 
+The file goes in `modules/services/`. Open it with a header comment saying what the service is for and which lesson shaped it, because the header is what the next person reads before the code.
+
+The body enables the NixOS service and binds it to `127.0.0.1` on its port. Nothing in the file names a host, a path on the reference machine, or a person; every site fact comes in through `homelab.*`.
+
+## Step 2 — Declare the vhost with the shared helper
+
+One line gives the service a name behind the gate:
+
+```nix
+services.nginx.virtualHosts."glances.${config.homelab.domain}" =
+  import ../lib/proxy-vhost.nix { port = 61208; };
+```
+
+The helper adds TLS from the ACME defaults and the forward-auth hook when the name is in the protected list. Declaring the vhost here, next to the service, is what keeps the web server out of a central file that every module has to edit.
+
+## Step 3 — Create the state directory and get it backed up
+
+If the service writes state, a tmpfiles rule in the module creates the directory. Backing it up is the consumer's call, so add that directory to `homelab.backup.paths` in your values file.
+
+## Step 4 — Register the module twice
+
+`flake.nix` exports it under `nixosModules.<name>`. Then `modules/catalog.nix` gets an entry:
+
+- a one-line description
+- `enable = "import"`
+- the options it reads, here `homelab.domain`
+- what it requires: `acme` and `nginx-access`, because every vhost assumes them
+- the vhost it claims
+- an empty secrets list
+
+The library's flake check refuses to evaluate when the export list and the catalog disagree, so neither half can be forgotten.
+
+## Step 5 — Run the checks
+
+```sh
+tools/leak-scan.sh
+nix flake check
+```
+
+The first looks for identifiers that belong to one household. The second checks the catalog against the exported modules in both directions.
+
+## Step 6 — Build a machine that imports it
+
+Add the module to your own host's imports and build the whole system without touching it:
+
+```sh
+nix build .#nixosConfigurations.<host>.config.system.build.toplevel
+```
+
+A store path comes out. [Proving a change](https://ww4.github.io/imperfect-homelab/extending/proving-a-change/) is what to do with it when the change is supposed to be a no-op.
+
+## Step 7 — Deploy and add the DNS record
+
+Deploy by merging; the daemon rebuilds from `main`. The DNS record for the new name is the one thing you add by hand, and [DNS and the gate](https://ww4.github.io/imperfect-homelab/day-two/dns-and-the-gate/) has the probe from outside that confirms the vhost is where you think it is.
+
+## Conclusion
+
+The service is in the library, the catalog describes it, and the Services section of this site will carry a generated page for it on the next refresh. [The option contract](https://ww4.github.io/imperfect-homelab/extending/the-option-contract/) is the next chapter, for when a value in your module has to become an option every household can set.
 
 
 ## The option contract
