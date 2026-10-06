@@ -1,7 +1,7 @@
 +++
 title = "Services"
 description = "Every module in the library — what it does, what it reads, what it needs"
-weight = 7
+weight = 8
 sort_by = "title"
 template = "section.html"
 page_template = "page.html"

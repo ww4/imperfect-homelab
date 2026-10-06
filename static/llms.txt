@@ -9,6 +9,8 @@ If you are an agent helping someone install or extend this, read these in order:
 - The booted installer serves a wizard at `http://<machine>:8099` with a JSON API (`/api/state`, `/api/action`, gated by a code on its console) — the skill above documents it; an agent can drive a whole install through it.
 - [Quick start](https://ww4.github.io/imperfect-homelab/quick-start/): the beginner's path, click by click (Windows, Rufus, boot menu, the seven TUI screens, first login) — hand this to a person who has never used Linux
 - [The installer ISO](https://ww4.github.io/imperfect-homelab/install/the-installer-iso/): download, checksum, write, boot
+- [Cloudflare DNS and the API token](https://ww4.github.io/imperfect-homelab/accounts/cloudflare-dns/): the out-of-band work for TLS, step by step — getting the domain to Cloudflare, the scoped token, what each of the installer's verify messages means, and how to set the token after the install
+- [A VPN account for the download client](https://ww4.github.io/imperfect-homelab/accounts/vpn/): the WireGuard values gluetun needs, per provider, and what a forwarded port changes
 - [The configurator's README](https://github.com/ww4/homelab-modules/blob/main/configurator/README.md): commands, the answers file, what comes out
 - [Services](https://ww4.github.io/imperfect-homelab/services/): every module, its options and secrets (generated from the library's catalog)
 

@@ -1,7 +1,7 @@
 +++
 title = "Day two"
 description = "DNS, first logins, prove a restore, SSO, the phone, the first alert"
-weight = 6
+weight = 7
 sort_by = "weight"
 template = "section.html"
 page_template = "page.html"

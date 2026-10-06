@@ -59,7 +59,7 @@ You need five things, and the domain is the only one that costs money. Gather th
 
 The PC is the one piece people hesitate over. An old gaming machine, a retired office desktop, a mini PC from a marketplace: any of them. A second disk inside it is nice for media but not required for the Starter kit, which lives on the one disk. If the machine has a disk you want to keep, take it out before you start; the installer erases every disk you point it at and nothing else, but taking the disk out removes the chance of a mistake.
 
-The domain is how the apps get names like `recipes.yourdomain.com` and real certificates, so your browser does not warn you every time. For this alpha release the installer only knows how to do that through Cloudflare's DNS. If you have no domain, register one at Cloudflare: sign in at dash.cloudflare.com, open Domain Registration, search a name, pay about ten dollars a year, and the DNS is already there. If you own a domain somewhere else, add it to a free Cloudflare account (Add a site, Free plan) and change the nameservers at your registrar to the two Cloudflare shows you; the registrar's help pages have the clicks for that, and the change takes anywhere from minutes to a day.
+The domain is how the apps get names like `recipes.yourdomain.com` and real certificates, so your browser does not warn you every time. For this alpha release the installer only knows how to do that through Cloudflare's DNS, and it wants an API token from your Cloudflare account to do it. [Cloudflare DNS and the API token](https://ww4.github.io/imperfect-homelab/accounts/cloudflare-dns/) is the walkthrough: registering a name there, or moving an existing one, and creating the token with the clicks in order. Do it before you start and step 4 has one less thing in it.
 
 Set aside an evening. Most of it is waiting: the stick takes a few minutes to write, and the install downloads two or three gigabytes.
 
@@ -113,7 +113,7 @@ Everything below works the same way on the machine's screen, if you would rather
 
 **5 SSH access.** This is for reaching the machine from another computer without sitting at it. Type your GitHub username to pull in the keys on that account, or paste one. If you do not know what an SSH key is, press Continue twice: the first press warns that only the machine's own screen will work, the second accepts it.
 
-**6 Domain and certificates.** Your domain (`example.com`, nothing in front of it) and your email address. Below them is a box for the Cloudflare token, with the steps to make one: dash.cloudflare.com, My Profile, API Tokens, Create Token, the "Edit zone DNS" template, your domain as the one zone. Paste it in, press Save, and the installer checks it against your domain at once: a green line means it works, a red one says what is wrong. **Skip for now** leaves it unset, and the page tells you what will not work until you set it later.
+**6 Domain and certificates.** Your domain (`example.com`, nothing in front of it) and your email address. Below them is a box for the Cloudflare token, with the steps to make one: dash.cloudflare.com, My Profile, API Tokens, Create Token, the "Edit zone DNS" template, your domain as the one zone. Paste it in, press Save, and the installer checks it against your domain at once: a green line means it works, a red one says what is wrong. **Skip for now** leaves it unset, and the page tells you what will not work until you set it later. [Cloudflare DNS and the API token](https://ww4.github.io/imperfect-homelab/accounts/cloudflare-dns/) has the same steps with the screens described, what each red line means, and how to set the token after the install.
 
 **7 Modules.** The kit's list, already filled in. The line at the top repeats how much memory the set needs.
 
@@ -183,7 +183,7 @@ The library is the reusable half. About forty NixOS modules hold the implementat
 URL: https://ww4.github.io/imperfect-homelab/start-here/who-this-is-for/
 
 
-You need a machine, a domain you control, and an evening. The machine can be anything that boots the NixOS installer and has a disk for the system and at least one for data; the Hardware chapter says what matters and what does not. The domain is for DNS-01 certificates and for naming services, so it needs a registrar or DNS host with an API (Cloudflare is the tested one). A Tailscale account is the simplest way to reach the box from outside your LAN, and the guide assumes it. Backblaze B2 is the tested offsite backup target and costs a few dollars a month at household scale.
+You need a machine, a domain you control, and an evening. The machine can be anything that boots the NixOS installer and has a disk for the system and at least one for data; the Hardware chapter says what matters and what does not. The domain is for DNS-01 certificates and for naming services, and this release speaks to one DNS provider, Cloudflare; [Cloudflare DNS and the API token](https://ww4.github.io/imperfect-homelab/accounts/cloudflare-dns/) is the walkthrough for getting a domain there and making the token. A Tailscale account is the simplest way to reach the box from outside your LAN, and the guide assumes it. Backblaze B2 is the tested offsite backup target and costs a few dollars a month at household scale.
 
 You do not need to know Nix. The configurator asks questions and writes the configuration; the Install chapter walks through the output file by file so you can see what it wrote and why. You will need to be comfortable in a terminal over SSH, and you will read more configuration than you write. By the Extending chapter you will be writing a module of your own, and the guide teaches the Nix you need along the way.
 
@@ -472,6 +472,256 @@ Stage 0 is the desk pass, from the model number alone: look up the CPU family an
 The reference machine's owner runs stages 0 and 4 through the agent and does 1 to 3 by hand; 2 and 3 are mostly waiting. The probe script and a sample card are in the configuration repository's `docs/hardware/`.
 
 
+# Accounts and keys
+
+URL: https://ww4.github.io/imperfect-homelab/accounts/
+
+
+The installer mints every secret it can. Two it cannot, because they belong to an account somewhere else: the Cloudflare API token that gets your certificates and your DNS records, and the WireGuard credentials the download client's tunnel runs on. Both are work you do in a web browser, on somebody else's site, before or during the install.
+
+Each page here is a walkthrough with the clicks in order, the values to copy, and what to do when the installer says the value did not check out. The Cloudflare page applies to every install. The VPN page applies only if the download stack is among your modules. Both can be done a day ahead, and both can be done after the install if you skipped them at the time.
+
+
+## Cloudflare DNS and the API token
+
+URL: https://ww4.github.io/imperfect-homelab/accounts/cloudflare-dns/
+
+
+At the end of this you will have a domain whose DNS lives at Cloudflare and an API token that can edit that one domain's records. The token is the single value the installer cannot work out for itself, and it is what makes the certificates automatic. Your services get real certificates from Let's Encrypt through a DNS-01 challenge. The challenge proves you own the domain by writing a temporary TXT record and reading it back, so nothing on your machine ever has to listen on the public internet. The same token does a second job after the install: `homelab-configure dns` uses it to create one A record per service name, pointing at the machine's own address.
+
+This release supports Cloudflare and no other DNS provider. If your domain is somewhere else and you would rather not move it, there is no path through the installer today.
+
+## Prerequisites
+
+- A domain name, or about ten dollars a year to register one. Any name will do; nothing in the homelab depends on what it is.
+- A Cloudflare account. The free plan does everything here.
+- Sign-in access to your current registrar, if the domain is already registered somewhere other than Cloudflare.
+- Twenty minutes, plus waiting time if you are moving an existing domain. You can do all of this a day before you install.
+
+## Step 1 — Put the domain's DNS at Cloudflare
+
+Cloudflare has to be answering DNS questions about your domain before a token can do anything with it. There are two routes, and which one you take depends on whether you already own a name.
+
+**If you do not have a domain yet**, register it at Cloudflare and the DNS is already in the right place. Sign in at [dash.cloudflare.com](https://dash.cloudflare.com), open **Domain Registration** in the left sidebar, choose **Register Domains**, search for a name, and pay. A `.com` runs about ten dollars a year and Cloudflare sells at cost. When the purchase finishes, the domain appears in your account with Cloudflare's nameservers already set, and you can go to Step 2.
+
+**If you already own a domain elsewhere**, add it to Cloudflare and then point the registrar at Cloudflare's nameservers. In the dashboard choose **Add a site** (on some layouts it is **Add** then **Existing domain**), type the domain without any `www` in front of it, and pick the **Free** plan. Cloudflare reads the records your current DNS host is publishing and shows you the list it found. Read that list before you go on. If you receive email at this domain, the MX records and any SPF, DKIM or DMARC TXT records have to be in that list, because after the switch Cloudflare is the only thing answering and anything missing stops working. Add by hand whatever the scan missed.
+
+Cloudflare then shows two nameservers, something in the shape of `ara.ns.cloudflare.com` and `rob.ns.cloudflare.com`. The pair is specific to your account, so copy the ones on your screen rather than the ones printed here. Sign in at your registrar, find the nameserver setting (registrars call it **Nameservers**, **DNS**, or **Manage DNS**), replace both entries with Cloudflare's, and save. The registrar's own help pages have the exact clicks, because every registrar puts this in a different place.
+
+The change takes effect somewhere between a few minutes and a day, and most of the time it is under an hour. Cloudflare checks on its own and emails you when the zone goes **Active**; until then the dashboard shows it as **Pending Nameserver Update**. The token you make in the next step will work the moment the zone is active, and not before. If you are in a hurry, create the token now and come back to the check at the end.
+
+## Step 2 — Create the API token
+
+Sign in at [dash.cloudflare.com](https://dash.cloudflare.com), click the profile icon in the top right corner, and choose **My Profile**. In the left sidebar choose **API Tokens**, then **Create Token**.
+
+Cloudflare offers a list of templates. Find **Edit zone DNS** and click **Use template** beside it. The template already carries the one permission the installer needs, `Zone - DNS - Edit`. Do not add others.
+
+Scroll to **Zone Resources** and set the three dropdowns to **Include**, **Specific zone**, and your domain. This is the part that matters for safety: a token scoped to one zone can edit that domain's records and nothing else in your account. Leave **Client IP Address Filtering** empty, because the machine's address will change, and leave **TTL** empty unless you want to rotate the token on a schedule.
+
+Click **Continue to summary**. The summary should read as one line, your domain with DNS edit rights. Click **Create Token**.
+
+Cloudflare now shows the token once and never again. It is about 40 characters of letters, digits, underscores and hyphens, with no spaces and no prefix:
+
+```
+v1Qk8s_ExampleTokenNotRealDoNotUse_7bQ3zR4t
+```
+
+Copy it somewhere you can paste from. If you lose it before the install, come back here and roll it; there is no way to read it again.
+
+Two mistakes are easy to make on this screen. The **Global API Key**, further down the same API Tokens page, is not what you want; it has full access to your whole account and the installer will reject it. And a token created with **All zones** instead of a specific zone will pass the installer's check but gives away more than it needs to.
+
+## Step 3 — Check the token before you use it
+
+You can prove the token works from any computer with `curl`, before the installer ever sees it. Replace the token and the domain:
+
+```sh
+curl -s -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  "https://api.cloudflare.com/client/v4/zones?name=example.com"
+```
+
+A working token answers with JSON containing `"success": true` and exactly one entry under `result`, carrying your domain's name and its zone id. An empty `result` array with `"success": true` means the token is valid but cannot see that zone, which sends you back to Step 1. An HTTP 400 or 403 with `"success": false` means the token itself is wrong. The installer makes this same request, so a token that passes here will pass there.
+
+## Step 4 — Paste it into the installer
+
+The installer asks for the token on the **Domain and certificates** screen, under the boxes for your domain and your email address. Fill the domain in first. The check needs it, and the installer will tell you to go back if the domain box is empty.
+
+Paste the token into the Cloudflare token box and press **Save**. The installer writes it as a single line, `CLOUDFLARE_DNS_API_TOKEN=` followed by the token, and encrypts the file before it reaches the installed machine. The installer never puts the token in the answers file, and the token never leaves the machine except to Cloudflare.
+
+The check runs the moment you save. A green line reads:
+
+```
+token verified: it can see the zone example.com
+```
+
+Use the web form if you can. The machine's console cannot take a paste, and retyping 40 characters without an error is not a good use of an evening. The form is at the address and code printed on the machine's screen, and both screens show the same answers as you fill them in.
+
+## Step 5 — When the check does not pass
+
+The check prints one of four messages when it fails, and each has one cause worth looking at first.
+
+**`set homelab.domain first so the token can be checked against your zone`** means the domain box above is empty. Fill it in and save the token again.
+
+**`Cloudflare rejected the token (401/403)`** means Cloudflare did not accept the value at all. The usual causes are a partial copy, a trailing space, or the Global API Key pasted in place of a token. Create a new token with the **Edit zone DNS** template and paste that.
+
+**`the token works but sees no zone named example.com`** means the token is valid but your account has no active zone by that name. Check the domain for a typo first, then check that the zone is **Active** rather than **Pending** in the Cloudflare dashboard, then check that the token's Zone Resources names this domain and not another one. A domain you registered at Cloudflare but never added as a site will also give this answer.
+
+**`could not reach Cloudflare`** means the machine has no working internet connection. The installer's Welcome screen says whether it has one; if it does not, check the network cable and the switch before anything else.
+
+## Step 6 — Set the token after the install, if you skipped it
+
+**Skip for now** lets the install finish without a token. The machine comes up and every service runs, but Let's Encrypt never issues a certificate, so each address either warns about an untrusted certificate or does not answer at all, and no DNS records are created. Nothing is lost, and the fix is three commands.
+
+Sit at the machine or log in over SSH, and write the token into a file:
+
+```sh
+sudo install -m 600 /dev/null /root/dns.env
+sudo tee /root/dns.env >/dev/null <<'EOF'
+CLOUDFLARE_DNS_API_TOKEN=paste-the-token-here
+EOF
+```
+
+Then hand it to the configurator, rebuild, and create the DNS records:
+
+```sh
+sudo homelab-configure generate --out /root/homelab \
+  --secret homelab.acme.credentialsFile=@/root/dns.env
+sudo nixos-rebuild switch --flake /root/homelab#YOUR_HOSTNAME
+sudo homelab-configure dns /root/homelab
+```
+
+The rebuild re-encrypts the secret and restarts the certificate service, which then asks Let's Encrypt for one certificate per service name. Give it a few minutes; a browser warning in the first minutes is expected, though not an hour later. The `dns` command prints the records it created, updated and left alone, and is safe to run again. Delete `/root/dns.env` when the rebuild has finished, because the encrypted copy in the flake is the one that matters from then on.
+
+## Conclusion
+
+You now have a domain whose DNS Cloudflare answers for, and a token that can edit that domain and nothing else. Certificates arrive on the first boot, and the service names point at the machine without you touching a DNS record by hand.
+
+Next, [Answer the questions](https://ww4.github.io/imperfect-homelab/quick-start/answer-the-questions/) walks through the rest of the installer's screens. If the install is already done, [DNS and the gate](https://ww4.github.io/imperfect-homelab/day-two/dns-and-the-gate/) is the check that the names resolve and that nothing outside your network can reach them. If your chosen kit includes the download stack, [A VPN account for the download client](https://ww4.github.io/imperfect-homelab/accounts/vpn/) is the other value you have to fetch from somebody else's website.
+
+
+## A VPN account for the download client
+
+URL: https://ww4.github.io/imperfect-homelab/accounts/vpn/
+
+
+At the end of this you will have four values written down: a WireGuard private key, an address, a country, and on one of the two providers a switch that asks for a forwarded port. Those are what the installer wants when the download stack is among your modules, and they are the only part of that stack you cannot get from the installer itself.
+
+The download client runs inside the VPN tunnel. qBittorrent shares gluetun's network namespace, so every packet it sends leaves through WireGuard and there is no route around the tunnel for it to fall back to. When the tunnel is down, qBittorrent has no network at all, which is why the credentials are not optional.
+
+## Prerequisites
+
+- A paid account with Mullvad or Proton VPN. Those are the two this page walks through. The installer's provider list has a few more, and `other` lets you name any provider gluetun supports.
+- The `arr` module among your chosen modules. Without it the installer never asks for any of this.
+- A text editor on the computer you are reading this on, to open the configuration file the provider gives you.
+- Nothing to install. Both providers hand over the values from a web page.
+
+## Step 1 — Decide whether you need a forwarded port
+
+A forwarded port is an open door back through the VPN to your download client, and without one you can still connect out to other peers and download at full speed. What you lose is inbound connections: peers cannot start a connection to you, so you upload to fewer of them and seeding is slower. Some private trackers check for a connectable port and will not count your uploads without one.
+
+Mullvad does not offer port forwarding at all. Proton offers it on paid plans through NAT-PMP, and the port it assigns lasts for the length of a session. If seeding ratio matters to you, that difference decides which of the two you want.
+
+## Step 2 — Get the values from Mullvad
+
+Sign in at [mullvad.net](https://mullvad.net) with your account number. Open **WireGuard configuration** under the account page, choose **Linux** as the platform, and generate a key. Pick any country for the server; the one you pick is the country you will type into the installer. Download the configuration file.
+
+Open the downloaded `.conf` in a text editor. The two lines you need are at the top:
+
+```ini
+[Interface]
+PrivateKey = oK3mExampleKeyNotRealDoNotUseAAAAAAAAAAAAAA=
+Address = 10.64.0.2/32,fc00:bbbb:bbbb:bb01::1:0/128
+```
+
+The private key is everything after `PrivateKey = `, and it ends in `=`. The address is everything after `Address = `, and you keep the `/32` on it. If the line carries an IPv6 address after a comma, keep the whole line as it is. Mullvad has no port forwarding, so there is no port to write down.
+
+## Step 3 — Get the values from Proton VPN
+
+Sign in at [account.protonvpn.com](https://account.protonvpn.com) and open **Downloads**, then **WireGuard configuration**. Choose **GNU/Linux** as the platform and give the key a name you will recognise later, such as `homelab`.
+
+Before you create the key, turn on **NAT-PMP (Port Forwarding)**, and choose a server from the **P2P** list. Both of those are settings on the same screen, and you need both: the free tier has no P2P servers and no port forwarding, so this step wants a paid plan. Click **Create** and download the file.
+
+The two lines you need are the same two:
+
+```ini
+[Interface]
+PrivateKey = yH7pExampleKeyNotRealDoNotUseBBBBBBBBBBBBBB=
+Address = 10.2.0.2/32
+```
+
+Write down the country the server you picked is in, as a single word such as `Netherlands` or `Switzerland`.
+
+## Step 4 — Fill the values in at the installer
+
+The installer asks for these on the Secrets screen, and the first box is the provider. Choose the provider before anything else, because the boxes below change to the values that provider needs.
+
+| Box | What goes in it | Where it came from |
+|---|---|---|
+| VPN provider | `mullvad` or `protonvpn` | your account |
+| WireGuard private key | the key, without `PrivateKey = ` | the `.conf` from Step 2 or 3 |
+| WireGuard address | the address, keeping the `/32` | the same file |
+| Server country | one country name, such as `Netherlands` | the server you chose |
+| Port forwarding | `on`, Proton only | Step 1 |
+| Forwarded port | a port number, only if your provider gives a fixed one | your provider |
+
+The installer writes these as `KEY=value` lines and encrypts the file before it reaches the installed machine, and the values never enter the answers file. Use the web form if you can: a WireGuard key is 44 characters you do not want to retype.
+
+Nothing checks these values the way the installer checks the Cloudflare token, because neither provider publishes an API for it. A typo shows up after the install as a tunnel that never comes up, so read the two long values back before you move on.
+
+## Step 5 — Match qBittorrent's listen port, if you have a fixed one
+
+Skip this step on Mullvad and on Proton. It applies to a provider that hands you a permanent port number.
+
+Type that number into the **Forwarded port** box in Step 4, which the installer passes to gluetun as `FIREWALL_VPN_INPUT_PORTS`, and then set the same number inside qBittorrent after the install: **Tools**, **Options**, **Connection**, **Port used for incoming connections**. The two have to agree. Gluetun opens the firewall for the port you gave the installer, and qBittorrent listens on the port you set in its own options, so a mismatch leaves you with the slow seeding of Step 1 while everything looks configured.
+
+Proton's port changes with each session, so there is no number to type ahead of time. Gluetun requests one and opens the firewall for it, and this release does not push that number into qBittorrent's own setting. To find the current one, read the gluetun log on the machine:
+
+```sh
+sudo journalctl -u docker-gluetun | grep -i "port forward" | tail -5
+```
+
+## Step 6 — Check it after the first boot
+
+Open `qbittorrent.` followed by your domain. The status bar at the bottom of the window says whether qBittorrent is connected. A globe icon marked **Firewalled** means it is working but has no inbound port, which is the expected state on Mullvad.
+
+If the page does not load at all, the tunnel is the first thing to look at:
+
+```sh
+systemctl status docker-gluetun
+sudo journalctl -u docker-gluetun -n 50
+```
+
+An authentication failure in that log means the private key or the address is wrong, and the fix is Step 7 with the values read again from the provider's file.
+
+## Step 7 — Set the credentials later, if you skipped them
+
+**Skip for now** on the Secrets screen lets the install finish. The download client stays off until you set the VPN credentials, and everything else on the machine runs normally. To set it afterwards, write the file on the installed machine:
+
+```sh
+sudo install -m 600 /dev/null /root/vpn.env
+sudo tee /root/vpn.env >/dev/null <<'EOF'
+WIREGUARD_PRIVATE_KEY=paste-the-key-here
+WIREGUARD_ADDRESSES=10.64.0.2/32
+SERVER_COUNTRIES=Netherlands
+EOF
+```
+
+Add `VPN_PORT_FORWARDING=on` to that file on Proton, or `FIREWALL_VPN_INPUT_PORTS=` and the number on a provider with a fixed port. Then hand it to the configurator and rebuild:
+
+```sh
+sudo homelab-configure generate --out /root/homelab \
+  --secret homelab.arrStack.vpnEnvFile=@/root/vpn.env
+sudo nixos-rebuild switch --flake /root/homelab#YOUR_HOSTNAME
+```
+
+Delete `/root/vpn.env` once the rebuild has finished; the encrypted copy inside the flake is the one the machine reads from then on. The same two commands replace the credentials when you change provider or roll a key.
+
+## Conclusion
+
+The download stack now has a tunnel it cannot leak around, and you know which of your two options gives you an inbound port. What remains is inside the applications: [First logins](https://ww4.github.io/imperfect-homelab/day-two/first-logins/) covers telling Sonarr and Radarr about the download client, which is one of the two things the installer cannot do for you.
+
+If you have not set up DNS yet, [Cloudflare DNS and the API token](https://ww4.github.io/imperfect-homelab/accounts/cloudflare-dns/) is the other value the installer asks you to fetch from somebody else's website. The [arr](https://ww4.github.io/imperfect-homelab/services/arr/) reference page lists every option this module reads.
+
+
 # Install
 
 URL: https://ww4.github.io/imperfect-homelab/install/
@@ -587,7 +837,7 @@ Then prove the gate from outside it; that is the one test the Principles chapter
 URL: https://ww4.github.io/imperfect-homelab/day-two/first-logins/
 
 
-Log in to each application once with the admin password from `FIRST-LOGIN.md`. The ones with single sign-on (Grafana, Forgejo, Nextcloud, Paperless, Immich, when `authelia` is among your modules) will show an SSO button; the admin account you log in with first is the local one, and the application creates the SSO account on first use. Enrol your authenticator in Authelia before anything else, because the forward-auth gate in front of the services without their own login needs it. Two things you must set by hand, because the configuration cannot: the download client's credentials inside Sonarr and Radarr (each app keeps them in its own database), and the first `snapraid sync` if you chose parity.
+Log in to each application once with the admin password from `FIRST-LOGIN.md`. The ones with single sign-on (Grafana, Forgejo, Nextcloud, Paperless, Immich, when `authelia` is among your modules) will show an SSO button; the admin account you log in with first is the local one, and the application creates the SSO account on first use. Enrol your authenticator in Authelia before anything else, because the forward-auth gate in front of the services without their own login needs it. Two things you must set by hand, because the configuration cannot: the download client's credentials inside Sonarr and Radarr (each app keeps them in its own database), and the first `snapraid sync` if you chose parity. If the download client is not connecting at all, its tunnel is the place to look, and [A VPN account for the download client](https://ww4.github.io/imperfect-homelab/accounts/vpn/) has the checks.
 
 
 
