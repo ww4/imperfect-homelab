@@ -4,7 +4,7 @@ description = "The internet denied, the network trusted, containers on the opt-i
 weight = 6
 +++
 
-A trust model is the list of who gets to do what without being asked again. This homelab has four entries on that list, and until a security review asked for them in one place you had to infer them from five chapters. The internet is denied, the local network and the tailnet are trusted as networks, containers on the machine reach the vhosts that opt in, and the installer's browser form can decide everything about an install except when to erase a disk. Each entry costs something.
+A trust model is the list of who gets to do what without being asked again. This homelab has four entries on that list, and until a security review asked for them in one place you had to infer them from five chapters. The internet is denied, the local network and the tailnet are trusted as networks, containers on the machine are trusted the way the local network is, and the installer's browser form can decide everything about an install except when to erase a disk. Each entry costs something.
 
 ## The internet is denied
 
@@ -16,13 +16,19 @@ The machine treats a device on your LAN and a device on your tailnet as devices 
 
 A compromised Tailscale account is inside the perimeter, because being on the tailnet is the whole credential. So is a phone on your wifi with something nasty on it.
 
-## Containers can reach the vhosts that opt in
+## Containers can reach the vhosts
 
 Several services in the library run as containers, on docker bridge networks on the same host. Each gets two kinds of reach, both of them deliberate.
 
 The first is a handful of host services that open a port to the container bridges and to nothing else. Jellyfin opens 8096 so a container that authenticates against it can; ntfy opens 8090 so a dashboard can post a notification; Prometheus opens 9090 and Glances 61208 so a dashboard can query them. Each hole is opened by the module that needs it, scoped to `br-+` interfaces, and invisible to the LAN and the tailnet, which still arrive through the vhost. A module that does not need it opens nothing.
 
-The second is the one the review asked to see stated plainly: containers can reach the vhosts that opt in, and the allow-list is per vhost. A vhost that opts in treats a request from a container bridge the way it treats a request from a laptop in the next room. The opt-in does not skip the application's own login and does not skip Authelia where that vhost is protected, so what a container gains is what a device already on your LAN has. In the bad case, a container somebody has taken over is a device on your network, with whatever that is worth on the vhosts that let it in. Turning it off everywhere is not free, which is why the decision is per vhost instead of one switch for the machine. Uptime Kuma runs in a container and checks the vhosts you tell it to watch, and a dashboard tile that shows a service's status fetches it server-side from a container too. Opt in the vhosts those need and leave the rest closed.
+The second is the one the review asked to see stated plainly: containers can reach every vhost. The source allow-list in front of nginx includes the container bridge range, so a vhost treats a request from a container the way it treats a request from a laptop in the next room. That is one switch for the whole machine, `homelab.nginxAccess.containerBridges`, and not a decision you make per service.
+
+It does not skip the application's own login and does not skip Authelia where a vhost is protected, so what a container gains is what a device already on your LAN has. In the bad case, a container somebody has taken over is a device on your network.
+
+We would rather it were narrower and it cannot be, for a reason worth knowing. Docker's bridges live inside the private address ranges: `172.16.0.0/12` means both "the container bridges" and an ordinary home LAN. Nothing in nginx's source filter can tell those apart, because telling them apart means asking which interface a packet arrived on, and that filter only sees addresses. A genuinely narrow answer is a separate internal listener per service, which is a larger change than this library has made.
+
+Emptying the switch is also not free. Uptime Kuma runs in a container and checks the vhosts you tell it to watch, and a dashboard tile that shows a service's status fetches it server-side from a container too. Both stop working. If nothing on your machine reaches a vhost from a container, set the list to empty and lose nothing.
 
 ## The browser form decides; the machine consents
 
