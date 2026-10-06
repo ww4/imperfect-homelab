@@ -1,0 +1,57 @@
+{# Previous/next across the whole site, so the pages read as one book.
+
+   The reading order is every section in weight order, and inside each section
+   its own pages in that section's sort order. `root.subsections` is already
+   sorted by section weight, which is where the cross-section order comes from:
+   walking it gives one flat list, so the last page of a section knows the
+   first page of the next one. Zola's page.lower/page.higher only see within
+   one section, so they are not used here.
+
+   The walk carries three pieces of state. `pn_last_*` trails one page behind,
+   so when the current page turns up it is the previous page. `pn_seen` flips
+   on at the current page, and the first page after that is the next one.
+   Variables are prefixed pn_ because set_global writes into the page context.
+
+   Included by page.html, which renders every content page, generated ones too. #}
+{% set_global pn_prev_url = "" %}
+{% set_global pn_prev_title = "" %}
+{% set_global pn_next_url = "" %}
+{% set_global pn_next_title = "" %}
+{% set_global pn_last_url = "" %}
+{% set_global pn_last_title = "" %}
+{% set_global pn_seen = false %}
+{% set_global pn_done = false %}
+{% set pn_root = get_section(path="_index.md") %}
+{% for pn_sub in pn_root.subsections %}
+  {% set pn_section = get_section(path=pn_sub) %}
+  {% for pn_page in pn_section.pages %}
+    {% if pn_seen and not pn_done %}
+      {% set_global pn_next_url = pn_page.permalink %}
+      {% set_global pn_next_title = pn_page.title %}
+      {% set_global pn_done = true %}
+    {% elif pn_page.path == page.path %}
+      {% set_global pn_seen = true %}
+      {% set_global pn_prev_url = pn_last_url %}
+      {% set_global pn_prev_title = pn_last_title %}
+    {% else %}
+      {% set_global pn_last_url = pn_page.permalink %}
+      {% set_global pn_last_title = pn_page.title %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+{% if pn_prev_url != "" or pn_next_url != "" %}
+<nav class="page-nav" aria-label="Previous and next page">
+  {% if pn_prev_url != "" %}
+  <a class="page-nav-prev" href="{{ pn_prev_url }}" rel="prev">
+    <span class="page-nav-dir">&#8592; Previous</span>
+    <span class="page-nav-title">{{ pn_prev_title }}</span>
+  </a>
+  {% endif %}
+  {% if pn_next_url != "" %}
+  <a class="page-nav-next" href="{{ pn_next_url }}" rel="next">
+    <span class="page-nav-dir">Next &#8594;</span>
+    <span class="page-nav-title">{{ pn_next_title }}</span>
+  </a>
+  {% endif %}
+</nav>
+{% endif %}

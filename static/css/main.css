@@ -32,6 +32,14 @@ main { padding:1.5rem 2rem 4rem; max-width:52rem }
 .prose blockquote { border-left:3px solid var(--accent); margin:1rem 0; padding:.25rem 1rem; color:var(--muted) }
 .generated { color:var(--muted); font-size:.9rem; border:1px dashed var(--line); padding:.5rem .75rem }
 dl.opt dt { font-family:ui-monospace,monospace; font-weight:600; margin-top:1rem } dl.opt dd { margin:0 0 0 1rem }
+.page-nav { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--line) }
+.page-nav a { display:block; border:1px solid var(--line); border-radius:4px; padding:.55rem .75rem; text-decoration:none }
+.page-nav a:hover { border-color:var(--accent) }
+.page-nav-next { grid-column:2; text-align:right }
+.page-nav-dir { display:block; color:var(--muted); font-size:.8rem }
+.page-nav-title { display:block; margin-top:.1rem }
+.page-nav a:hover .page-nav-title { text-decoration:underline }
+@media (max-width:48rem) { .page-nav { grid-template-columns:1fr } .page-nav-next { grid-column:auto; text-align:left } }
 .site-footer { border-top:1px solid var(--line); padding:1rem 1.25rem; color:var(--muted); font-size:.9rem }
 @media (max-width:48rem) { .layout { grid-template-columns:1fr } .sidebar { border-right:0; border-bottom:1px solid var(--line) } }
 .sidebar-toggle > summary { display:none }
