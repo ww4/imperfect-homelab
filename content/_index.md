@@ -13,6 +13,18 @@ If you have never used Linux, the [Quick start](@/quick-start/_index.md) is
 the short road: one evening, click by click, and the Starter kit is running.
 The rest of the site is the long road, for when you want to know why.
 
+If you already know what you need, the image is
+[homelab-installer.iso](https://github.com/ww4/homelab-modules/releases/latest/download/homelab-installer.iso)
+and its
+[sha256](https://github.com/ww4/homelab-modules/releases/latest/download/homelab-installer.iso.sha256)
+sits beside it. Write it to a USB stick and boot the machine you are installing
+on from that stick. The installer starts on its own.
+
+It asks eight questions, then partitions the disks, writes your secrets and
+installs with no further input from you. The [Quick start](@/quick-start/_index.md)
+walks through the same steps one screen at a time, if you would rather follow it
+that way.
+
 Three promises:
 
 1. **One command from the installer ISO** answers questions and leaves you
