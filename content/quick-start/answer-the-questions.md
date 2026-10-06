@@ -72,7 +72,7 @@ Leave it alone unless you know you want something else. Adding a module later is
 
 Everything on one screen, with the disks to be erased in red. Read that red line, then press **Install**.
 
-Nothing is erased yet. Because you are driving this from a browser, the PC's own screen now shows a six-digit number and the disks it is about to wipe, and the browser asks you for that number. Walk over, read it off the PC, type it in, and the install starts. Three wrong numbers cancel the request and you press **Install** again for a new one, and pressing Escape at the PC refuses it outright. The number never travels to the browser, which is the point of it: whoever starts an install has stood at the machine. [The trust model](@/principles/the-trust-model.md) has the reasoning.
+Nothing is erased yet. Because you are driving this from a browser, the PC's own screen now lists the disks it is about to wipe and waits for an answer. Walk over and press **Y** on the PC, and the install starts. Press **Escape** to refuse it. There is nothing to type in the browser, and nothing about your answer travels: whoever starts an install has stood at the machine. [The trust model](@/principles/the-trust-model.md) has the reasoning.
 
 From here the installer works alone: it writes the configuration and checks it, partitions the disk, downloads the system and installs it. Twenty to forty minutes is normal on a home connection, and both screens show what it is doing line by line. When it finishes it prints the addresses to open and the login to use.
 

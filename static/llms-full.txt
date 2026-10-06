@@ -265,7 +265,7 @@ Leave it alone unless you know you want something else. Adding a module later is
 
 Everything on one screen, with the disks to be erased in red. Read that red line, then press **Install**.
 
-Nothing is erased yet. Because you are driving this from a browser, the PC's own screen now shows a six-digit number and the disks it is about to wipe, and the browser asks you for that number. Walk over, read it off the PC, type it in, and the install starts. Three wrong numbers cancel the request and you press **Install** again for a new one, and pressing Escape at the PC refuses it outright. The number never travels to the browser, which is the point of it: whoever starts an install has stood at the machine. [The trust model](https://ww4.github.io/imperfect-homelab/principles/the-trust-model/) has the reasoning.
+Nothing is erased yet. Because you are driving this from a browser, the PC's own screen now lists the disks it is about to wipe and waits for an answer. Walk over and press **Y** on the PC, and the install starts. Press **Escape** to refuse it. There is nothing to type in the browser, and nothing about your answer travels: whoever starts an install has stood at the machine. [The trust model](https://ww4.github.io/imperfect-homelab/principles/the-trust-model/) has the reasoning.
 
 From here the installer works alone: it writes the configuration and checks it, partitions the disk, downloads the system and installs it. Twenty to forty minutes is normal on a home connection, and both screens show what it is doing line by line. When it finishes it prints the addresses to open and the login to use.
 
@@ -623,13 +623,21 @@ Before the server reads a byte of a request it looks at the peer's address and c
 
 ### Pressing Install
 
-Pressing Install in the browser does not start an install. The machine's own screen shows a six-digit number and the list of disks it is about to erase, and typing that number into the browser is what goes ahead. The number is never sent to the page, which is what makes it a second channel rather than a second password: whoever types it has seen the machine's screen. Three wrong numbers cancel the request. Pressing Install again produces a fresh number, and there is no second try at the old one. Pressing Escape at the machine refuses the request outright.
+Pressing Install in the browser does not start an install. The machine's own screen lists the disks it is about to erase and waits for an answer. Pressing Y there installs. Pressing Escape refuses. Nothing is typed into the browser and nothing about the answer crosses the network, so there is no approval for a listener to catch and nothing for a guesser to try.
 
-An install started at the console needs no number. The person pressing Install there is standing at the machine, which is what the number exists to prove.
+An earlier version did this with a number: the machine showed six digits and you typed them into the browser. That is worse than it looks. The digits travelled back over the same unencrypted connection they existed to protect, arriving on the wire at the one moment they mattered, and a wrong guess only cost the price of asking for another number. A keypress on the machine cannot be sent, intercepted or repeated.
+
+An install started at the console needs no approval. The person pressing Install there is standing at the machine, which is the thing being proved.
 
 ### What this does not protect
 
-The browser form is plain HTTP. The Cloudflare token, the VPN credentials and the admin password you type into it cross your local network unencrypted, and anything on that network that can watch traffic can read them. This is a known limitation of the release and it is not solved. The alternative available to an installer with no name and no certificate authority is a self-signed certificate, which would encrypt the form and would also teach a beginner, in the first ten minutes of their first install, that a browser security warning is a thing you click through. That habit costs more over a year than this exposure costs in the hour the installer is running. Either way, the tokens alone do not build anything: an install cannot be completed without someone at the machine reading the number off its screen.
+The browser form is plain HTTP, and the secret values on it are encrypted before they leave the page. The installer makes a key pair when it starts, the page seals the Cloudflare token, the VPN credentials, the backup credentials and the admin password to the public half, and only the ciphertext is posted. Something watching your network sees ciphertext. The credential screen and the machine's own screen both show a short fingerprint of that key, and comparing them is how you know the page is talking to your machine.
+
+The page carries its own cryptography to do this, because the browser will not lend it any. A browser only exposes `crypto.subtle` on a secure context, which a plain-HTTP page is not, so the installer ships a small public-domain library and uses that.
+
+This protects against watching, not against rewriting. Somebody who can change traffic in flight, rather than only read it, can serve you a modified page with their own key in it, and then the sealing is theirs. The fingerprint is what makes that visible, and it is the reason the machine prints one. A certificate would close the gap and would also teach a beginner, in the first ten minutes of their first install, that a browser security warning is a thing you click through. That habit costs more over a year than this exposure costs in the hour the installer runs.
+
+The honest summary is that the installer is protected against a network that watches, and relies on you comparing a fingerprint against a network that rewrites. In both cases the credentials alone build nothing: an install cannot start without somebody pressing a key on the machine itself.
 
 ## Updating the installer itself
 
