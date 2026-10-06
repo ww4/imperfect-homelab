@@ -69,15 +69,62 @@ Set aside an evening. Most of it is waiting: the stick takes a few minutes to wr
 URL: https://ww4.github.io/imperfect-homelab/quick-start/make-the-stick/
 
 
-Download two things on your Windows computer: the installer image, which is about 1.5 GB, and Rufus, which writes it to the stick. The image is at `https://github.com/ww4/homelab-modules/releases/latest/download/homelab-installer.iso` (that address always points at the newest build). Save it anywhere. If you want to be sure the download is whole, open a Command Prompt in the folder and run `certutil -hashfile homelab-installer.iso SHA256`; the long number it prints should match the one at the same address with `.sha256` added. Rufus is a single program with nothing to install; get `rufus-x.xx.exe` from [rufus.ie](https://rufus.ie) and run it. Plug in the stick.
+At the end of this you will have a USB stick that the spare PC can boot from. Two downloads go into it: the installer image, which is about 1.5 GB, and Rufus, a single Windows program that writes the image to the stick. Neither needs installing and neither touches the computer you are reading this on, beyond the files in your Downloads folder.
 
-1. In Rufus, under Device, pick the stick. Check the size; if there is more than one drive listed, pick the one that matches the stick, because Rufus erases whatever you pick.
-2. Click SELECT and choose the `.iso` you downloaded.
-3. Leave Partition scheme on GPT and Target system on UEFI (non CSM).
-4. Click START. Rufus asks how to write the image; choose "Write in DD Image mode" and click OK. It warns that it will erase the device; click OK.
-5. Wait for the green READY bar, then click CLOSE.
+## Prerequisites
 
-Eject the stick from the taskbar before you pull it out, the way you would any drive. If Rufus says the image is not bootable or stops with an error, the download is usually incomplete: compare the file size with the number next to the download link, and download it again.
+- A Windows computer with a free USB port. The steps below name Rufus, which is Windows only; on macOS or Linux, use Etcher or `dd` and come back at Step 5.
+- A USB stick of 4 GB or more. Step 4 erases it.
+- About fifteen minutes, most of it the download.
+
+## Step 1 — Download the installer image
+
+The current image is always at this address, which redirects to the newest build:
+
+```
+https://github.com/ww4/homelab-modules/releases/latest/download/homelab-installer.iso
+```
+
+Save it anywhere you can find it again. The file is about 1.5 GB, so on a slow connection start it now and read on while it runs.
+
+## Step 2 — Check that the download is whole
+
+A partial download is the most common reason Rufus refuses an image, and the check takes a few seconds. Download the checksum from the same address with `.sha256` on the end, then open a Command Prompt in the folder holding the `.iso` and run:
+
+```
+certutil -hashfile homelab-installer.iso SHA256
+```
+
+The long number it prints should match the number in the `.sha256` file. If it does not, download the image again.
+
+## Step 3 — Get Rufus
+
+Rufus is one `.exe` with nothing to install. Download `rufus-x.xx.exe` from [rufus.ie](https://rufus.ie) and run it. Windows may ask whether to allow it to make changes; it needs that to write to a drive.
+
+Plug the stick in now, so Rufus sees it when it starts.
+
+## Step 4 — Write the image to the stick
+
+Rufus erases whatever drive you point it at, so the first field is the one to be careful with.
+
+1. Under **Device**, pick the stick. Check the size against the stick in your hand. If more than one drive is listed, pick the one that matches.
+2. Click **SELECT** and choose the `.iso` you downloaded.
+3. Leave **Partition scheme** on **GPT** and **Target system** on **UEFI (non CSM)**.
+4. Click **START**. Rufus asks how to write the image: choose **Write in DD Image mode** and click **OK**.
+5. Rufus warns that it will erase the device. Click **OK**.
+6. Wait for the green **READY** bar, then click **CLOSE**.
+
+Writing takes a few minutes. The progress bar stalls near the end while Windows flushes its cache, which is normal.
+
+## Step 5 — Eject the stick
+
+Eject the stick from the taskbar before you pull it out, the way you would any drive. Pulling it early can leave the last few megabytes unwritten, and a stick in that state boots partway and then stops.
+
+If Rufus said the image is not bootable, or stopped with an error, the download was incomplete. Compare the file size with the number next to the download link, redo Step 2, and write it again.
+
+## Conclusion
+
+You have a bootable installer on a stick, and nothing on your own computer has changed. Next, [Boot it](https://ww4.github.io/imperfect-homelab/quick-start/boot-it/) starts the spare PC from the stick.
 
 
 ## Boot it
@@ -85,13 +132,52 @@ Eject the stick from the taskbar before you pull it out, the way you would any d
 URL: https://ww4.github.io/imperfect-homelab/quick-start/boot-it/
 
 
-Plug the stick into the PC you are giving up, plug in the network cable, and turn it on. The PC will try to start whatever is on its disk; you want it to start from the stick instead, and the way to ask is a key pressed right after power-on.
+At the end of this the spare PC will be running the installer out of memory, with an address and a code on screen that let you finish the job from your own computer's browser. Nothing is written to the PC's disk in this step, and you can turn the machine off at any point here with no effect on it.
 
-Tap the boot-menu key repeatedly as soon as the machine's logo appears. Which key depends on who made the machine or its motherboard: F12 on Dell, Lenovo and Acer, F11 on MSI, F8 on ASUS, Esc on HP. A menu appears listing drives; pick the entry that names your USB stick, preferring one that starts with "UEFI". If no menu comes and Windows starts, turn it off and try again faster; if the key does nothing at all, enter the setup screen instead (Del or F2 at the same moment) and look for a Boot tab where you can put the USB drive first. While you are in setup, find Secure Boot, usually under Boot or Security, and set it to Disabled; the installer will not start with it on.
+## Prerequisites
 
-When it worked, the screen goes through a few seconds of text and ends on a short green message that starts with "Homelab installer"; it waits for the network (if no cable is in, it says so and keeps waiting; plug one in and it carries on), spends about a minute looking for a newer installer on the internet (a stick burned months ago still runs today's installer), and the installer's form opens over it, showing an address, a six-character code and a barcode for finishing the job from your own computer's browser. You are logged in already. Nothing is installed yet; the stick runs in memory and you can turn the PC off at any point before step 4 with no effect.
+- The stick from [Make the stick](https://ww4.github.io/imperfect-homelab/quick-start/make-the-stick/).
+- The spare PC, a monitor and a keyboard attached to it.
+- A network cable from the PC to your router. Wi-Fi works but has to be typed in with `wpa_cli`, and you can move the machine to Wi-Fi later.
 
-The network is automatic over a cable. Wi-Fi works but needs typing (`wpa_cli`); a cable is easier, and you can move the machine afterwards.
+## Step 1 — Start the PC from the stick
+
+Plug the stick into the PC, plug in the network cable, and turn it on. Left alone the PC will start whatever is on its own disk, so you have to ask it for the stick, and the way to ask is a key pressed right after power-on.
+
+Tap the boot-menu key repeatedly as soon as the maker's logo appears. Which key it is depends on who made the machine or its motherboard:
+
+| Maker | Boot menu | Setup |
+|---|---|---|
+| Dell, Lenovo, Acer | F12 | F2 |
+| MSI | F11 | Del |
+| ASUS | F8 | Del or F2 |
+| HP | Esc, then F9 | Esc, then F10 |
+
+A menu appears listing the drives it can start from. Pick the entry that names your USB stick, preferring one that starts with **UEFI**. If Windows starts instead, turn the PC off and try again, tapping earlier.
+
+## Step 2 — Turn Secure Boot off, if the stick will not start
+
+If the key does nothing, or the stick is not in the menu, go into the setup screen instead (the right-hand column above) and look for a **Boot** tab where you can put the USB drive first in the order.
+
+While you are in there, find **Secure Boot**, usually under **Boot** or **Security**, and set it to **Disabled**. The installer will not start with it on. Save and exit, which is usually F10.
+
+On a few older machines the stick has to be in a rear USB port rather than a front one, because the front ports are wired to a hub the firmware cannot boot from.
+
+## Step 3 — Wait for the installer to come up
+
+The screen runs a few seconds of text and settles on a short green message beginning "Homelab installer". Three things then happen on their own, and the screen says which one it is on.
+
+It waits for the network. With no cable in it says so and keeps waiting; plug one in and it carries on by itself.
+
+It spends about a minute looking for a newer installer on the internet, so a stick burned months ago still runs today's installer.
+
+Then the installer's form opens over the message, showing an address like `http://192.168.1.50:8099`, a short code, and a square barcode.
+
+You are already logged in, and nothing has been written to the PC's disk.
+
+## Conclusion
+
+The PC is running the installer from memory and is waiting for answers. Next, [Answer the questions](https://ww4.github.io/imperfect-homelab/quick-start/answer-the-questions/) fills the form in from your own computer, which is the easier place to do it because that browser has a clipboard.
 
 
 ## Answer the questions
@@ -99,29 +185,81 @@ The network is automatic over a cable. Wi-Fi works but needs typing (`wpa_cli`);
 URL: https://ww4.github.io/imperfect-homelab/quick-start/answer-the-questions/
 
 
-A minute after the green welcome text, the machine's screen shows an address like `http://192.168.1.50:8099`, a six-character code, and a square barcode. Open that address in a browser on your own computer, or point a phone camera at the barcode, type the code once, and fill the form there. You can paste into it. The machine's own screen cannot take a paste, and the Cloudflare token is a long line you do not want to retype. The code keeps anyone else on your network from using the form.
+At the end of this the PC will be installing itself, and you will have answered eight screens to get there. Fill them in from a browser on your own computer rather than at the machine: that browser has a clipboard, and the Cloudflare token is a long line you do not want to retype.
 
-Everything below works the same way on the machine's screen, if you would rather stand there. The arrow keys or Tab move between lines, Enter opens a line for typing and Enter again keeps it, and the bottom line says what is wrong when something is. Both screens show the same answers as you go, so you can start in one and finish in the other.
+## Prerequisites
 
-**1 Welcome.** What is about to happen, and what the machine has: memory, disks, and whether it can reach the internet. If the internet line says it cannot, check the cable before going on.
+- The PC showing the installer's address, code and barcode from [Boot it](https://ww4.github.io/imperfect-homelab/quick-start/boot-it/).
+- Your domain name and, if you have made one, your Cloudflare API token. [Cloudflare DNS and the API token](https://ww4.github.io/imperfect-homelab/accounts/cloudflare-dns/) is the walkthrough if you have not.
+- A password you can keep. There is no reset email on this machine.
+- Twenty to forty minutes of downloading after you press Install, on a home connection.
 
-**2 What should this machine be?** Pick Starter. The number beside each kit is the memory it needs on this machine, green when it fits.
+## Step 1 — Open the form from your own computer
 
-**3 Storage.** Every disk in the machine except the stick you booted from. Set the one the system should go on to SYSTEM; that disk is erased. A second disk for your files is `data`. Continue refuses until one disk says SYSTEM.
+Type the address shown on the machine's screen into a browser, or point a phone camera at the barcode. Type the code once when it asks. The code is what keeps anyone else on your network from filling in the form.
 
-**4 Profile.** The machine's name (one word, like `homelab`), the admin username (`admin` is fine), the password twice, and the time zone in the form `America/New_York`. Write the password down: there is no reset email.
+Everything below works the same way on the machine's own screen if you would rather stand there. Arrow keys or Tab move between lines, Enter opens a line for typing and Enter again keeps it, and the bottom line says what is wrong when something is. Both screens show the same answers as you go, so you can start in one and finish in the other.
 
-**5 SSH access.** This is for reaching the machine from another computer without sitting at it. Type your GitHub username to pull in the keys on that account, or paste one. If you do not know what an SSH key is, press Continue twice: the first press warns that only the machine's own screen will work, the second accepts it.
+## Step 2 — Welcome
 
-**6 Domain and certificates.** Your domain (`example.com`, nothing in front of it) and your email address. Below them is a box for the Cloudflare token, with the steps to make one: dash.cloudflare.com, My Profile, API Tokens, Create Token, the "Edit zone DNS" template, your domain as the one zone. Paste it in, press Save, and the installer checks it against your domain at once: a green line means it works, a red one says what is wrong. **Skip for now** leaves it unset, and the page tells you what will not work until you set it later. [Cloudflare DNS and the API token](https://ww4.github.io/imperfect-homelab/accounts/cloudflare-dns/) has the same steps with the screens described, what each red line means, and how to set the token after the install.
+The first screen says what is about to happen and what the machine has: memory, disks, and whether it can reach the internet.
 
-**7 Modules.** The kit's list, already filled in. The line at the top repeats how much memory the set needs.
+Check the internet line before you go on. If it says the machine cannot reach the internet, the install will fail partway, and the cause is almost always the network cable or the port it is in.
 
-**8 Review.** Everything on one screen, with the disks to be erased in red. Press Install.
+## Step 3 — Choose what the machine should be
 
-From there it works alone: it writes the configuration and checks it, partitions the disk, downloads the system onto it and installs it. On a home connection that is twenty to forty minutes, and both screens show what it is doing, line by line. When it finishes you get the addresses to open and the login to use.
+Pick **Starter** if you are following this chapter. The number beside each kit is the memory that kit needs, shown green when it fits the machine you are installing on.
 
-If it stops with an error instead, read [When something is wrong](https://ww4.github.io/imperfect-homelab/quick-start/when-something-is-wrong/). The form reopens with everything you typed still in it.
+The other kits add the media pipeline, the office applications, or everything in the library. You can add any of them later with one command, so there is no reason to over-reach now.
+
+## Step 4 — Storage
+
+This screen lists every disk in the machine except the stick you booted from. Set the disk the system should go on to **SYSTEM**. That disk is erased.
+
+A second disk for your files is set to `data`. The Starter kit does not need one; it lives on the system disk.
+
+Continue refuses to move on until exactly one disk says SYSTEM, which is the guard against installing onto a disk you meant to keep.
+
+## Step 5 — Profile
+
+Four values, and the password is the one to be careful with.
+
+- **Machine name**: one word, such as `homelab`.
+- **Admin username**: `admin` is fine.
+- **Password**, twice. Write it down before you move on. There is no reset email.
+- **Time zone**, in the form `America/New_York`.
+
+## Step 6 — SSH access
+
+This is for reaching the machine from another computer without sitting at it. Type your GitHub username to pull in the public keys on that account, or paste a key.
+
+If you do not know what an SSH key is, press **Continue** twice. The first press warns you that only the machine's own screen will reach it afterwards, and the second accepts that.
+
+## Step 7 — Domain and certificates
+
+Type your domain with nothing in front of it (`example.com`, not `www.example.com`) and your email address. The email goes to Let's Encrypt with the certificate request.
+
+Below them is a box for the Cloudflare API token, with the steps to make one beside it. Paste the token in and press **Save**. The installer checks it against your domain at once: a green line means it works, and a red one says what is wrong.
+
+**Skip for now** leaves the token unset and the install carries on. The machine then comes up with no certificates and no DNS records, so every address either warns or does not answer. [Cloudflare DNS and the API token](https://ww4.github.io/imperfect-homelab/accounts/cloudflare-dns/) covers both the token itself and how to set it after the install.
+
+## Step 8 — Modules
+
+The kit's list, already ticked. The line at the top repeats how much memory the whole set needs.
+
+Leave it alone unless you know you want something else. Adding a module later is one command and a rebuild.
+
+## Step 9 — Review and install
+
+Everything on one screen, with the disks to be erased in red. Read that red line, then press **Install**.
+
+From here the installer works alone: it writes the configuration and checks it, partitions the disk, downloads the system and installs it. Twenty to forty minutes is normal on a home connection, and both screens show what it is doing line by line. When it finishes it prints the addresses to open and the login to use.
+
+If it stops with an error instead, the form reopens with everything you typed still in it. [When something is wrong](https://ww4.github.io/imperfect-homelab/quick-start/when-something-is-wrong/) has the three usual causes.
+
+## Conclusion
+
+The machine is installing itself and needs nothing more from you until it reboots. Next, [First look](https://ww4.github.io/imperfect-homelab/quick-start/first-look/) opens the apps from your other computer.
 
 
 ## First look
@@ -129,11 +267,62 @@ If it stops with an error instead, read [When something is wrong](https://ww4.gi
 URL: https://ww4.github.io/imperfect-homelab/quick-start/first-look/
 
 
-Press Close, type `reboot`, press Enter, and pull the stick out as soon as the screen goes dark. The first boot takes a few minutes longer than later ones, because the machine requests its certificates and starts every service for the first time; give it five minutes before you judge it. The first backup runs by itself at 2:30 that night.
+At the end of this you will have opened the machine's apps from another computer, logged in to the ones that need it, and moved the first-login passwords into your password manager. The install is already done; this is the part where you see it.
 
-On your other computer, open `https://recipes.` followed by your domain, so `https://recipes.example.com`. Jellyfin is at `jellyfin.`, the monitoring dashboards at `grafana.`, and the alert feed at `ntfy.`, all on your domain. The install created these names at Cloudflare, pointing at the machine's address on your home network, so they work from any device in the house. If the browser says the site cannot be reached, wait another minute and reload; if it warns about the certificate, same answer. Jellyfin and Tandoor ask you to create their first account the first time you visit; use whatever you like, those are separate from the machine. The dashboards and the few apps that come with a fixed login have their passwords in a file on the machine called `FIRST-LOGIN.md`. To read it, sit at the machine, log in as `admin` with the password you typed on the Host screen, and type `sudo cat /root/homelab/FIRST-LOGIN.md`. Copy what you need into a password manager and the file can go.
+## Prerequisites
 
-Tandoor is usable at once: paste a recipe URL and it imports the recipe. Jellyfin needs your video files copied onto the machine before there is anything to watch, and the Starter kit has no file share yet, so for now that step needs a terminal or a USB drive plugged into the machine. Install the ntfy app on your phone, subscribe it to your `ntfy.` address, and alerts will arrive there. When you want more, [Day two](https://ww4.github.io/imperfect-homelab/day-two/) is the next chapter. [Start here](https://ww4.github.io/imperfect-homelab/start-here/) explains what you now have.
+- The installer saying it has finished, on the machine's screen.
+- The password you typed on the Profile screen.
+- A password manager, or somewhere else you are willing to keep passwords.
+
+## Step 1 — Reboot and pull the stick
+
+Press **Close**, type `reboot` and press Enter. Pull the stick out as soon as the screen goes dark, so the machine starts from its own disk.
+
+The first boot takes a few minutes longer than later ones, because the machine requests its certificates and starts every service for the first time. Give it five minutes before you judge it.
+
+## Step 2 — Open the first app
+
+On your other computer, open `https://recipes.` followed by your domain, so `https://recipes.example.com`. The other names are the same shape:
+
+| Address | What it is |
+|---|---|
+| `recipes.<domain>` | Tandoor, the recipe app |
+| `jellyfin.<domain>` | Jellyfin, movies and shows |
+| `grafana.<domain>` | the monitoring dashboards |
+| `ntfy.<domain>` | the alert feed your phone subscribes to |
+
+The install created these names at Cloudflare, pointing at the machine's address on your home network, so they work from any device in the house.
+
+If the browser says the site cannot be reached, wait another minute and reload. If it warns about the certificate, the same answer: the certificate is on its way. A warning an hour later is a real problem, and [When something is wrong](https://ww4.github.io/imperfect-homelab/quick-start/when-something-is-wrong/) covers it.
+
+## Step 3 — Create the accounts the apps ask for
+
+Jellyfin and Tandoor ask you to create their first account the first time you visit. Use whatever you like. Those accounts belong to the applications themselves; the machine's own login is separate.
+
+## Step 4 — Read the first-login passwords, then delete the file
+
+The dashboards and the few apps that come with a fixed login have their passwords in a file on the machine. Sit at the machine, log in as `admin` with the password you typed on the Profile screen, and read it:
+
+```sh
+sudo cat /root/homelab/FIRST-LOGIN.md
+```
+
+Copy what you need into a password manager. Once it is there, the file can go:
+
+```sh
+sudo rm /root/homelab/FIRST-LOGIN.md
+```
+
+## Step 5 — Put the alerts on your phone
+
+Install the ntfy app on your phone, point it at your `ntfy.` address, and log in with the subscriber account from `FIRST-LOGIN.md`. Alerts from the machine arrive there from then on. [The phone](https://ww4.github.io/imperfect-homelab/day-two/the-phone/) has the step where you cause one on purpose to prove it works.
+
+## Conclusion
+
+Tandoor is usable straight away: paste a recipe URL and it imports the recipe. Jellyfin needs your video files copied onto the machine before there is anything to watch, and the Starter kit has no file share yet, so that step needs a terminal or a USB drive plugged into the machine for now. The first backup runs by itself at 02:30 tonight.
+
+[Day two](https://ww4.github.io/imperfect-homelab/day-two/) is the next chapter: the DNS and gate check, the restore drill, and the first alert. [Start here](https://ww4.github.io/imperfect-homelab/start-here/) explains what you now have and why it is built the way it is.
 
 
 ## When something is wrong
@@ -738,17 +927,54 @@ This chapter describes that path as the library's own test runs it, in a virtual
 URL: https://ww4.github.io/imperfect-homelab/install/the-installer-iso/
 
 
-The installer is the stock NixOS minimal ISO with `homelab-configure` on it, so the machine you are installing needs no URL and compiles nothing. Download the current image and its checksum:
+At the end of this you will have the target machine booted into the installer with `homelab-configure` on its path. The image is the stock NixOS minimal ISO with the configurator added, so the machine you are installing needs no URL typed into it and compiles nothing.
+
+## Prerequisites
+
+- A Linux or macOS machine with `curl` and `dd`, or Windows with Rufus. The [Quick start](https://ww4.github.io/imperfect-homelab/quick-start/make-the-stick/) has the Rufus clicks.
+- A USB stick of 4 GB or more. Writing erases it.
+- The target machine, with a wired network connection.
+
+## Step 1 — Download the image and its checksum
 
 ```sh
 curl -fLO https://github.com/ww4/homelab-modules/releases/latest/download/homelab-installer.iso
 curl -fLO https://github.com/ww4/homelab-modules/releases/latest/download/homelab-installer.iso.sha256
+```
+
+The image is about 1.5 GB. That `releases/latest/download/` address redirects to the newest build, the way distributions publish a current image.
+
+## Step 2 — Check the download
+
+```sh
 sha256sum -c homelab-installer.iso.sha256
 ```
 
-The image is about 1.5 GB. Write it to a USB stick of 4 GB or more with `dd if=homelab-installer.iso of=/dev/sdX bs=4M status=progress` (the stick, not a partition; everything on it is erased) or with Etcher, boot the target from it, and the installer opens by itself on the console (and serves the same wizard at `http://<the machine>:8099`, which is the easier way to fill it in: a browser on your own computer has a clipboard) after it has looked for a newer version of itself on the project's binary cache (so an old stick runs the current installer; `--max-jobs 0` means it downloads or falls back to the copy on the stick, never compiles). `homelab-configure tui` opens it again; Ctrl-Q leaves it and the shell is behind it. Wired network is automatic; for Wi-Fi, `wpa_cli` first. If you would rather use a stock NixOS ISO, `nix run 'github:ww4/homelab-modules?dir=configurator' -- tui` does the same thing after a compile of a few minutes.
+It should print `homelab-installer.iso: OK`. Anything else means the download is incomplete, and writing it to a stick wastes the next ten minutes.
 
-Each build is a GitHub release on the library's mirror, tagged `installer-<date>-<commit>` with the image and its checksum attached; the `releases/latest/download/` address above redirects to the newest one, the way distributions publish a current image. The stick looks for a newer installer at boot, so an older image is only stale in its fallback copy.
+## Step 3 — Write it to a USB stick
+
+Point `dd` at the stick, not at a partition on it. Everything on the stick is erased.
+
+```sh
+sudo dd if=homelab-installer.iso of=/dev/sdX bs=4M status=progress conv=fsync
+```
+
+Etcher does the same thing with a file picker if you would rather not name a device by hand.
+
+## Step 4 — Boot the target and open the wizard
+
+Boot the target machine from the stick. The installer opens by itself on the console after it has looked for a newer version of itself on the project's binary cache, so an old stick runs the current installer. That lookup passes `--max-jobs 0`, which means it downloads a newer configurator or falls back to the copy on the stick, and never compiles one.
+
+The same wizard is served at `http://<the machine>:8099`, which is the easier way to fill it in, because a browser on your own computer has a clipboard. The console prints the address and the code that gates it.
+
+`homelab-configure tui` opens the console wizard again if you close it, and Ctrl-Q leaves it with a shell behind. A wired network is automatic; for Wi-Fi, run `wpa_cli` first.
+
+## Conclusion
+
+The machine is sitting in the installer and nothing has been written to its disks. [The answers file](https://ww4.github.io/imperfect-homelab/install/the-answers-file/) is the next step if you are driving the configurator from a file rather than filling in the wizard.
+
+If you would rather not use this image at all, a stock NixOS ISO plus `nix run 'github:ww4/homelab-modules?dir=configurator' -- tui` does the same thing after a compile of a few minutes. Each image is a release on the library's GitHub mirror, tagged `installer-<date>-<commit>` with the image and its checksum attached, so an older tag is still downloadable if you need the exact build you installed from.
 
 
 ## The answers file
@@ -756,12 +982,70 @@ Each build is a GitHub release on the library's mirror, tagged `installer-<date>
 URL: https://ww4.github.io/imperfect-homelab/install/the-answers-file/
 
 
-Start from one of the three profiles in the library's `configurator/profiles/` directory. `media-box.json` is the media server with the download stack and parity; `docs-forge.json` is the household office with single sign-on; `everything.json` is every module that needs no manual artifact. Copy one and replace every `REPLACE-…` placeholder: the system disk and data disks by their `/dev/disk/by-id/` names, and your SSH public key.
+At the end of this you will have one JSON file that describes the machine you want, which is everything `generate` needs apart from the secrets. The wizard writes the same file for you; doing it by hand is the path to take when you are installing several machines, or driving the configurator from a script.
 
-The file has four parts. `host` names the machine, its time zone, the system disk (erased), the data disks (each becomes one filesystem at `/mnt/disks/<name>`) and your SSH keys. `modules` is the list of library modules to import; the generator adds anything a chosen module `requires`, and the foundation set (`system`, `boot`) is always present. `values` holds `homelab.*` options keyed by their full path: your domain, the admin user, the ACME email, the pool definition, the backup paths. `sops.adminRecipient` is your existing age public key, if you have one; leave it out and the generator makes a key and tells you where to move it.
+## Prerequisites
 
-`homelab-configure schema --modules a,b,c` prints the question set for a module list: every option it reads with type, default and whether it is required, and every secret with its class. If any required option has no value, the generator rejects the answers and lists all of the missing ones at once. The foundation rule applies here: `backup` has to be in the list with `homelab.backup.paths` and `homelab.backup.local.repository` set, or the generator rejects the answers and says why; `monitoring` and `ntfy` are not required, but leaving them out produces a warning.
+- A checkout of the library, or the configurator available through `nix run`.
+- The `/dev/disk/by-id/` names of the disks in the target machine. Run `ls -l /dev/disk/by-id/` on the booted installer to get them.
+- Your SSH public key.
+- Your domain name.
 
+## Step 1 — Copy a profile
+
+Three profiles live in the library's `configurator/profiles/` directory:
+
+| Profile | What it is |
+|---|---|
+| `media-box.json` | the media server with the download stack and parity |
+| `docs-forge.json` | the household office with single sign-on |
+| `everything.json` | every module that needs no manual artifact |
+
+Copy the nearest one to `my.json` and edit that. Starting from a profile means the module list is already consistent, which is most of the work.
+
+## Step 2 — Replace every placeholder
+
+Search the file for `REPLACE-` and replace each one. There are three kinds:
+
+- The system disk and the data disks, by their `/dev/disk/by-id/` names. The system disk is erased. Each data disk becomes one filesystem at `/mnt/disks/<name>`.
+- Your SSH public key.
+- Your domain.
+
+Nothing checks for a leftover `REPLACE-` by name, so read the file once more when you think you are done.
+
+## Step 3 — Understand the four parts
+
+The file has four top-level keys, and knowing which one a value belongs in saves a round trip through the error messages.
+
+`host` names the machine, its time zone, the system disk, the data disks and your SSH keys.
+
+`modules` is the list of library modules to import. The generator adds anything a chosen module `requires`, and the foundation set (`system` and `boot`) is always present whether you list it or not.
+
+`values` holds `homelab.*` options keyed by their full path: your domain, the admin user, the ACME email, the pool definition, the backup paths.
+
+`sops.adminRecipient` is your existing age public key. Leave it out and the generator makes a key and tells you where to move it.
+
+## Step 4 — Check the question set before you generate
+
+`schema` prints every option a module list reads, with its type, its default, and whether it is required, plus every secret with its class:
+
+```sh
+homelab-configure schema --modules jellyfin,tandoor,backup,monitoring
+```
+
+Add `--json` to get the same thing machine-readably. Reading this before you run `generate` is faster than discovering a missing value afterwards, though the generator does list every problem at once rather than stopping at the first.
+
+## Step 5 — Satisfy the foundation rules
+
+Two rules reject an answers file, and both have the same shape: something has to be present before the first install, because adding it later is harder than adding it now.
+
+`backup` has to be in the module list, with `homelab.backup.paths` and `homelab.backup.local.repository` set. The restore path has to exist before there is anything to restore.
+
+`monitoring` and `ntfy` are not required, and leaving them out produces a warning instead of a rejection. A machine with no monitoring fails without telling you.
+
+## Conclusion
+
+You have an answers file that describes the machine. Next, [Generate](https://ww4.github.io/imperfect-homelab/install/generate/) turns it into a flake you own, mints the secrets it can, and asks for the ones only you have.
 
 
 ## Generate
@@ -769,17 +1053,76 @@ The file has four parts. `host` names the machine, its time zone, the system dis
 URL: https://ww4.github.io/imperfect-homelab/install/generate/
 
 
-Secrets never go in the answers file. The ones only you can supply come in by `--secret homelab.acme.credentialsFile=@dns.env` (a file) or `=env:VAR`; the generator refuses to run without them and names the flag to pass. Everything else it mints.
+At the end of this you will have a private flake that builds your machine, with every secret either minted for you or supplied by you, and all of them encrypted. Two files in it need your attention before the first commit, and both of them are files you move somewhere else and delete.
+
+## Prerequisites
+
+- An answers file. [The answers file](https://ww4.github.io/imperfect-homelab/install/the-answers-file/) is how to write one.
+- The supply-class secrets your module list needs, each in a file. `homelab-configure schema --modules …` lists them with the variable names each file must carry.
+- Nothing else. The generator mints the rest.
+
+## Step 1 — Put each supplied secret in a file
+
+Secrets never go in the answers file. The ones only you can supply arrive on the command line as a path or an environment variable:
+
+```
+--secret homelab.acme.credentialsFile=@dns.env
+--secret homelab.acme.credentialsFile=env:CF_TOKEN
+```
+
+The generator refuses to run without them and names the exact flag to pass, so a missing one costs you a rerun rather than a broken machine. [Cloudflare DNS and the API token](https://ww4.github.io/imperfect-homelab/accounts/cloudflare-dns/) and [A VPN account for the download client](https://ww4.github.io/imperfect-homelab/accounts/vpn/) are the two walkthroughs for getting those values.
+
+## Step 2 — Run generate
 
 ```sh
 homelab-configure generate --answers my.json --out ./my-homelab \
   --secret homelab.acme.credentialsFile=@dns.env
 ```
 
-What comes out is a flake you own. `flake.nix` pins nixpkgs to the rev the library was validated on and imports your modules one line each. `homelab-values.nix` holds every value and one sops declaration per secret. `hosts/<name>/` has the host file (your user, SSH, sops), the disko layout, and a placeholder `hardware.nix` the installer fills. `secrets/` holds the encrypted files, each readable by the host's key and by yours. `answers.json` is the copy a later reconfigure starts from. The generator then evaluates the whole system to prove it builds, and prints the DNS names the chosen modules claim.
+It writes the flake, mints and encrypts every generated secret, then evaluates the whole system to prove it builds, and prints the DNS names your chosen modules claim. Exit 2 means it found problems and listed all of them at once; exit 3 means the result failed to evaluate.
 
-Two files need you before the first commit. `FIRST-LOGIN.md` holds every show-once value in plaintext: the admin's console password, the application admin passwords, the restic passphrase. Move them to your password manager and delete the file; it is git-ignored, but that is not storage. `keys/admin-age-key.txt`, if the generator made one, is the key that lets you edit secrets later; move it to `~/.config/sops/age/keys.txt` and delete it from the flake directory. Lose it and the host key, and the secrets are gone with them. Commit the rest; from here every change to the machine is a commit to this repository.
+## Step 3 — Read what came out
 
+```
+my-homelab/
+├── flake.nix              nixpkgs pinned to the rev the library was validated on,
+│                          your modules imported one line each
+├── homelab-values.nix     every value, plus one sops declaration per secret
+├── hosts/<name>/          the host file, the disko layout, a placeholder hardware.nix
+├── secrets/               the encrypted files, readable by the host key and by yours
+├── answers.json           the copy a later reconfigure starts from
+├── FIRST-LOGIN.md         every show-once value, in plaintext
+└── keys/admin-age-key.txt the key that lets you edit secrets later, if one was made
+```
+
+The flake is yours. Nothing in it points back at the library except the pinned input.
+
+## Step 4 — Empty FIRST-LOGIN.md
+
+`FIRST-LOGIN.md` holds every show-once value in plaintext: the admin's console password, the application admin passwords, the restic passphrase. Move them into your password manager and delete the file. It is git-ignored, which is not the same as being stored safely.
+
+## Step 5 — Move the admin age key off the flake directory
+
+If the generator made one, `keys/admin-age-key.txt` is the key that lets you decrypt and edit secrets later. Move it to `~/.config/sops/age/keys.txt` and delete it from the flake directory:
+
+```sh
+mkdir -p ~/.config/sops/age
+mv ./my-homelab/keys/admin-age-key.txt ~/.config/sops/age/keys.txt
+```
+
+Lose this key and the host key together and the secrets are gone with them. Keep a copy somewhere that is not the machine you are about to install.
+
+## Step 6 — Commit the rest
+
+```sh
+cd my-homelab && git init && git add -A && git commit -m "initial configuration"
+```
+
+From here, every change to the machine is a commit to this repository.
+
+## Conclusion
+
+You have a flake that describes a machine, with its secrets encrypted to a host key that does not exist yet. [nixos-anywhere](https://ww4.github.io/imperfect-homelab/install/nixos-anywhere/) installs it onto hardware and puts that host key in place before the first boot.
 
 
 ## nixos-anywhere
@@ -787,7 +1130,34 @@ Two files need you before the first commit. `FIRST-LOGIN.md` holds every show-on
 URL: https://ww4.github.io/imperfect-homelab/install/nixos-anywhere/
 
 
-Boot the target machine from the installer ISO (previous page) and make sure you can SSH to it as root (set a password at the console with `passwd`, or the ISO's documented key method). From the flake directory, the command the generator printed:
+At the end of this the target machine will be running your flake, with its disks partitioned, its secrets decrypted, and the one file it wrote itself committed back to your repository. The step erases the disks you named in the answers file.
+
+## Prerequisites
+
+- The generated flake, with the secrets encrypted in it. [Generate](https://ww4.github.io/imperfect-homelab/install/generate/) produces it.
+- The target machine booted from the installer ISO, or any NixOS ISO.
+- Root SSH access to the target, and its address on your network.
+- `nixos-anywhere` on the machine you are running from.
+
+## Step 1 — Get root SSH access to the target
+
+At the target's console, give root a password:
+
+```sh
+sudo passwd root
+```
+
+Then check from the machine you are driving the install from:
+
+```sh
+ssh root@<target-ip> true
+```
+
+The ISO's documented key method works instead if you would rather not set a password.
+
+## Step 2 — Run nixos-anywhere
+
+From the flake directory, run the command the generator printed:
 
 ```sh
 nixos-anywhere --flake .#<host> --extra-files ./extra-files \
@@ -795,10 +1165,25 @@ nixos-anywhere --flake .#<host> --extra-files ./extra-files \
   root@<target-ip>
 ```
 
-It copies the installer closure to the target, runs disko to partition the system disk and the data disks (erasing them), writes `hardware.nix` from what it finds, runs `nixos-install`, and copies `extra-files/` into the new root so the pre-generated SSH host key is in place before the first boot. That key is why the first activation can decrypt your secrets. Then it reboots the target. Commit `hardware.nix` afterwards; it is the one file in the flake the machine wrote.
+Five things then happen without further input. It copies the installer closure to the target. It runs disko to partition the system disk and the data disks, erasing them. It writes `hardware.nix` from what it finds in the machine. It runs `nixos-install`. And it copies `extra-files/` into the new root, so the pre-generated SSH host key is in place before anything boots, which is what lets the first activation decrypt your secrets.
+
+Then it reboots the target.
+
+## Step 3 — Commit the file the machine wrote
+
+`hardware.nix` is the one file in the flake that the machine produced rather than you. Commit it:
+
+```sh
+git add hosts/<host>/hardware.nix && git commit -m "hardware config from the install"
+```
+
+A later reconfigure leaves the real `hardware.nix` alone, so this is the only time you have to think about it.
+
+## Conclusion
+
+The machine is installed and running your configuration. [Day two](https://ww4.github.io/imperfect-homelab/day-two/) is the next chapter: the DNS names and the gate, the first logins, and a restore you have run yourself.
 
 The library's own test does exactly this in a virtual machine for each profile: generate, `nixos-anywhere --vm-test`, and a check that the pool mounted after boot. Its first runs found two bugs: an ESP mounted where the boot module did not expect it, and the pool mounting before its member disks.
-
 
 
 ## Later: add or remove a module
