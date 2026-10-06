@@ -1,44 +1,53 @@
 {# Previous/next across the whole site, so the pages read as one book.
 
    The reading order is every section in weight order, and inside each section
-   its own pages in that section's sort order. `root.subsections` is already
-   sorted by section weight, which is where the cross-section order comes from:
-   walking it gives one flat list, so the last page of a section knows the
-   first page of the next one. Zola's page.lower/page.higher only see within
-   one section, so they are not used here.
+   the section's own landing page first and then its pages in that section's
+   sort order. `root.subsections` is already sorted by section weight, which is
+   where the cross-section order comes from: walking it builds one flat list of
+   everything a reader should see. Pressing next from the last page of a section
+   lands on the next section's landing page, and the stop after that is that
+   section's first page, so holding next misses nothing. The home page is not in
+   the list. Zola's page.lower/page.higher only see within one section, so they
+   are not used.
 
-   The walk carries three pieces of state. `pn_last_*` trails one page behind,
-   so when the current page turns up it is the previous page. `pn_seen` flips
-   on at the current page, and the first page after that is the next one.
-   Variables are prefixed pn_ because set_global writes into the page context.
-
-   Included by page.html, which renders every content page, generated ones too. #}
+   The walk fills three parallel arrays, because concat takes scalars and page
+   objects cannot go into an array. It then finds the current stop by path and
+   reads its neighbours. The caller sets pn_current: page.path from page.html,
+   section.path from section.html. Variables are prefixed pn_ because set_global
+   writes into the shared context. #}
+{% set_global pn_urls = [] %}
+{% set_global pn_titles = [] %}
+{% set_global pn_paths = [] %}
+{% set pn_root = get_section(path="_index.md") %}
+{% for pn_sub in pn_root.subsections %}
+  {% set pn_section = get_section(path=pn_sub) %}
+  {% set_global pn_urls = pn_urls | concat(with=pn_section.permalink) %}
+  {% set_global pn_titles = pn_titles | concat(with=pn_section.title) %}
+  {% set_global pn_paths = pn_paths | concat(with=pn_section.path) %}
+  {% for pn_page in pn_section.pages %}
+    {% set_global pn_urls = pn_urls | concat(with=pn_page.permalink) %}
+    {% set_global pn_titles = pn_titles | concat(with=pn_page.title) %}
+    {% set_global pn_paths = pn_paths | concat(with=pn_page.path) %}
+  {% endfor %}
+{% endfor %}
+{% set_global pn_at = -1 %}
+{% for pn_path in pn_paths %}
+  {% if pn_path == pn_current %}{% set_global pn_at = loop.index0 %}{% endif %}
+{% endfor %}
 {% set_global pn_prev_url = "" %}
 {% set_global pn_prev_title = "" %}
 {% set_global pn_next_url = "" %}
 {% set_global pn_next_title = "" %}
-{% set_global pn_last_url = "" %}
-{% set_global pn_last_title = "" %}
-{% set_global pn_seen = false %}
-{% set_global pn_done = false %}
-{% set pn_root = get_section(path="_index.md") %}
-{% for pn_sub in pn_root.subsections %}
-  {% set pn_section = get_section(path=pn_sub) %}
-  {% for pn_page in pn_section.pages %}
-    {% if pn_seen and not pn_done %}
-      {% set_global pn_next_url = pn_page.permalink %}
-      {% set_global pn_next_title = pn_page.title %}
-      {% set_global pn_done = true %}
-    {% elif pn_page.path == page.path %}
-      {% set_global pn_seen = true %}
-      {% set_global pn_prev_url = pn_last_url %}
-      {% set_global pn_prev_title = pn_last_title %}
-    {% else %}
-      {% set_global pn_last_url = pn_page.permalink %}
-      {% set_global pn_last_title = pn_page.title %}
-    {% endif %}
-  {% endfor %}
-{% endfor %}
+{% if pn_at > 0 %}
+  {% set pn_before = pn_at - 1 %}
+  {% set_global pn_prev_url = pn_urls[pn_before] %}
+  {% set_global pn_prev_title = pn_titles[pn_before] %}
+{% endif %}
+{% if pn_at >= 0 and pn_at + 1 < pn_paths | length %}
+  {% set pn_after = pn_at + 1 %}
+  {% set_global pn_next_url = pn_urls[pn_after] %}
+  {% set_global pn_next_title = pn_titles[pn_after] %}
+{% endif %}
 {% if pn_prev_url != "" or pn_next_url != "" %}
 <nav class="page-nav" aria-label="Previous and next page">
   {% if pn_prev_url != "" %}

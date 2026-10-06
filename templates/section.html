@@ -9,4 +9,5 @@
 {% endfor %}
 </ul>
 {% endif %}
+{% set_global pn_current = section.path %}{% include "page-nav.html" %}
 {% endblock content %}

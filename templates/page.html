@@ -3,5 +3,5 @@
 <h1>{{ page.title }}</h1>
 {% if page.extra.generated %}<p class="generated">Generated from the library catalog at the pinned commit — do not edit by hand; run <code>nix run .#gen-reference</code>.</p>{% endif %}
 {{ page.content | safe }}
-{% include "page-nav.html" %}
+{% set_global pn_current = page.path %}{% include "page-nav.html" %}
 {% endblock content %}
