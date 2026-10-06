@@ -6,7 +6,7 @@ weight = 1
 
 You need five things, and the domain is the only one that costs money. Gather them before you start, because the middle of the install is a bad time to discover the stick is too small.
 
-- A PC you can give up. Step 4 erases its disk. Anything from the last ten years works if it has 8 GB of memory or more; the Starter kit uses about 3 GB of that, and the installer adds up whatever you pick and tells you if the machine is short. It needs a wired network connection to your router for the install.
+- A PC you can give up. Step 4 erases its disk. Anything from the last ten years works if it has 8 GB of memory or more and boots in UEFI mode; the Starter kit uses about 3 GB of that, and the installer adds up whatever you pick and tells you if the machine is short. It needs a wired network connection to your router for the install. [Compatibility](@/start-here/compatibility.md) is the full list of what this release runs on.
 - A USB stick of 4 GB or more; step 2 erases it.
 - The computer you are reading this on, for making the stick and later for using the apps.
 - A domain name at Cloudflare. See below.

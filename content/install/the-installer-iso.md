@@ -41,9 +41,9 @@ Etcher does the same thing with a file picker if you would rather not name a dev
 
 ## Step 4 — Boot the target and open the wizard
 
-Boot the target machine from the stick. The installer opens by itself on the console after it has looked for a newer version of itself on the project's binary cache, so an old stick runs the current installer. That lookup passes `--max-jobs 0`, which means it downloads a newer configurator or falls back to the copy on the stick, and never compiles one.
+Boot the target machine from the stick. The installer opens by itself on the console after it has looked for a newer version of itself on the project's binary cache, so an old stick runs the current installer. That lookup passes `--max-jobs 0`, which means it downloads a newer configurator or falls back to the copy on the stick, and never compiles one. It prints the commit, the store path, the publication time and the signing key it requires before it fetches anything, and [The trust model](@/principles/the-trust-model.md) explains what that signature does and does not promise.
 
-The same wizard is served at `http://<the machine>:8099`, which is the easier way to fill it in, because a browser on your own computer has a clipboard. The console prints the address and the code that gates it.
+The same wizard is served at `http://<the machine>:8099`, which is the easier way to fill it in, because a browser on your own computer has a clipboard. The console prints the address and the eight-character code that gates it. The server answers computers on your own network only, and a browser that fills the form still cannot start an install without a number read off the machine's own screen.
 
 `homelab-configure tui` opens the console wizard again if you close it, and Ctrl-Q leaves it with a shell behind. A wired network is automatic; for Wi-Fi, run `wpa_cli` first.
 

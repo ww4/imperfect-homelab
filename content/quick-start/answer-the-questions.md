@@ -15,7 +15,7 @@ At the end of this the PC will be installing itself, and you will have answered 
 
 ## Step 1 — Open the form from your own computer
 
-Type the address shown on the machine's screen into a browser, or point a phone camera at the barcode. Type the code once when it asks. The code is what keeps anyone else on your network from filling in the form.
+Type the address shown on the machine's screen into a browser, or point a phone camera at the barcode. Type the code once when it asks. The code is what keeps anyone else on your network from filling in the form, and [The trust model](@/principles/the-trust-model.md) says what else stands behind it.
 
 Everything below works the same way on the machine's own screen if you would rather stand there. Arrow keys or Tab move between lines, Enter opens a line for typing and Enter again keeps it, and the bottom line says what is wrong when something is. Both screens show the same answers as you go, so you can start in one and finish in the other.
 
@@ -71,6 +71,8 @@ Leave it alone unless you know you want something else. Adding a module later is
 ## Step 9 — Review and install
 
 Everything on one screen, with the disks to be erased in red. Read that red line, then press **Install**.
+
+Nothing is erased yet. Because you are driving this from a browser, the PC's own screen now shows a six-digit number and the disks it is about to wipe, and the browser asks you for that number. Walk over, read it off the PC, type it in, and the install starts. Three wrong numbers cancel the request and you press **Install** again for a new one, and pressing Escape at the PC refuses it outright. The number never travels to the browser, which is the point of it: whoever starts an install has stood at the machine. [The trust model](@/principles/the-trust-model.md) has the reasoning.
 
 From here the installer works alone: it writes the configuration and checks it, partitions the disk, downloads the system and installs it. Twenty to forty minutes is normal on a home connection, and both screens show what it is doing line by line. When it finishes it prints the addresses to open and the login to use.
 

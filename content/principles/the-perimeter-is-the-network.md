@@ -10,5 +10,5 @@ The mistake this prevents is relying on DNS as access control. A homelab whose r
 
 Certificates come from Let's Encrypt over DNS-01. The challenge is answered by a DNS record your API token creates, so issuance needs no inbound path at all, and a service that nobody outside your network can reach still gets a real certificate. The ACME module's defaults are the library's; your flake supplies the email and the token file.
 
-Some things the gate does not cover: a compromised Tailscale account is inside the perimeter, single sign-on covers only the applications that support it, and disks are not encrypted at rest. The Security chapter in Operating with an agent lists the rest.
+Some things the gate does not cover: a compromised Tailscale account is inside the perimeter, single sign-on covers only the applications that support it, and disks are not encrypted at rest. [The trust model](@/principles/the-trust-model.md) collects those exclusions in one place, and it covers the one source this shared rule does not settle for every vhost at once, which is the container bridges on the machine itself.
 

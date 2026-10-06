@@ -34,7 +34,7 @@ This is the short road. With a spare PC, a USB stick and a domain name, you can 
 
 Six steps, each on its own page, each with the exact clicks and keys. The pages assume Windows on the computer you are reading this on, because that is what most people have; the steps on the PC you are installing to are the same for everyone, and if a step does not match what you see, the page says what to check, and the Field notes chapter has the rest.
 
-This alpha release supports one DNS provider, Cloudflare, because that is the simplest way to get certificates for a machine on a home network; a local-only setup without a domain is planned but not built. The installer wipes the PC you install on. Everything else is reversible.
+This alpha release supports one DNS provider, Cloudflare, because that is the simplest way to get certificates for a machine on a home network; a local-only setup without a domain is planned but not built. [Compatibility](https://ww4.github.io/imperfect-homelab/start-here/compatibility/) lists the rest of what this release does and does not support. The installer wipes the PC you install on. Everything else is reversible.
 
 1. [Before you begin](https://ww4.github.io/imperfect-homelab/quick-start/before-you-begin/): the five things you need.
 2. [Make the stick](https://ww4.github.io/imperfect-homelab/quick-start/make-the-stick/): put the installer on a USB stick with Rufus.
@@ -51,7 +51,7 @@ URL: https://ww4.github.io/imperfect-homelab/quick-start/before-you-begin/
 
 You need five things, and the domain is the only one that costs money. Gather them before you start, because the middle of the install is a bad time to discover the stick is too small.
 
-- A PC you can give up. Step 4 erases its disk. Anything from the last ten years works if it has 8 GB of memory or more; the Starter kit uses about 3 GB of that, and the installer adds up whatever you pick and tells you if the machine is short. It needs a wired network connection to your router for the install.
+- A PC you can give up. Step 4 erases its disk. Anything from the last ten years works if it has 8 GB of memory or more and boots in UEFI mode; the Starter kit uses about 3 GB of that, and the installer adds up whatever you pick and tells you if the machine is short. It needs a wired network connection to your router for the install. [Compatibility](https://ww4.github.io/imperfect-homelab/start-here/compatibility/) is the full list of what this release runs on.
 - A USB stick of 4 GB or more; step 2 erases it.
 - The computer you are reading this on, for making the stick and later for using the apps.
 - A domain name at Cloudflare. See below.
@@ -196,7 +196,7 @@ At the end of this the PC will be installing itself, and you will have answered 
 
 ## Step 1 — Open the form from your own computer
 
-Type the address shown on the machine's screen into a browser, or point a phone camera at the barcode. Type the code once when it asks. The code is what keeps anyone else on your network from filling in the form.
+Type the address shown on the machine's screen into a browser, or point a phone camera at the barcode. Type the code once when it asks. The code is what keeps anyone else on your network from filling in the form, and [The trust model](https://ww4.github.io/imperfect-homelab/principles/the-trust-model/) says what else stands behind it.
 
 Everything below works the same way on the machine's own screen if you would rather stand there. Arrow keys or Tab move between lines, Enter opens a line for typing and Enter again keeps it, and the bottom line says what is wrong when something is. Both screens show the same answers as you go, so you can start in one and finish in the other.
 
@@ -252,6 +252,8 @@ Leave it alone unless you know you want something else. Adding a module later is
 ## Step 9 — Review and install
 
 Everything on one screen, with the disks to be erased in red. Read that red line, then press **Install**.
+
+Nothing is erased yet. Because you are driving this from a browser, the PC's own screen now shows a six-digit number and the disks it is about to wipe, and the browser asks you for that number. Walk over, read it off the PC, type it in, and the install starts. Three wrong numbers cancel the request and you press **Install** again for a new one, and pressing Escape at the PC refuses it outright. The number never travels to the browser, which is the point of it: whoever starts an install has stood at the machine. [The trust model](https://ww4.github.io/imperfect-homelab/principles/the-trust-model/) has the reasoning.
 
 From here the installer works alone: it writes the configuration and checks it, partitions the disk, downloads the system and installs it. Twenty to forty minutes is normal on a home connection, and both screens show what it is doing line by line. When it finishes it prints the addresses to open and the login to use.
 
@@ -346,7 +348,7 @@ URL: https://ww4.github.io/imperfect-homelab/start-here/
 
 This guide hands you a homelab that one person has run for years, and then shows you how it is built so you can change it. Every service, alert rule and backup job you end up with is a file you can read. The install is one command from the NixOS installer: it asks what you want, mints the secrets, and leaves you with a working machine. The understanding takes longer, and the rest of the site is for that.
 
-Read it in order the first time. Later you will come back for one chapter at a time, and the Services reference is for looking things up.
+Read it in order the first time. Later you will come back for one chapter at a time, and the Services reference is for looking things up. [Compatibility](https://ww4.github.io/imperfect-homelab/start-here/compatibility/) is the page to check before you commit a machine to this: the release, the architectures, the memory each kit needs, and the one DNS provider this release knows how to use.
 
 The reference machine is one household's setup. The Principles chapter gives the reasons for its choices (a MergerFS pool over independent disks, Tailscale as the only way in, nginx in front of everything), and you can make different ones. The install path is tested against three fixed profiles in a virtual machine, and your hardware will differ from the reference box in ways the Hardware chapter tries to anticipate. When something in the guide and something on your screen disagree, the screen is right, and the issue tracker is where to say so.
 
@@ -378,6 +380,78 @@ You do not need to know Nix. The configurator asks questions and writes the conf
 
 If you already run a homelab, the install path still applies, but you will probably skim Start Here and Principles and spend your time in Tech Stack and Extending. The library is a set of modules you can import one at a time into an existing NixOS flake; you do not have to adopt the whole machine to use the storage watchdog or the monitoring.
 
+
+
+## Compatibility
+
+URL: https://ww4.github.io/imperfect-homelab/start-here/compatibility/
+
+
+This page is the support matrix for the release. A security review asked for it; the numbers come from the library's own catalog and the installer's own kit lists, not from a wiki page that drifted.
+
+## NixOS release
+
+The library targets NixOS 26.05. The installer's flake pins `nixos-26.05`, and the private flake it writes for you pins the exact nixpkgs revision the installer binary was built against, so the machine you install is the machine the library was validated on. The generated host sets `system.stateVersion = "26.05"`.
+
+Moving off that pin is `nix flake update nixpkgs` in your own flake, done on purpose. Nothing moves it for you.
+
+## CPU architecture
+
+| Architecture | State |
+|---|---|
+| `x86_64-linux` | Supported. The published installer image targets it, and every change installs the three test profiles on it in a virtual machine. |
+| `aarch64-linux` | The configurator package builds for it. There is no installer image, no test coverage, and the answers file defaults `host.system` to `x86_64-linux`. Treat it as unproven. |
+| 32-bit x86, armv7 | Not supported. |
+
+## Memory
+
+Every entry in the library's catalog carries an integer: rough steady-state resident memory in MiB at household load, with no burst in it. The installer adds 1024 MiB underneath for the kernel, systemd and the container runtime, adds up whatever you have ticked, and compares the total against the memory of the machine it is running on. On the Kit screen, the installer flags a kit that does not fit before it writes anything.
+
+| Kit | Modules | Sum of the module figures | Plus the 1024 MiB base | Total |
+|---|---|---|---|---|
+| Minimal | 2 | 0 MiB | 1024 | 1.0 GiB |
+| Starter | 10 | 1760 MiB | 1024 | 2784 MiB, 2.7 GiB |
+| Media box | 19 | 4048 MiB | 1024 | 5072 MiB, 5.0 GiB |
+| Docs and forge | 19 | 5664 MiB | 1024 | 6688 MiB, 6.5 GiB |
+| Everything | 40 | 9272 MiB | 1024 | 10296 MiB, 10.1 GiB |
+
+The module counts include the two foundation modules every install gets, `system` and `boot`, both of which carry a zero. The largest single figures are the ones to know when you are trimming a kit to fit: Immich at 1536 MiB, the download stack at 1280, Paperless at 1024, Nextcloud at 768, the monitoring stack at 640, Jellyfin at 512.
+
+Those are steady-state numbers. A transcode, Immich's machine-learning pass or a SnapRAID sync adds a gigabyte or two for as long as it runs, so size the machine above the total. [What matters](https://ww4.github.io/imperfect-homelab/hardware/what-matters/) has the buying advice.
+
+## Storage
+
+The installer writes one fixed layout per disk role, through disko. It erases everything on every disk you give it.
+
+| Role | What the installer writes |
+|---|---|
+| System | GPT, a 512 MiB ESP at `/boot/efi`, a 4 GiB swap partition, ext4 root |
+| Data | One ext4 filesystem, mounted at `/mnt/disks/<name>` |
+| Parity | The same ext4 filesystem, held out of the pool to hold SnapRAID parity |
+
+Marking any disk as data turns on `mergerfs-pools`, which unions the data disks into one pool. Marking a parity disk turns on `snapraid`. You decide the pool shape at install, and the installer refuses to remove `mergerfs-pools` on a later reconfigure, because changing it is a data migration, not a setting.
+
+Not supported in this release: ZFS, btrfs, LUKS or any full-disk encryption, mdadm, hardware RAID, and LVM; the disk picker filters out device-mapper, LVM and md devices instead of offering them and failing later. Nothing on the machine is encrypted at rest.
+
+## DNS
+
+The installer supports Cloudflare DNS and nothing else. It asks for a Cloudflare API token, verifies it against Cloudflare's API while you are still on the screen, and creates the DNS records your chosen vhosts need through that same API. The `acme` module's `dnsProvider` option takes any lego provider name and defaults to `cloudflare`, so you can set another provider by hand in your flake afterwards, but the installer will not mint it, will not check it, and nothing in the test runs covers it. The project plans a local-only path, with no domain and no public DNS at all, and has not shipped it. Until it does, a domain on Cloudflare is a requirement of the install and not a preference.
+
+## The VPN account
+
+Only the download stack needs one, and this documentation covers only two providers end to end: Mullvad and Proton VPN. Mullvad forwards no ports, which means slower seeding and trouble with any tracker that wants an open one. Proton VPN forwards a port on its paid plans. Both hand you a WireGuard configuration file to copy a private key and an address out of, and the installer's own screen names the fields it wants from it. The installer checks only the Cloudflare token against its provider while you wait; the download client finds a wrong VPN key after the install.
+
+## Boot mode
+
+UEFI only: the library's `boot` module enables systemd-boot and lets it touch EFI variables, and the disko layout puts the ESP at `/boot/efi` where that module expects it. Legacy BIOS and CSM-only machines are not supported, and neither is Secure Boot: the library ships no signing. The boot menu's kernel command-line editor stays disabled, which closes the no-tooling path from console access to a root shell on a machine whose disks are not encrypted.
+
+## When upstream changes under you
+
+Nothing upstream reaches your machine until you move a pin. Services that come from nixpkgs come from the revision your flake pins. Services that run as containers carry a digest pin, written as `tag@sha256:…`, so a vendor pushing a new build over the same tag does not change what you run.
+
+Upstream arrives on a `nix flake update`, in one of three shapes. An option that nixpkgs renamed or removed fails at evaluation, before nix builds anything. A package that no longer builds fails the build. The third is the awkward one: the service starts and behaves differently, usually a database schema that migrated forward and will not migrate back. That last case is what the rehearsal branch is for, and [GitOps with a rehearsal](https://ww4.github.io/imperfect-homelab/principles/gitops-with-a-rehearsal/) describes it.
+
+The library catches the first shape on its own side. Its `nix flake check` builds a machine with every module enabled and real values set, so an option rename in nixpkgs breaks the library's own check rather than your install. Catching the second and third is what a rehearsal and a restore you have already run are for.
 
 
 ## Where it came from
@@ -419,6 +493,8 @@ URL: https://ww4.github.io/imperfect-homelab/principles/
 Five rules account for the choices in this homelab, and most of the library's files are one of them applied. Implementations live in a public library and the facts about your house live in a flake you own. Secrets enter as file paths, never as values the library knows about. Importing a module is what enables it, and a module reads nothing but its own options. The network is the perimeter, and the applications behind it are not asked to be. And nobody applies a change by hand: a merge deploys it, after a rehearsal if you want one.
 
 Each has a chapter. They are short, and they are worth reading before the Tech stack chapter: the rules came first and the stack had to fit them.
+
+A sixth chapter, [The trust model](https://ww4.github.io/imperfect-homelab/principles/the-trust-model/), is what the five add up to when you ask who is allowed to do what without being asked again. Read that one if you are deciding whether to put this on a network you care about.
 
 
 
@@ -474,7 +550,7 @@ The mistake this prevents is relying on DNS as access control. A homelab whose r
 
 Certificates come from Let's Encrypt over DNS-01. The challenge is answered by a DNS record your API token creates, so issuance needs no inbound path at all, and a service that nobody outside your network can reach still gets a real certificate. The ACME module's defaults are the library's; your flake supplies the email and the token file.
 
-Some things the gate does not cover: a compromised Tailscale account is inside the perimeter, single sign-on covers only the applications that support it, and disks are not encrypted at rest. The Security chapter in Operating with an agent lists the rest.
+Some things the gate does not cover: a compromised Tailscale account is inside the perimeter, single sign-on covers only the applications that support it, and disks are not encrypted at rest. [The trust model](https://ww4.github.io/imperfect-homelab/principles/the-trust-model/) collects those exclusions in one place, and it covers the one source this shared rule does not settle for every vhost at once, which is the container bridges on the machine itself.
 
 
 
@@ -488,6 +564,64 @@ Nobody runs `nixos-rebuild` on the reference machine, including its owner. A dae
 The rehearsal branch is the part that makes an agent operator workable, and it is useful to a human for the same reason. The daemon applies a push to the unprotected `testing` branch with `nixos-rebuild test`: the configuration goes live and services restart, and it writes nothing to the bootloader, so a reboot returns the machine to the last merged state. You check the real thing (the vhost answers, the timer fired, the metric is there) before you ask anyone to merge. The one rule is that `testing` must descend from `main`; a diverged branch is ignored by design, and the reference machine's push hook refuses it.
 
 Two watchdogs watch the pipeline itself. One compares the forge's branch head with the commit the daemon last deployed, because a deploy pipeline that looks healthy while reading a stale source is a failure the dashboards miss. The other compares the forge with its mirror, so a mirror that stopped tracking is an alert instead of a surprise found during a disaster. Both ship their own alert rules. The reference machine lost its deploys for two days once to an expired mirror token and found out by accident; the watchdogs are the result. A failed check publishes a failure, never stale data that reads as healthy. The library's exporters and watchdogs follow that rule, and the Field notes chapter has the incidents that taught it.
+
+
+## The trust model
+
+URL: https://ww4.github.io/imperfect-homelab/principles/the-trust-model/
+
+
+A trust model is the list of who gets to do what without being asked again. This homelab has four entries on that list, and until a security review asked for them in one place you had to infer them from five chapters. The internet is denied, the local network and the tailnet are trusted as networks, containers on the machine reach the vhosts that opt in, and the installer's browser form can decide everything about an install except when to erase a disk. Each entry costs something.
+
+## The internet is denied
+
+Nothing on the machine accepts a connection from the public internet. The `nginx-access` module puts one allow/deny block in the shared `http` section, every virtual host inherits it, and a source outside the listed ranges gets a 403 before any backend sees the request. Certificates come from Let's Encrypt over DNS-01, so issuing one means writing a DNS record with your API token rather than answering a challenge on port 80. There is no router port to forward, and forwarding one anyway changes nothing, because the filter rejects a public source address however the packet arrived, and that matters more than it sounds like it should now that many home connections hand out a routable IPv6 address. [The perimeter is the network](https://ww4.github.io/imperfect-homelab/principles/the-perimeter-is-the-network/) has the longer version.
+
+## The local network and the tailnet are trusted
+
+The machine treats a device on your LAN and a device on your tailnet as devices that belong there. nginx answers them. What happens after that depends on which service they asked for. Authelia protects the vhosts you name in `homelab.authelia.protectedVhosts`, and the default for that list is empty. Jellyfin, Nextcloud, Immich, Forgejo and Vaultwarden each carry their own accounts and ask on their own, so a login stands in front of them whether or not you list them. Prometheus and Glances ask nothing at all; if you want a login in front of them, those two are the first names to put in the list. The network is the perimeter, and a guest on your wifi reaches a Prometheus holding every metric on the machine unless you said otherwise.
+
+A compromised Tailscale account is inside the perimeter, because being on the tailnet is the whole credential. So is a phone on your wifi with something nasty on it.
+
+## Containers can reach the vhosts that opt in
+
+Several services in the library run as containers, on docker bridge networks on the same host. Each gets two kinds of reach, both of them deliberate.
+
+The first is a handful of host services that open a port to the container bridges and to nothing else. Jellyfin opens 8096 so a container that authenticates against it can; ntfy opens 8090 so a dashboard can post a notification; Prometheus opens 9090 and Glances 61208 so a dashboard can query them. Each hole is opened by the module that needs it, scoped to `br-+` interfaces, and invisible to the LAN and the tailnet, which still arrive through the vhost. A module that does not need it opens nothing.
+
+The second is the one the review asked to see stated plainly: containers can reach the vhosts that opt in, and the allow-list is per vhost. A vhost that opts in treats a request from a container bridge the way it treats a request from a laptop in the next room. The opt-in does not skip the application's own login and does not skip Authelia where that vhost is protected, so what a container gains is what a device already on your LAN has. In the bad case, a container somebody has taken over is a device on your network, with whatever that is worth on the vhosts that let it in. Turning it off everywhere is not free, which is why the decision is per vhost instead of one switch for the machine. Uptime Kuma runs in a container and checks the vhosts you tell it to watch, and a dashboard tile that shows a service's status fetches it server-side from a container too. Opt in the vhosts those need and leave the rest closed.
+
+## The browser form decides; the machine consents
+
+The installer is one wizard with two front ends: a console program on the machine's own screen, and a page served on port 8099 to any computer on the network. The browser front end exists because a Cloudflare API token is forty characters of random text and a console has no clipboard. It holds configuration authority in full: every answer, every secret, every module, and which disk gets which role. It does not hold destructive authority.
+
+### The pairing code
+
+The console shows an eight-character code, and the page must present it before the API answers anything at all. The alphabet it is drawn from leaves out every pair that gets read wrong off a screen: no O or 0, no I, 1 or l, no S or 5, no B or 8, no Z or 2. Twenty-five characters survive that, and eight of them is about 37 bits, which is the part doing the work. The server counts wrong codes per source address. It answers the first three immediately. After that it answers each further attempt from the same address about two seconds slower, which turns a guessing loop into something that runs for days. After ten wrong codes it refuses the address outright, and the address stays refused until somebody at the machine clears it; typing the correct code afterwards does not lift the lockout. One address guessing does not shut any other address out, and one correct code resets that address's count to nothing.
+
+### Who may connect at all
+
+Before the server reads a byte of a request it looks at the peer's address and closes the connection if the address is not on a local network. Loopback counts, the private ranges count, link-local counts, IPv6 unique-local and link-local count, and so does `100.64.0.0/10`, the range Tailscale assigns from. A household router that forwards port 8099 to the installer, deliberately or by accident, does not thereby put the form on the internet. The installer image carries the same ranges in its own firewall, so a foreign packet is dropped before the server sees it as well as refused after.
+
+### Pressing Install
+
+Pressing Install in the browser does not start an install. The machine's own screen shows a six-digit number and the list of disks it is about to erase, and typing that number into the browser is what goes ahead. The number is never sent to the page, which is what makes it a second channel rather than a second password: whoever types it has seen the machine's screen. Three wrong numbers cancel the request. Pressing Install again produces a fresh number, and there is no second try at the old one. Pressing Escape at the machine refuses the request outright.
+
+An install started at the console needs no number. The person pressing Install there is standing at the machine, which is what the number exists to prove.
+
+### What this does not protect
+
+The browser form is plain HTTP. The Cloudflare token, the VPN credentials and the admin password you type into it cross your local network unencrypted, and anything on that network that can watch traffic can read them. This is a known limitation of the release and it is not solved. The alternative available to an installer with no name and no certificate authority is a self-signed certificate, which would encrypt the form and would also teach a beginner, in the first ten minutes of their first install, that a browser security warning is a thing you click through. That habit costs more over a year than this exposure costs in the hour the installer is running. Either way, the tokens alone do not build anything: an install cannot be completed without someone at the machine reading the number off its screen.
+
+## Updating the installer itself
+
+A stick burned in March runs March's installer unless something replaces it, so the installer checks the project's binary cache for a newer build of itself and can fetch and run it before the wizard opens. That is a real trust decision, so it has three bounds on it.
+
+The build must be signed by the key baked into the image, named `homelab-installer-1`. Nix checks that signature itself and refuses a build that key did not sign, no matter what the cache claims about it. The fetch runs with `--max-jobs 0`, which means it downloads a finished build or it fails, and never compiles one on a live USB. A failure of any kind falls back to the installer already on the stick.
+
+Before it fetches anything, it prints what it is about to run: the commit, the exact store path, when that build was published, and the name of the key it will require. "It is signed" says nothing without saying by whom, so the name of the key is printed next to the store path it is about to run. Those four lines are read out of the cache's own index and are only as honest as the cache is. The signature check is the part that does not depend on that.
+
+If you would rather not trust the project's cache at all, build the installer yourself from the published commit. A stock NixOS ISO plus `nix run 'github:ww4/homelab-modules?dir=configurator' -- tui` compiles the configurator from source in a few minutes, with no installer cache configured as a substituter and nothing signed by that key in the result.
 
 
 # Tech stack
@@ -590,7 +724,7 @@ URL: https://ww4.github.io/imperfect-homelab/tech-stack/containers-on-nixos/
 
 Most services here are native NixOS modules, and the ones that are not run as OCI containers declared in Nix (`virtualisation.oci-containers`), which makes each one a systemd unit like everything else. The download stack is the main user: Prowlarr, Sonarr, Radarr, Lidarr, Jellyseerr, and qBittorrent inside a Gluetun VPN namespace. A container's image, environment, volumes and network are in the module; its state is a directory under `/var/lib` that the backup module covers.
 
-Images are pinned by tag and digest, and the digest is what deploys. A bare `:latest` re-pulls on every rebuild, which makes each container a standing supply-chain surface, and the containers sit inside the network gate (bridge networks are in the allowed ranges), so a compromised upstream image would be a LAN-equivalent attacker. Pinning makes an image update a reviewed change. To bump one deliberately, `skopeo inspect` gives you the new digest and a pull request carries it. The download stack's containers share a user-defined bridge network, because the default Docker bridge does not do DNS between containers and their addresses shuffle on restart. That network is IPv4-only on purpose: the bridge has no IPv6 route, Cloudflare-fronted indexers are dual-stack, and glibc prefers the AAAA answer, so a container picks an address it cannot reach and the connection dies with a message that blames DNS.
+Images are pinned by tag and digest, and the digest is what deploys. A bare `:latest` re-pulls on every rebuild, which makes each container a standing supply-chain surface, and the containers sit inside the network gate on the vhosts that opt their bridge range in, so a compromised upstream image would be a LAN-equivalent attacker on those. [The trust model](https://ww4.github.io/imperfect-homelab/principles/the-trust-model/) says why that opt-in exists and what turning it off costs. Pinning makes an image update a reviewed change. To bump one deliberately, `skopeo inspect` gives you the new digest and a pull request carries it. The download stack's containers share a user-defined bridge network, because the default Docker bridge does not do DNS between containers and their addresses shuffle on restart. That network is IPv4-only on purpose: the bridge has no IPv6 route, Cloudflare-fronted indexers are dual-stack, and glibc prefers the AAAA answer, so a container picks an address it cannot reach and the connection dies with a message that blames DNS.
 
 Two gaps between Docker and NixOS are worth knowing before you hit them. A `MemoryMax` on a `docker-*.service` unit constrains nothing, because dockerd puts the container's processes in their own cgroup scope; the memory limit goes in the container's `extraOptions` as `--memory`. And NixOS's interface-scoped firewall rules do not see traffic from a bridge network to the host, so a container that needs to reach a host service needs a hole for the `br-+` interfaces on that port.
 
@@ -643,7 +777,7 @@ Power is the real price. At around twelve cents per kilowatt-hour a machine that
 
 The NIC: one gigabit port is enough for everything in this guide, and an Intel chipset is the one with the fewest surprises. Out-of-band management (IPMI, Intel AMT) is convenient for a box in a closet, and AMT on old Intel boards needs firmware patched past the 2017 vulnerability before you enable it. Two and a half gigabit or ten is only worth paying for if your pool can feed it, which a few USB disks cannot.
 
-Memory is the number to size by, and it is additive. Each module in the Services chapter carries a rough resident figure for household load, the configurator adds them up for whatever you pick, puts a gigabyte under them for the kernel, systemd and the container runtime, and compares the sum with the machine it is running on; a kit that does not fit is marked red before you install anything. The sums today: the Starter kit about 3 GB, the media box about 5 GB, documents and forge about 7 GB, everything about 10 GB. Those are steady-state numbers; a transcode, Immich's machine-learning pass or a SnapRAID sync adds a gigabyte or two for as long as it runs, so buy a quarter more than the sum and never less than 8 GB. Memory is also the cheapest upgrade a used desktop takes.
+Memory is the number to size by, and it is additive. Each module in the Services chapter carries a rough resident figure for household load, the configurator adds them up for whatever you pick, puts a gigabyte under them for the kernel, systemd and the container runtime, and compares the sum with the machine it is running on; a kit that does not fit is marked red before you install anything. The sums today: the Starter kit about 3 GB, the media box about 5 GB, documents and forge about 7 GB, everything about 10 GB, and [Compatibility](https://ww4.github.io/imperfect-homelab/start-here/compatibility/) has each one to the megabyte with the arithmetic beside it. Those are steady-state numbers; a transcode, Immich's machine-learning pass or a SnapRAID sync adds a gigabyte or two for as long as it runs, so buy a quarter more than the sum and never less than 8 GB. Memory is also the cheapest upgrade a used desktop takes.
 
 The CPU is the last question. Anything from the last decade with four cores runs every profile; transcoding video for remote playback is the one job that wants more, and a GPU or a modern iGPU covers it. RAM wants 16 GB as a floor and 32 GB if the download stack and the photo server are both on.
 
@@ -1001,9 +1135,9 @@ Etcher does the same thing with a file picker if you would rather not name a dev
 
 ## Step 4 — Boot the target and open the wizard
 
-Boot the target machine from the stick. The installer opens by itself on the console after it has looked for a newer version of itself on the project's binary cache, so an old stick runs the current installer. That lookup passes `--max-jobs 0`, which means it downloads a newer configurator or falls back to the copy on the stick, and never compiles one.
+Boot the target machine from the stick. The installer opens by itself on the console after it has looked for a newer version of itself on the project's binary cache, so an old stick runs the current installer. That lookup passes `--max-jobs 0`, which means it downloads a newer configurator or falls back to the copy on the stick, and never compiles one. It prints the commit, the store path, the publication time and the signing key it requires before it fetches anything, and [The trust model](https://ww4.github.io/imperfect-homelab/principles/the-trust-model/) explains what that signature does and does not promise.
 
-The same wizard is served at `http://<the machine>:8099`, which is the easier way to fill it in, because a browser on your own computer has a clipboard. The console prints the address and the code that gates it.
+The same wizard is served at `http://<the machine>:8099`, which is the easier way to fill it in, because a browser on your own computer has a clipboard. The console prints the address and the eight-character code that gates it. The server answers computers on your own network only, and a browser that fills the form still cannot start an install without a number read off the machine's own screen.
 
 `homelab-configure tui` opens the console wizard again if you close it, and Ctrl-Q leaves it with a shell behind. A wired network is automatic; for Wi-Fi, run `wpa_cli` first.
 
@@ -3993,7 +4127,7 @@ What it has done through this flow: migrated every secret into encrypted storage
 URL: https://ww4.github.io/imperfect-homelab/agent/what-this-does-not-claim/
 
 
-Stating the limits is part of the model; a threat model with no exclusions is one nobody has examined. The gates constrain what the agent can apply, not what it can read. It reads everything on the machine that group permissions allow, secret values excepted, other users' service data included. If that is not acceptable for your data, the fix is file permissions, and the chapter on principles says where they live. A compromised Tailscale account is inside the network perimeter regardless of the agent, and single sign-on covers only the applications that support it.
+Stating the limits is part of the model; a threat model with no exclusions is one nobody has examined. The gates constrain what the agent can apply, not what it can read. It reads everything on the machine that group permissions allow, secret values excepted, other users' service data included. If that is not acceptable for your data, the fix is file permissions, and the chapter on principles says where they live. A compromised Tailscale account is inside the network perimeter regardless of the agent, and single sign-on covers only the applications that support it. The limits that belong to the machine rather than to the agent are in [The trust model](https://ww4.github.io/imperfect-homelab/principles/the-trust-model/).
 
 The design does not assume the model is trustworthy. The working assumption is that it is capable and sometimes wrong, and each gate sits where a confidently wrong agent produces a rejected pull request instead of an outage. Nothing here stops it from proposing a bad change; the owner's review does that, and the review is only as good as the diff is readable. That is one reason the library insists on one concern per file and on pull requests scoped to one topic. The guard stops the catastrophic class, the review stops the merely wrong one, and the rehearsal branch catches the change that looks right and is not.
 

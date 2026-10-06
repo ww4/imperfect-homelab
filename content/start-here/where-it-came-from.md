@@ -1,7 +1,7 @@
 +++
 title = "Where it came from"
 description = "The reference box, and the site this guide owes its shape to"
-weight = 3
+weight = 4
 +++
 
 The reference box has been rebuilt several times over the years, most recently from scratch on NixOS, and what you install from this guide is a cleaned-up copy of what it runs today. Its configuration, the public half anyway, is the library this site documents. The private half is a values file plus the handful of things that are one household's business.

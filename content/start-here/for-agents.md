@@ -1,7 +1,7 @@
 +++
 title = "For agents"
 description = "The headless contract, for an AI agent driving the install on someone's behalf"
-weight = 4
+weight = 5
 +++
 
 If you are an AI agent and someone has handed you this site, the short version is in two files: {{ link(path="llms.txt", text="llms.txt") }} says what is where, and {{ link(path="skills/homelab-install/SKILL.md", text="the install skill") }} is the procedure. This page is the contract behind both, written for a reader who will act on it.
