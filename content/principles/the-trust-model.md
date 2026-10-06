@@ -52,13 +52,17 @@ An install started at the console needs no approval. The person pressing Install
 
 ### What this does not protect
 
-The browser form is plain HTTP, and the secret values on it are encrypted before they leave the page. The installer makes a key pair when it starts, the page seals the Cloudflare token, the VPN credentials, the backup credentials and the admin password to the public half, and only the ciphertext is posted. Something watching your network sees ciphertext. The credential screen and the machine's own screen both show a short fingerprint of that key, and comparing them is how you know the page is talking to your machine.
+The browser form is plain HTTP, and the secret values on it are encrypted before they leave the page. The installer makes a key pair when it starts, the page seals the Cloudflare token, the VPN credentials, the backup credentials and the admin password to the public half, and only the ciphertext is posted. Something watching your network sees ciphertext. If the page cannot encrypt a value it does not send it, and tells you to type that one on the machine instead. Refusing is deliberate: stopping the encryption from working is easier than breaking it, so a fallback to sending in the clear would be the cheapest way in rather than a convenience.
 
 The page carries its own cryptography to do this, because the browser will not lend it any. A browser only exposes `crypto.subtle` on a secure context, which a plain-HTTP page is not, so the installer ships a small public-domain library and uses that.
 
-This protects against watching, not against rewriting. Somebody who can change traffic in flight, rather than only read it, can serve you a modified page with their own key in it, and then the sealing is theirs. The fingerprint is what makes that visible, and it is the reason the machine prints one. A certificate would close the gap and would also teach a beginner, in the first ten minutes of their first install, that a browser security warning is a thing you click through. That habit costs more over a year than this exposure costs in the hour the installer runs.
+This protects against watching, not against rewriting. Somebody who can change traffic in flight, rather than only read it, can serve you a modified page carrying their own key, and then the encryption is theirs.
 
-The honest summary is that the installer is protected against a network that watches, and relies on you comparing a fingerprint against a network that rewrites. In both cases the credentials alone build nothing: an install cannot start without somebody pressing a key on the machine itself.
+Both screens show a short fingerprint of the installer's key, and it is worth knowing exactly what that is for. A difference between them means something is wrong, and that is worth catching. A match proves nothing, because the browser's copy of the fingerprint arrived over the same connection an attacker would be rewriting, and they can print the real one beside their own key. The machine's copy is the one that did not travel. Treat the fingerprint as a consistency check, not as proof of who you are talking to.
+
+A certificate would close the gap and would also teach a beginner, in the first ten minutes of their first install, that a browser security warning is a thing you click through. That habit costs more over a year than this exposure costs in the hour the installer runs.
+
+The honest summary is that the installer is protected against a network that watches and is not protected against one that rewrites. What bounds the second case is not cryptographic. An install cannot start without somebody pressing a key on the machine, the answers are frozen from the moment that question is asked until it is answered, and the form itself cannot be taken from whoever is using it without another keypress there. The code written beside the address is enough to look; everything that changes the machine needs a person in front of it.
 
 ## Updating the installer itself
 
