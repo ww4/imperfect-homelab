@@ -18,7 +18,11 @@ Import `nixosModules.authelia` and set `homelab.authelia.enable = true`.
 
 ## Secrets
 
-None.
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.authelia.adminPasswordHashFile` | `<argon2 hash of the admin's first password>` | `root` | generate |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
 
 ## Options
 
@@ -33,6 +37,12 @@ Display name for the administrator.
 `string` — default `"admin"`
 
 Username of the human administrator (SSO seed user, etc.).
+
+#### `homelab.authelia.adminPasswordHashFile`
+
+`null or absolute path` — default `null`
+
+A file holding the argon2 hash of the admin's first Authelia password. When set, the module seeds `users.yml` from it, and the password itself never touches the machine: the configurator mints one, writes the hash here and puts the password in FIRST-LOGIN.md. Left null, the module mints a password at activation and writes it to `initial-password` beside `users.yml`, root-readable. Read it, log in, change the password, delete the file. Before this option existed the module minted a password and threw it away, so nobody could log in at all until they replaced `users.yml` by hand. 
 
 #### `homelab.authelia.displayName`
 

@@ -101,7 +101,7 @@ One parity file per parity disk, each on a disk that is NOT a pool member and at
 
 #### `homelab.snapraid.pool`
 
-`string` — **required** — example `"media"`
+`string` — default `"media"` — example `"media"`
 
 Name of the homelab.pools entry whose memberDir + members are the data disks.
 

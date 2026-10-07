@@ -41,7 +41,7 @@ Whether to enable the forge-vs-deployed drift watcher.
 
 #### `homelab.deployDriftWatch.repoUrl`
 
-`string` — **required** — example `"https://git.example.com/me/flakes.git"`
+`string` — default `""` — example `"https://git.example.com/me/flakes.git"`
 
-The flake repo the GitOps applier deploys from.
+The flake repo the GitOps applier deploys from. Empty (the default) means there is no repo yet: the check does nothing until you set it.
 

@@ -30,7 +30,7 @@ The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&
 
 #### `homelab.metube.downloadDir`
 
-`string` — **required** — example `"/mnt/media/youtube/metube"`
+`string` — default `"/mnt/media/youtube/metube"` — example `"/mnt/media/youtube/metube"`
 
 Host directory downloads land in (bind-mounted into the container).
 

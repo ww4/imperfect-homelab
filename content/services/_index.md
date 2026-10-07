@@ -31,6 +31,7 @@ against the catalog, so what you read here is what the code does.
 | [drive-temps](@/services/drive-temps.md) | Drive temperature + SMART-health exporter for spinning disks. | 8 MiB | import |  |
 | [forgejo](@/services/forgejo.md) | Forgejo git forge. | 320 MiB | import | `git.<domain>` |
 | [glances](@/services/glances.md) | Glances system monitor with a REST/web API. | 96 MiB | import | `glances.<domain>` |
+| [hermes-agent](@/services/hermes-agent.md) | A self-hosted agent harness that runs code and acts on its own; talks to local or paid models. | 700 MiB | import |  |
 | [immich](@/services/immich.md) | Immich photo & video management. | 1536 MiB | import | `photos.<domain>` |
 | [jellyfin](@/services/jellyfin.md) | Jellyfin media server. | 512 MiB | import | `jellyfin.<domain>` |
 | [lazylibrarian](@/services/lazylibrarian.md) | LazyLibrarian ebook/audiobook automation on the shared /data tree. | 192 MiB | import | `lazylibrarian.<domain>` |
@@ -44,6 +45,8 @@ against the catalog, so what you read here is what the code does.
 | [nginx-access](@/services/nginx-access.md) | nginx source-access gate: allow/deny inherited by every vhost from one place. | 64 MiB | import |  |
 | [nginx-log-paths-check](@/services/nginx-log-paths-check.md) | Build-time guard: nginx may only be told to write logs where it can write. | 8 MiB | import |  |
 | [ntfy](@/services/ntfy.md) | Self-hosted ntfy: write-only anonymous access, self-provisioning subscriber. | 32 MiB | import | `ntfy.<domain>` |
+| [ollama](@/services/ollama.md) | Run open-weight language models on this machine. | 300 MiB | import |  |
+| [open-webui](@/services/open-webui.md) | A browser front end for the models ollama is serving. | 500 MiB | import | `chat.<domain>` |
 | [paperless](@/services/paperless.md) | Paperless-ngx OCR-indexed document archive. | 1024 MiB | import | `paperless.<domain>` |
 | [pinchflat](@/services/pinchflat.md) | PinchFlat YouTube archiver. | 320 MiB | import | `pinchflat.<domain>` |
 | [pool-autoremount](@/services/pool-autoremount.md) | Self-healing remount for pool members that drop off the bus; detects zombie mounts with real I/O. | 8 MiB | import |  |

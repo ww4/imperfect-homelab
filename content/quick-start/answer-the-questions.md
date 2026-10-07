@@ -1,10 +1,10 @@
 +++
 title = "Answer the questions"
-description = "Eight screens, filled in from your own computer's browser, then it installs by itself"
+description = "Nine screens, filled in from your own computer's browser, then it installs by itself"
 weight = 4
 +++
 
-At the end of this the PC will be installing itself, and you will have answered eight screens to get there. Fill them in from a browser on your own computer rather than at the machine: that browser has a clipboard, and the Cloudflare token is a long line you do not want to retype.
+At the end of this the PC will be installing itself, and you will have answered nine screens to get there. Fill them in from a browser on your own computer rather than at the machine: that browser has a clipboard, and the Cloudflare token is a long line you do not want to retype.
 
 ## Prerequisites
 
@@ -30,6 +30,8 @@ Check the internet line before you go on. If it says the machine cannot reach th
 Pick **Starter** if you are following this chapter. The number beside each kit is the memory that kit needs, shown green when it fits the machine you are installing on.
 
 The other kits add the media pipeline, the office applications, or everything in the library. You can add any of them later with one command, so there is no reason to over-reach now.
+
+One kit, **AI box**, is offered only on a machine whose graphics card the installer recognises and rates. On every other machine it is shown greyed with the reason beside it, which is usually that the published card list does not know your card. That affects this kit alone; the assistant on [Step 8](#step-8-an-assistant) runs on any machine.
 
 ## Step 4 — Storage
 
@@ -62,13 +64,21 @@ Below them is a box for the Cloudflare API token, with the steps to make one bes
 
 **Skip for now** leaves the token unset and the install carries on. The machine then comes up with no certificates and no DNS records, so every address either warns or does not answer. [Cloudflare DNS and the API token](@/accounts/cloudflare-dns.md) covers both the token itself and how to set it after the install.
 
-## Step 8 — Modules
+## Step 8 — An assistant
+
+This screen asks whether the machine should run an assistant, and no is the default. An assistant is a program that keeps working between conversations, reads and writes the files you give it, and runs what you ask it to. Nothing else on the machine depends on the answer, so **No, thank you** and **Continue** is a complete answer and costs you nothing later: it is one command and a rebuild to add.
+
+Answering **Yes, set one up** installs Hermes, which is somebody else's open-source work rather than part of this library. You talk to it at the machine or over SSH; it gets no address on your network.
+
+The line under the two choices says what this machine can do about models. A graphics card the installer recognises and rates runs models on the machine itself, and then the assistant is already pointed at them and needs no account anywhere. Any other machine needs an account with a model provider, and a credentials line appears for the key. [A model for the assistant](@/accounts/model-provider.md) is the walkthrough for that, including what to do if you would rather set it up after the install.
+
+## Step 9 — Modules
 
 The kit's list, already ticked. The line at the top repeats how much memory the whole set needs.
 
 Leave it alone unless you know you want something else. Adding a module later is one command and a rebuild.
 
-## Step 9 — Review and install
+## Step 10 — Review and install
 
 Everything on one screen, with the disks to be erased in red. Read that red line, then press **Install**.
 

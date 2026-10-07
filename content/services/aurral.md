@@ -52,9 +52,9 @@ Optional keeper library mounted at /keepers/tv (Sonarr twin of keepersMovies).
 
 #### `homelab.arrStack.owner`
 
-`string` — **required**
+`string` — default `"admin"`
 
-Host user owning the stack's directories (matches puid).
+Host user owning the stack's directories (matches puid). Defaults to homelab.adminUser: the account a fresh install is sure to have.
 
 #### `homelab.arrStack.pgid`
 
@@ -70,9 +70,9 @@ uid the stack's containers run as.
 
 #### `homelab.arrStack.root`
 
-`string` — **required** — example `"/mnt/media/arr"`
+`string` — default `"/mnt/media/arr"` — example `"/mnt/media/arr"`
 
-The shared /data tree (downloads + media subdirs).
+The shared /data tree (downloads + media subdirs). The default sits on the media pool, which is where a disk marked `data` at install is mounted.
 
 #### `homelab.arrStack.scratchDir`
 

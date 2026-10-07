@@ -30,6 +30,7 @@ Every entry in the library's catalog carries an integer: rough steady-state resi
 | Starter | 10 | 1760 MiB | 1024 | 2784 MiB, 2.7 GiB |
 | Media box | 19 | 4048 MiB | 1024 | 5072 MiB, 5.0 GiB |
 | Docs and forge | 19 | 5664 MiB | 1024 | 6688 MiB, 6.5 GiB |
+| AI box | 10 | 1664 MiB | 1024 | 2688 MiB, 2.6 GiB |
 | Everything | 40 | 9272 MiB | 1024 | 10296 MiB, 10.1 GiB |
 
 The module counts include the two foundation modules every install gets, `system` and `boot`, both of which carry a zero. The largest single figures are the ones to know when you are trimming a kit to fit: Immich at 1536 MiB, the download stack at 1280, Paperless at 1024, Nextcloud at 768, the monitoring stack at 640, Jellyfin at 512.
@@ -53,6 +54,14 @@ Not supported in this release: ZFS, btrfs, LUKS or any full-disk encryption, mda
 ## DNS
 
 The installer supports Cloudflare DNS and nothing else. It asks for a Cloudflare API token, verifies it against Cloudflare's API while you are still on the screen, and creates the DNS records your chosen vhosts need through that same API. The `acme` module's `dnsProvider` option takes any lego provider name and defaults to `cloudflare`, so you can set another provider by hand in your flake afterwards, but the installer will not mint it, will not check it, and nothing in the test runs covers it. The project plans a local-only path, with no domain and no public DNS at all, and has not shipped it. Until it does, a domain on Cloudflare is a requirement of the install and not a preference.
+
+## Graphics cards
+
+Nothing in this release needs a graphics card, and one kit can use one. The AI box runs language models on the machine itself, so the installer offers that kit only where it can both identify the card and say how much video memory it has, and six gigabytes is the floor. Identification comes from a list published alongside this library, built from the PCI device database with memory recorded per card family. A card newer than the list, or any machine the list cannot be fetched on, reads as unknown, and the kit is then shown greyed with that reason rather than hidden. Management chips — the ASPEED and Matrox parts on server boards, and the virtual adapters a hypervisor presents — are marked in the list as not graphics cards, so they never qualify.
+
+The assistant is a separate question and has no such requirement: it runs on any machine, and a card is one of the two places it can get a model from rather than a condition of having one. [A model for the assistant](@/accounts/model-provider.md) covers the other.
+
+Acceleration is not guessed. The installer sets `homelab.ollama.acceleration` from the card it found, `cuda` for NVIDIA and `rocm` for AMD, and each pulls a large vendor build; the CUDA one is unfree. Left unset, the processor does the work, which is correct and slow.
 
 ## The VPN account
 

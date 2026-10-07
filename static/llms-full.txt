@@ -17,7 +17,7 @@ and its
 sits beside it. Write it to a USB stick and boot the machine you are installing
 on from that stick. The installer starts on its own.
 
-It asks eight questions, then partitions the disks, writes your secrets and
+It asks nine questions, then partitions the disks, writes your secrets and
 installs with no further input from you. The [Quick start](https://ww4.github.io/imperfect-homelab/quick-start/)
 walks through the same steps one screen at a time, if you would rather follow it
 that way.
@@ -51,7 +51,7 @@ This alpha release supports one DNS provider, Cloudflare, because that is the si
 1. [Before you begin](https://ww4.github.io/imperfect-homelab/quick-start/before-you-begin/): the five things you need.
 2. [Make the stick](https://ww4.github.io/imperfect-homelab/quick-start/make-the-stick/): put the installer on a USB stick with Rufus.
 3. [Boot it](https://ww4.github.io/imperfect-homelab/quick-start/boot-it/): start the PC from the stick.
-4. [Answer the questions](https://ww4.github.io/imperfect-homelab/quick-start/answer-the-questions/): eight screens in your own browser, then it installs by itself.
+4. [Answer the questions](https://ww4.github.io/imperfect-homelab/quick-start/answer-the-questions/): nine screens in your own browser, then it installs by itself.
 5. [First look](https://ww4.github.io/imperfect-homelab/quick-start/first-look/): open it from your other computer and log in.
 6. [When something is wrong](https://ww4.github.io/imperfect-homelab/quick-start/when-something-is-wrong/): the usual three, and how to get help.
 
@@ -197,7 +197,7 @@ The PC is running the installer from memory and is waiting for answers. Next, [A
 URL: https://ww4.github.io/imperfect-homelab/quick-start/answer-the-questions/
 
 
-At the end of this the PC will be installing itself, and you will have answered eight screens to get there. Fill them in from a browser on your own computer rather than at the machine: that browser has a clipboard, and the Cloudflare token is a long line you do not want to retype.
+At the end of this the PC will be installing itself, and you will have answered nine screens to get there. Fill them in from a browser on your own computer rather than at the machine: that browser has a clipboard, and the Cloudflare token is a long line you do not want to retype.
 
 ## Prerequisites
 
@@ -223,6 +223,8 @@ Check the internet line before you go on. If it says the machine cannot reach th
 Pick **Starter** if you are following this chapter. The number beside each kit is the memory that kit needs, shown green when it fits the machine you are installing on.
 
 The other kits add the media pipeline, the office applications, or everything in the library. You can add any of them later with one command, so there is no reason to over-reach now.
+
+One kit, **AI box**, is offered only on a machine whose graphics card the installer recognises and rates. On every other machine it is shown greyed with the reason beside it, which is usually that the published card list does not know your card. That affects this kit alone; the assistant on [Step 8](#step-8-an-assistant) runs on any machine.
 
 ## Step 4 — Storage
 
@@ -255,13 +257,21 @@ Below them is a box for the Cloudflare API token, with the steps to make one bes
 
 **Skip for now** leaves the token unset and the install carries on. The machine then comes up with no certificates and no DNS records, so every address either warns or does not answer. [Cloudflare DNS and the API token](https://ww4.github.io/imperfect-homelab/accounts/cloudflare-dns/) covers both the token itself and how to set it after the install.
 
-## Step 8 — Modules
+## Step 8 — An assistant
+
+This screen asks whether the machine should run an assistant, and no is the default. An assistant is a program that keeps working between conversations, reads and writes the files you give it, and runs what you ask it to. Nothing else on the machine depends on the answer, so **No, thank you** and **Continue** is a complete answer and costs you nothing later: it is one command and a rebuild to add.
+
+Answering **Yes, set one up** installs Hermes, which is somebody else's open-source work rather than part of this library. You talk to it at the machine or over SSH; it gets no address on your network.
+
+The line under the two choices says what this machine can do about models. A graphics card the installer recognises and rates runs models on the machine itself, and then the assistant is already pointed at them and needs no account anywhere. Any other machine needs an account with a model provider, and a credentials line appears for the key. [A model for the assistant](https://ww4.github.io/imperfect-homelab/accounts/model-provider/) is the walkthrough for that, including what to do if you would rather set it up after the install.
+
+## Step 9 — Modules
 
 The kit's list, already ticked. The line at the top repeats how much memory the whole set needs.
 
 Leave it alone unless you know you want something else. Adding a module later is one command and a rebuild.
 
-## Step 9 — Review and install
+## Step 10 — Review and install
 
 Everything on one screen, with the disks to be erased in red. Read that red line, then press **Install**.
 
@@ -425,6 +435,7 @@ Every entry in the library's catalog carries an integer: rough steady-state resi
 | Starter | 10 | 1760 MiB | 1024 | 2784 MiB, 2.7 GiB |
 | Media box | 19 | 4048 MiB | 1024 | 5072 MiB, 5.0 GiB |
 | Docs and forge | 19 | 5664 MiB | 1024 | 6688 MiB, 6.5 GiB |
+| AI box | 10 | 1664 MiB | 1024 | 2688 MiB, 2.6 GiB |
 | Everything | 40 | 9272 MiB | 1024 | 10296 MiB, 10.1 GiB |
 
 The module counts include the two foundation modules every install gets, `system` and `boot`, both of which carry a zero. The largest single figures are the ones to know when you are trimming a kit to fit: Immich at 1536 MiB, the download stack at 1280, Paperless at 1024, Nextcloud at 768, the monitoring stack at 640, Jellyfin at 512.
@@ -448,6 +459,14 @@ Not supported in this release: ZFS, btrfs, LUKS or any full-disk encryption, mda
 ## DNS
 
 The installer supports Cloudflare DNS and nothing else. It asks for a Cloudflare API token, verifies it against Cloudflare's API while you are still on the screen, and creates the DNS records your chosen vhosts need through that same API. The `acme` module's `dnsProvider` option takes any lego provider name and defaults to `cloudflare`, so you can set another provider by hand in your flake afterwards, but the installer will not mint it, will not check it, and nothing in the test runs covers it. The project plans a local-only path, with no domain and no public DNS at all, and has not shipped it. Until it does, a domain on Cloudflare is a requirement of the install and not a preference.
+
+## Graphics cards
+
+Nothing in this release needs a graphics card, and one kit can use one. The AI box runs language models on the machine itself, so the installer offers that kit only where it can both identify the card and say how much video memory it has, and six gigabytes is the floor. Identification comes from a list published alongside this library, built from the PCI device database with memory recorded per card family. A card newer than the list, or any machine the list cannot be fetched on, reads as unknown, and the kit is then shown greyed with that reason rather than hidden. Management chips — the ASPEED and Matrox parts on server boards, and the virtual adapters a hypervisor presents — are marked in the list as not graphics cards, so they never qualify.
+
+The assistant is a separate question and has no such requirement: it runs on any machine, and a card is one of the two places it can get a model from rather than a condition of having one. [A model for the assistant](https://ww4.github.io/imperfect-homelab/accounts/model-provider/) covers the other.
+
+Acceleration is not guessed. The installer sets `homelab.ollama.acceleration` from the card it found, `cuda` for NVIDIA and `rocm` for AMD, and each pulls a large vendor build; the CUDA one is unfree. Left unset, the processor does the work, which is correct and slow.
 
 ## The VPN account
 
@@ -867,9 +886,9 @@ You have a decision and a record of how you reached it. The probe script and a s
 URL: https://ww4.github.io/imperfect-homelab/accounts/
 
 
-The installer mints every secret it can. Two it cannot, because they belong to an account somewhere else: the Cloudflare API token that gets your certificates and your DNS records, and the WireGuard credentials the download client's tunnel runs on. Both are work you do in a web browser, on somebody else's site, before or during the install.
+The installer mints every secret it can. Three it cannot, because they belong to an account somewhere else: the Cloudflare API token that gets your certificates and your DNS records, the WireGuard credentials the download client's tunnel runs on, and the key an assistant uses to reach a model it cannot run here. All three are work you do in a web browser, on somebody else's site, before or during the install.
 
-Each page here is a walkthrough with the clicks in order, the values to copy, and what to do when the installer says the value did not check out. The Cloudflare page applies to every install. The VPN page applies only if the download stack is among your modules. Both can be done a day ahead, and both can be done after the install if you skipped them at the time.
+Each page here is a walkthrough with the clicks in order, the values to copy, and what to do when the installer says the value did not check out. The Cloudflare page applies to every install. The VPN page applies only if the download stack is among your modules, and the model provider page only if you asked for an assistant on a machine with no graphics card of its own. All of them can be done a day ahead, and all of them can be done after the install if you skipped them at the time.
 
 
 ## Cloudflare DNS and the API token
@@ -985,7 +1004,7 @@ The rebuild re-encrypts the secret and restarts the certificate service, which t
 
 You now have a domain whose DNS Cloudflare answers for, and a token that can edit that domain and nothing else. Certificates arrive on the first boot, and the service names point at the machine without you touching a DNS record by hand.
 
-Next, [Answer the questions](https://ww4.github.io/imperfect-homelab/quick-start/answer-the-questions/) walks through the rest of the installer's screens. If the install is already done, [DNS and the gate](https://ww4.github.io/imperfect-homelab/day-two/dns-and-the-gate/) is the check that the names resolve and that nothing outside your network can reach them. If your chosen kit includes the download stack, [A VPN account for the download client](https://ww4.github.io/imperfect-homelab/accounts/vpn/) is the other value you have to fetch from somebody else's website.
+Next, [Answer the questions](https://ww4.github.io/imperfect-homelab/quick-start/answer-the-questions/) walks through the rest of the installer's screens. If the install is already done, [DNS and the gate](https://ww4.github.io/imperfect-homelab/day-two/dns-and-the-gate/) is the check that the names resolve and that nothing outside your network can reach them. If your chosen kit includes the download stack, [A VPN account for the download client](https://ww4.github.io/imperfect-homelab/accounts/vpn/) is the next value to fetch from somebody else's website, and [A model for the assistant](https://ww4.github.io/imperfect-homelab/accounts/model-provider/) is the one after it if you asked for an assistant.
 
 
 ## A VPN account for the download client
@@ -1109,7 +1128,102 @@ Delete `/root/vpn.env` once the rebuild has finished; the encrypted copy inside 
 
 The download stack now has a tunnel it cannot leak around, and you know which of your two options gives you an inbound port. What remains is inside the applications: [First logins](https://ww4.github.io/imperfect-homelab/day-two/first-logins/) covers telling Sonarr and Radarr about the download client, which is one of the two things the installer cannot do for you.
 
-If you have not set up DNS yet, [Cloudflare DNS and the API token](https://ww4.github.io/imperfect-homelab/accounts/cloudflare-dns/) is the other value the installer asks you to fetch from somebody else's website. The [arr](https://ww4.github.io/imperfect-homelab/services/arr/) reference page lists every option this module reads.
+If you have not set up DNS yet, [Cloudflare DNS and the API token](https://ww4.github.io/imperfect-homelab/accounts/cloudflare-dns/) is the other value every install asks you to fetch from somebody else's website, and [A model for the assistant](https://ww4.github.io/imperfect-homelab/accounts/model-provider/) is the third, for anyone who asked for one. The [arr](https://ww4.github.io/imperfect-homelab/services/arr/) reference page lists every option this module reads.
+
+
+## A model for the assistant
+
+URL: https://ww4.github.io/imperfect-homelab/accounts/model-provider/
+
+
+At the end of this the assistant on your machine will have a model to think with. The assistant is the program; the model is what it thinks with, and a model comes from one of two places. A machine with a large enough graphics card runs its own, and then there is nothing to buy and nothing on this page to do. Every other machine rents one by the token from a company, which means an account and an API key. The installer tells you which of the two you have, on the screen that offers the assistant, so read that line first and come back here only if you need to.
+
+## Prerequisites
+
+- A decision that you want an assistant at all. It is optional, nothing else on the machine depends on it, and the installer defaults to no.
+- A card for payment, for every provider named here. All of them charge by use rather than by month, and a small household's use is small.
+- About ten minutes, in a browser, on any computer.
+- The installer open at the assistant screen, or a machine already installed. Either order works.
+
+## Step 1 — Settle whether you need an account at all
+
+The assistant screen in the installer prints one line about this machine's graphics card. If it names a card and says what that card can run, this machine serves its own models and the key box below can stay empty: the assistant is already pointed at the models on the machine. If it says the card is too small, or that it recognises no card, then models have to come from somewhere else and you need an account.
+
+A machine with a capable card can still use an account, and some people do: a local model for everything ordinary, a rented one for the occasional hard question. That is a later decision, made in the assistant's own configuration rather than in the installer, and you do not need to make it now.
+
+## Step 2 — Choose a provider
+
+Hermes talks to anything that speaks OpenAI's API shape, which by now is much of the industry. Your choice is wider than the three below, and every one of them needs the same two values from you: a key and the address to send it to.
+
+**OpenAI** is the one with nothing extra to configure. Its address is the one Hermes assumes, so you supply the key and leave the address box empty.
+
+**OpenRouter** is one account that reaches many companies' models, including Anthropic's and several free ones, and it is the simplest way to try more than one model without opening more than one account. It needs the key and the address `https://openrouter.ai/api/v1`.
+
+**Anthropic** sells access to Claude directly, and its address for OpenAI-shaped clients is `https://api.anthropic.com/v1/`. Read Anthropic's own note on that endpoint before you build on it: the company describes the compatibility layer as intended for testing and comparing models rather than as a long-term solution, and says some features are ignored rather than refused. For Claude models in an assistant you intend to keep using, OpenRouter is the steadier route.
+
+| Provider | Where the key comes from | Address to enter |
+|---|---|---|
+| OpenAI | platform.openai.com, **API keys** | leave empty |
+| OpenRouter | [openrouter.ai/keys](https://openrouter.ai/keys) | `https://openrouter.ai/api/v1` |
+| Anthropic | platform.claude.com, **API keys** | `https://api.anthropic.com/v1/` |
+
+## Step 3 — Create the key
+
+Sign in to whichever you chose, find the API keys page, and create one. Name it for the machine rather than for yourself, because the name is how you will know which key to revoke later. Every provider shows the key once. Copy it somewhere you can paste from before you leave the page. If you lose it, delete that key and make another; there is no way to read an existing one back.
+
+A key is a long string of letters, digits and dashes with no spaces in it. Do not copy a surrounding quotation mark, and do not copy the word before it. A key that arrives with a stray character fails in a way the error message does not explain.
+
+## Step 4 — Give it to the installer
+
+The installer asks for this on the assistant screen, step 7 of 9. Answer **Yes, set one up**, and a credentials line appears underneath; press Enter on it to open the form. The form has two boxes. Put the key in **API key**. Put the address in **Provider address**, or leave that box empty for OpenAI. Press **Save**.
+
+The browser encrypts what you type before it sends it, and the installer prints the key fingerprint on the machine's own screen so you can check that the two agree. It reaches the installed machine as an encrypted file and never appears in the answers file.
+
+**Skip** leaves the credential unset and the install carries on. Nothing else changes: the rest of the machine installs and works the same.
+
+## Step 5 — Put a limit on it
+
+A key with no limit on it can run up a bill while you are asleep. Every provider named here has a page for this, usually under **Billing** or **Limits**, where you set a monthly maximum and an address to warn. Set one now. An assistant left running against a large document or a long task uses more than a conversation does, and the point of the limit is that you find out from an email rather than from a statement.
+
+## Step 6 — Talk to it after the first boot
+
+The assistant has no web address, on purpose. It runs in a container with one directory of its own, the installer gives it no name under your domain, and nothing on your network can reach it. You talk to it by sitting at the machine or logging in over SSH:
+
+```sh
+sudo docker exec -it hermes-agent hermes
+```
+
+If you skipped the key, this first conversation is where it asks for one. If you supplied it, it is already there.
+
+Everything the assistant keeps lives in `/var/lib/hermes`, and that directory is the whole of what it can see. Giving it more is a deliberate edit to `homelab.hermes.extraMounts` in your flake, one line per thing, read-only unless it needs to write. Read the [hermes-agent](https://ww4.github.io/imperfect-homelab/services/hermes-agent/) reference page before you add the first one: this is a program whose job is to run code and act on what it finds, and the directory list is the whole of the fence around it.
+
+If the machine has a capable card, you also have `chat.<your domain>`, a browser chat window against the models running locally. That is a different thing from the assistant and it needs no key at all.
+
+## Step 7 — Set or change the key later
+
+Skipping the key at install time costs nothing, and the same two commands set it afterwards or replace it when you roll it. Sit at the machine or log in over SSH, and write the file:
+
+```sh
+sudo install -m 600 /dev/null /root/hermes.env
+sudo tee /root/hermes.env >/dev/null <<'EOF'
+OPENAI_API_KEY=paste-the-key-here
+OPENAI_BASE_URL=https://openrouter.ai/api/v1
+EOF
+```
+
+Leave the `OPENAI_BASE_URL` line out entirely for OpenAI. Then hand the file to the configurator and rebuild:
+
+```sh
+sudo homelab-configure generate --out /root/homelab \
+  --secret homelab.hermes.environmentFile=@/root/hermes.env
+sudo nixos-rebuild switch --flake /root/homelab#YOUR_HOSTNAME
+```
+
+Delete `/root/hermes.env` once the rebuild has finished; the encrypted copy inside the flake is the one the machine reads from then on.
+
+## Conclusion
+
+What the assistant can see is still one directory, and that is the setting to look at next. The [hermes-agent](https://ww4.github.io/imperfect-homelab/services/hermes-agent/) reference page lists every option the module reads. If your machine runs its own models instead, [ollama](https://ww4.github.io/imperfect-homelab/services/ollama/) and [open-webui](https://ww4.github.io/imperfect-homelab/services/open-webui/) are the two modules behind that, and neither needs an account with anybody.
 
 
 # Install
@@ -1640,6 +1754,7 @@ against the catalog, so what you read here is what the code does.
 | [drive-temps](https://ww4.github.io/imperfect-homelab/services/drive-temps/) | Drive temperature + SMART-health exporter for spinning disks. | 8 MiB | import |  |
 | [forgejo](https://ww4.github.io/imperfect-homelab/services/forgejo/) | Forgejo git forge. | 320 MiB | import | `git.<domain>` |
 | [glances](https://ww4.github.io/imperfect-homelab/services/glances/) | Glances system monitor with a REST/web API. | 96 MiB | import | `glances.<domain>` |
+| [hermes-agent](https://ww4.github.io/imperfect-homelab/services/hermes-agent/) | A self-hosted agent harness that runs code and acts on its own; talks to local or paid models. | 700 MiB | import |  |
 | [immich](https://ww4.github.io/imperfect-homelab/services/immich/) | Immich photo & video management. | 1536 MiB | import | `photos.<domain>` |
 | [jellyfin](https://ww4.github.io/imperfect-homelab/services/jellyfin/) | Jellyfin media server. | 512 MiB | import | `jellyfin.<domain>` |
 | [lazylibrarian](https://ww4.github.io/imperfect-homelab/services/lazylibrarian/) | LazyLibrarian ebook/audiobook automation on the shared /data tree. | 192 MiB | import | `lazylibrarian.<domain>` |
@@ -1653,6 +1768,8 @@ against the catalog, so what you read here is what the code does.
 | [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/) | nginx source-access gate: allow/deny inherited by every vhost from one place. | 64 MiB | import |  |
 | [nginx-log-paths-check](https://ww4.github.io/imperfect-homelab/services/nginx-log-paths-check/) | Build-time guard: nginx may only be told to write logs where it can write. | 8 MiB | import |  |
 | [ntfy](https://ww4.github.io/imperfect-homelab/services/ntfy/) | Self-hosted ntfy: write-only anonymous access, self-provisioning subscriber. | 32 MiB | import | `ntfy.<domain>` |
+| [ollama](https://ww4.github.io/imperfect-homelab/services/ollama/) | Run open-weight language models on this machine. | 300 MiB | import |  |
+| [open-webui](https://ww4.github.io/imperfect-homelab/services/open-webui/) | A browser front end for the models ollama is serving. | 500 MiB | import | `chat.<domain>` |
 | [paperless](https://ww4.github.io/imperfect-homelab/services/paperless/) | Paperless-ngx OCR-indexed document archive. | 1024 MiB | import | `paperless.<domain>` |
 | [pinchflat](https://ww4.github.io/imperfect-homelab/services/pinchflat/) | PinchFlat YouTube archiver. | 320 MiB | import | `pinchflat.<domain>` |
 | [pool-autoremount](https://ww4.github.io/imperfect-homelab/services/pool-autoremount/) | Self-healing remount for pool members that drop off the bus; detects zombie mounts with real I/O. | 8 MiB | import |  |
@@ -1846,9 +1963,9 @@ Optional keeper library mounted at /keepers/tv (Sonarr twin of keepersMovies).
 
 #### `homelab.arrStack.owner`
 
-`string` — **required**
+`string` — default `"admin"`
 
-Host user owning the stack's directories (matches puid).
+Host user owning the stack's directories (matches puid). Defaults to homelab.adminUser: the account a fresh install is sure to have.
 
 #### `homelab.arrStack.pgid`
 
@@ -1864,9 +1981,9 @@ uid the stack's containers run as.
 
 #### `homelab.arrStack.root`
 
-`string` — **required** — example `"/mnt/media/arr"`
+`string` — default `"/mnt/media/arr"` — example `"/mnt/media/arr"`
 
-The shared /data tree (downloads + media subdirs).
+The shared /data tree (downloads + media subdirs). The default sits on the media pool, which is where a disk marked `data` at install is mounted.
 
 #### `homelab.arrStack.scratchDir`
 
@@ -1976,9 +2093,9 @@ Optional keeper library mounted at /keepers/tv (Sonarr twin of keepersMovies).
 
 #### `homelab.arrStack.owner`
 
-`string` — **required**
+`string` — default `"admin"`
 
-Host user owning the stack's directories (matches puid).
+Host user owning the stack's directories (matches puid). Defaults to homelab.adminUser: the account a fresh install is sure to have.
 
 #### `homelab.arrStack.pgid`
 
@@ -1994,9 +2111,9 @@ uid the stack's containers run as.
 
 #### `homelab.arrStack.root`
 
-`string` — **required** — example `"/mnt/media/arr"`
+`string` — default `"/mnt/media/arr"` — example `"/mnt/media/arr"`
 
-The shared /data tree (downloads + media subdirs).
+The shared /data tree (downloads + media subdirs). The default sits on the media pool, which is where a disk marked `data` at install is mounted.
 
 #### `homelab.arrStack.scratchDir`
 
@@ -2048,7 +2165,11 @@ Import `nixosModules.authelia` and set `homelab.authelia.enable = true`.
 
 ## Secrets
 
-None.
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.authelia.adminPasswordHashFile` | `<argon2 hash of the admin's first password>` | `root` | generate |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
 
 ## Options
 
@@ -2063,6 +2184,12 @@ Display name for the administrator.
 `string` — default `"admin"`
 
 Username of the human administrator (SSO seed user, etc.).
+
+#### `homelab.authelia.adminPasswordHashFile`
+
+`null or absolute path` — default `null`
+
+A file holding the argon2 hash of the admin's first Authelia password. When set, the module seeds `users.yml` from it, and the password itself never touches the machine: the configurator mints one, writes the hash here and puts the password in FIRST-LOGIN.md. Left null, the module mints a password at activation and writes it to `initial-password` beside `users.yml`, root-readable. Read it, log in, change the password, delete the file. Before this option existed the module minted a password and threw it away, so nobody could log in at all until they replaced `users.yml` by hand. 
 
 #### `homelab.authelia.displayName`
 
@@ -2346,9 +2473,9 @@ Whether to enable the forge-vs-deployed drift watcher.
 
 #### `homelab.deployDriftWatch.repoUrl`
 
-`string` — **required** — example `"https://git.example.com/me/flakes.git"`
+`string` — default `""` — example `"https://git.example.com/me/flakes.git"`
 
-The flake repo the GitOps applier deploys from.
+The flake repo the GitOps applier deploys from. Empty (the default) means there is no repo yet: the check does nothing until you set it.
 
 
 
@@ -2498,6 +2625,56 @@ The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&
 
 
 
+## hermes-agent
+
+URL: https://ww4.github.io/imperfect-homelab/services/hermes-agent/
+
+
+A self-hosted agent harness that runs code and acts on its own; talks to local or paid models.
+
+Memory: about 700 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
+## Enabling it
+
+Importing `nixosModules.hermes-agent` enables it; there is no switch.
+
+
+## Secrets
+
+| Option | File must carry | Read by | Class |
+|---|---|---|---|
+| `homelab.hermes.environmentFile` | `OPENAI_API_KEY=…  # or the provider you use; none is needed for local models` | `root` | supply |
+
+Classes: *generate* — tooling can mint the value; *supply* — only you can provide it; *first-boot* — the value exists only after the service has run once.
+
+## Options
+
+#### `homelab.hermes.environmentFile`
+
+`null or absolute path` — default `null`
+
+A file of `KEY=value` lines carrying whichever provider credentials Hermes should use. Not needed at all when it is talking to the models on this machine: with this unset and `ollama` imported, Hermes is pointed at them. Setting it hands the choice of address back to the container, so a file for a provider other than OpenAI should carry that provider's `OPENAI_BASE_URL` as well. 
+
+#### `homelab.hermes.extraMounts`
+
+`list of string` — default `[ ]` — example `[   "/mnt/media/photos:/photos:ro" ]`
+
+Anything else Hermes may see, in docker's `host:container[:ro]` form. ⚠️ This is the whole of its reach. Hermes runs code and acts on what it finds, so each line here is a deliberate decision about what an agent is allowed to touch. Read-only unless it genuinely needs to write. 
+
+#### `homelab.hermes.memoryMax`
+
+`string` — default `"4g"`
+
+A ceiling on the container's memory, so a runaway cannot take the machine with it.
+
+#### `homelab.hermes.stateDir`
+
+`string` — default `"/var/lib/hermes"`
+
+Everything Hermes keeps, and everything it can see unless you add to `extraMounts`.
+
+
+
 ## immich
 
 URL: https://ww4.github.io/imperfect-homelab/services/immich/
@@ -2528,7 +2705,7 @@ The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&
 
 #### `homelab.immich.mediaLocation`
 
-`string` — **required** — example `"/mnt/media/immich"`
+`string` — default `"/mnt/media/immich"` — example `"/mnt/media/immich"`
 
 Where Immich stores photo/video data.
 
@@ -2618,9 +2795,9 @@ Optional keeper library mounted at /keepers/tv (Sonarr twin of keepersMovies).
 
 #### `homelab.arrStack.owner`
 
-`string` — **required**
+`string` — default `"admin"`
 
-Host user owning the stack's directories (matches puid).
+Host user owning the stack's directories (matches puid). Defaults to homelab.adminUser: the account a fresh install is sure to have.
 
 #### `homelab.arrStack.pgid`
 
@@ -2636,9 +2813,9 @@ uid the stack's containers run as.
 
 #### `homelab.arrStack.root`
 
-`string` — **required** — example `"/mnt/media/arr"`
+`string` — default `"/mnt/media/arr"` — example `"/mnt/media/arr"`
 
-The shared /data tree (downloads + media subdirs).
+The shared /data tree (downloads + media subdirs). The default sits on the media pool, which is where a disk marked `data` at install is mounted.
 
 #### `homelab.arrStack.scratchDir`
 
@@ -2714,9 +2891,9 @@ Optional keeper library mounted at /keepers/tv (Sonarr twin of keepersMovies).
 
 #### `homelab.arrStack.owner`
 
-`string` — **required**
+`string` — default `"admin"`
 
-Host user owning the stack's directories (matches puid).
+Host user owning the stack's directories (matches puid). Defaults to homelab.adminUser: the account a fresh install is sure to have.
 
 #### `homelab.arrStack.pgid`
 
@@ -2732,9 +2909,9 @@ uid the stack's containers run as.
 
 #### `homelab.arrStack.root`
 
-`string` — **required** — example `"/mnt/media/arr"`
+`string` — default `"/mnt/media/arr"` — example `"/mnt/media/arr"`
 
-The shared /data tree (downloads + media subdirs).
+The shared /data tree (downloads + media subdirs). The default sits on the media pool, which is where a disk marked `data` at install is mounted.
 
 #### `homelab.arrStack.scratchDir`
 
@@ -2894,7 +3071,7 @@ The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&
 
 #### `homelab.metube.downloadDir`
 
-`string` — **required** — example `"/mnt/media/youtube/metube"`
+`string` — default `"/mnt/media/youtube/metube"` — example `"/mnt/media/youtube/metube"`
 
 Host directory downloads land in (bind-mounted into the container).
 
@@ -3206,6 +3383,70 @@ Full URL (server + topic) that library modules POST notifications to, in ntfy.sh
 
 
 
+## ollama
+
+URL: https://ww4.github.io/imperfect-homelab/services/ollama/
+
+
+Run open-weight language models on this machine.
+
+Memory: about 300 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
+## Enabling it
+
+Importing `nixosModules.ollama` enables it; there is no switch.
+
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.ollama.acceleration`
+
+`null or one of "cuda", "rocm"` — default `null`
+
+How the models are run. `null` means the processor does the work, which is correct and slow. "cuda" is for NVIDIA cards and "rocm" for AMD; both pull a large vendor-specific build, and the CUDA one is unfree. The installer sets this from the card it found. 
+
+#### `homelab.ollama.models`
+
+`list of string` — default `[ ]` — example `[   "llama3.2:3b"   "qwen2.5-coder:7b" ]`
+
+Models pulled when the service first starts, so the machine is useful without a second step. Each one is a download of several gigabytes. What a card can comfortably hold is what the installer reports from the published card list. 
+
+
+
+## open-webui
+
+URL: https://ww4.github.io/imperfect-homelab/services/open-webui/
+
+
+A browser front end for the models ollama is serving.
+
+Memory: about 500 MiB resident at household load (the configurator adds these up against the machine; bursts such as a transcode or an indexing job are extra).
+
+## Enabling it
+
+Importing `nixosModules.open-webui` enables it; there is no switch.
+
+**Requires:** [ollama](https://ww4.github.io/imperfect-homelab/services/ollama/), [acme](https://ww4.github.io/imperfect-homelab/services/acme/), [nginx-access](https://ww4.github.io/imperfect-homelab/services/nginx-access/)
+**Serves:** `chat.<homelab.domain>` — create the DNS record.
+
+## Secrets
+
+None.
+
+## Options
+
+#### `homelab.domain`
+
+`string` — **required** — example `"example.com"`
+
+The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&gt;). No default — set it in your flake. 
+
+
+
 ## paperless
 
 URL: https://ww4.github.io/imperfect-homelab/services/paperless/
@@ -3282,7 +3523,7 @@ The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&
 
 #### `homelab.pinchflat.mediaDir`
 
-`string` — **required** — example `"/mnt/media/pinchflat"`
+`string` — default `"/mnt/media/pinchflat"` — example `"/mnt/media/pinchflat"`
 
 Where PinchFlat stores downloaded media.
 
@@ -3441,9 +3682,9 @@ Optional keeper library mounted at /keepers/tv (Sonarr twin of keepersMovies).
 
 #### `homelab.arrStack.owner`
 
-`string` — **required**
+`string` — default `"admin"`
 
-Host user owning the stack's directories (matches puid).
+Host user owning the stack's directories (matches puid). Defaults to homelab.adminUser: the account a fresh install is sure to have.
 
 #### `homelab.arrStack.pgid`
 
@@ -3459,9 +3700,9 @@ uid the stack's containers run as.
 
 #### `homelab.arrStack.root`
 
-`string` — **required** — example `"/mnt/media/arr"`
+`string` — default `"/mnt/media/arr"` — example `"/mnt/media/arr"`
 
-The shared /data tree (downloads + media subdirs).
+The shared /data tree (downloads + media subdirs). The default sits on the media pool, which is where a disk marked `data` at install is mounted.
 
 #### `homelab.arrStack.scratchDir`
 
@@ -3690,7 +3931,7 @@ One parity file per parity disk, each on a disk that is NOT a pool member and at
 
 #### `homelab.snapraid.pool`
 
-`string` — **required** — example `"media"`
+`string` — default `"media"` — example `"media"`
 
 Name of the homelab.pools entry whose memberDir + members are the data disks.
 
@@ -3830,9 +4071,9 @@ Optional keeper library mounted at /keepers/tv (Sonarr twin of keepersMovies).
 
 #### `homelab.arrStack.owner`
 
-`string` — **required**
+`string` — default `"admin"`
 
-Host user owning the stack's directories (matches puid).
+Host user owning the stack's directories (matches puid). Defaults to homelab.adminUser: the account a fresh install is sure to have.
 
 #### `homelab.arrStack.pgid`
 
@@ -3848,9 +4089,9 @@ uid the stack's containers run as.
 
 #### `homelab.arrStack.root`
 
-`string` — **required** — example `"/mnt/media/arr"`
+`string` — default `"/mnt/media/arr"` — example `"/mnt/media/arr"`
 
-The shared /data tree (downloads + media subdirs).
+The shared /data tree (downloads + media subdirs). The default sits on the media pool, which is where a disk marked `data` at install is mounted.
 
 #### `homelab.arrStack.scratchDir`
 

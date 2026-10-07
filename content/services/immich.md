@@ -30,7 +30,7 @@ The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&
 
 #### `homelab.immich.mediaLocation`
 
-`string` — **required** — example `"/mnt/media/immich"`
+`string` — default `"/mnt/media/immich"` — example `"/mnt/media/immich"`
 
 Where Immich stores photo/video data.
 

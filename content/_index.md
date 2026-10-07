@@ -20,7 +20,7 @@ and its
 sits beside it. Write it to a USB stick and boot the machine you are installing
 on from that stick. The installer starts on its own.
 
-It asks eight questions, then partitions the disks, writes your secrets and
+It asks nine questions, then partitions the disks, writes your secrets and
 installs with no further input from you. The [Quick start](@/quick-start/_index.md)
 walks through the same steps one screen at a time, if you would rather follow it
 that way.

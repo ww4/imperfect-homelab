@@ -120,4 +120,4 @@ Delete `/root/vpn.env` once the rebuild has finished; the encrypted copy inside 
 
 The download stack now has a tunnel it cannot leak around, and you know which of your two options gives you an inbound port. What remains is inside the applications: [First logins](@/day-two/first-logins.md) covers telling Sonarr and Radarr about the download client, which is one of the two things the installer cannot do for you.
 
-If you have not set up DNS yet, [Cloudflare DNS and the API token](@/accounts/cloudflare-dns.md) is the other value the installer asks you to fetch from somebody else's website. The [arr](@/services/arr.md) reference page lists every option this module reads.
+If you have not set up DNS yet, [Cloudflare DNS and the API token](@/accounts/cloudflare-dns.md) is the other value every install asks you to fetch from somebody else's website, and [A model for the assistant](@/accounts/model-provider.md) is the third, for anyone who asked for one. The [arr](@/services/arr.md) reference page lists every option this module reads.

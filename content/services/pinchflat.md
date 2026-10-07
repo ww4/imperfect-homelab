@@ -30,7 +30,7 @@ The base domain every vhost hangs off (services live at &lt;name&gt;.&lt;domain&
 
 #### `homelab.pinchflat.mediaDir`
 
-`string` — **required** — example `"/mnt/media/pinchflat"`
+`string` — default `"/mnt/media/pinchflat"` — example `"/mnt/media/pinchflat"`
 
 Where PinchFlat stores downloaded media.
 
